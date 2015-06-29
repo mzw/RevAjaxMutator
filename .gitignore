@@ -1,0 +1,21 @@
+# maven artifacts
+/target/
+
+# eclipse settings
+/.settings/
+/.classpath
+/.project
+
+# WebScarab files
+/.conversation/
+/.keystore
+
+# workspace
+/localenv.sh
+/record/
+/my.sh
+/sample/
+
+# Github
+.git.github
+
