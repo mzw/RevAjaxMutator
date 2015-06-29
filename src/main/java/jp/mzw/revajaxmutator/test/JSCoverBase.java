@@ -1,6 +1,8 @@
 package jp.mzw.revajaxmutator.test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -30,6 +32,37 @@ public class JSCoverBase {
 							"--no-instrument-reg=.*jquery.*",
 							"--no-instrument-reg=.*bootstrap.*",
 					});
+				}
+			});
+			server.start();
+	    	Thread.sleep(300); // wait for launching proxy server
+		}
+	}
+	
+
+	public static void launchProxyServer(final String dir, final String port, String[] insr, String[] no_instr) throws InterruptedException {
+		File cov_result = new File(dir, JSCOVER_REPORT_FILE);
+        if (cov_result.exists()) cov_result.delete();
+        
+        ArrayList<String> _args = new ArrayList<String>();
+        _args.add("-ws");
+        _args.add("--port=" + port);
+        _args.add("--proxy");
+        _args.add("--local-storage");
+        _args.add("--report-dir=" + dir);
+        for(String regx : insr) {
+        	_args.add("--only-instrument-reg=" + regx);
+        }
+        for(String regx : no_instr) {
+        	_args.add("--no-instrument-reg=" + regx);
+        }
+        final String[] args = _args.toArray(new String[0]);
+        
+		if(server == null) {
+			server = new Thread(new Runnable() {
+				@Override
+				public void run() {
+					jscover.Main.main(args);
 				}
 			});
 			server.start();
