@@ -51,9 +51,11 @@ public class JSCoverBase {
         _args.add("--local-storage");
         _args.add("--report-dir=" + dir);
         for(String regx : insr) {
+        	if("".equals(regx)) continue;
         	_args.add("--only-instrument-reg=" + regx);
         }
         for(String regx : no_instr) {
+        	if("".equals(regx)) continue;
         	_args.add("--no-instrument-reg=" + regx);
         }
         final String[] args = _args.toArray(new String[0]);
