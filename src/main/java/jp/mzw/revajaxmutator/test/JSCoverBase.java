@@ -85,9 +85,19 @@ public class JSCoverBase {
         new WebDriverWait(driver, timeout).until(
         		ExpectedConditions.elementToBeClickable(By.id("storeTab")));
         driver.findElement(By.id("storeTab")).click();
+        try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
         new WebDriverWait(driver, timeout).until(
         		ExpectedConditions.elementToBeClickable(By.id("storeButton")));
         driver.findElement(By.id("storeButton")).click();
+        try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
         new WebDriverWait(driver, timeout).until(
         		ExpectedConditions.textToBePresentInElement(By.id("storeDiv"), "Coverage data stored at"));
         
