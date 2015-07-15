@@ -1,5 +1,8 @@
 package jp.mzw.revajaxmutator.mutator;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mozilla.javascript.ast.Name;
 
 import jp.gr.java_conf.daisy.ajax_mutator.mutatable.Request;
@@ -12,14 +15,16 @@ public class MootoolsRequestMethodMutator extends AbstractMutator<Request> {
     }
 
     @Override
-    public Mutation generateMutation(Request originalNode) {
+    public List<Mutation> generateMutationList(Request originalNode) {
         Name requestMethodName = (Name) originalNode.getRequestMethodNode();
         String name = requestMethodName.getIdentifier();
+        List<Mutation> mutationList = new ArrayList<Mutation>();
         if ("send".equals(name)) {
-            return new Mutation(requestMethodName, "get");
+            mutationList.add(new Mutation(requestMethodName, "get"));
         }
         else {
-            return new Mutation(requestMethodName, "send");
+            mutationList.add(new Mutation(requestMethodName, "send"));
         }
+        return mutationList;
     }
 }

@@ -1,5 +1,8 @@
 package jp.mzw.revajaxmutator.fixer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jp.gr.java_conf.daisy.ajax_mutator.mutatable.EventAttachment;
 import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.Mutation;
 import jp.gr.java_conf.daisy.ajax_mutator.mutator.AbstractMutator;
@@ -13,7 +16,9 @@ public class EventTargetGivenFixer extends AbstractMutator<EventAttachment> {
     }
 
     @Override
-    public Mutation generateMutation(EventAttachment originalNode) {
-        return new Mutation(originalNode.getTarget(), target);
+    public List<Mutation> generateMutationList(EventAttachment originalNode) {
+    	List<Mutation> mutationList = new ArrayList<Mutation>();
+        mutationList.add(new Mutation(originalNode.getTarget(), target));
+        return mutationList;
     }
 }
