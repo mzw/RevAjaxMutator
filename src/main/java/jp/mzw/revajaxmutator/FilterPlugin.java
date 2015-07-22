@@ -1,6 +1,8 @@
 package jp.mzw.revajaxmutator;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.HttpUrl;
@@ -38,7 +40,10 @@ public class FilterPlugin extends ProxyPlugin {
     }
 
     private boolean matchUrl(HttpUrl url) {
-        return url.toString().startsWith(mUrlPrefix);
+    	Pattern p = Pattern.compile(mUrlPrefix);
+    	Matcher m = p.matcher(url.toString());
+    	return m.find();
+//        return url.toString().startsWith(mUrlPrefix);
     }
 
     private boolean matchMethod(String method) {
