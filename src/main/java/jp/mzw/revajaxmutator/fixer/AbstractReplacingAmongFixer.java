@@ -47,6 +47,15 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends A
         AstNode focusedNode = getFocusedNode(originalNode);
         improperNodes.add(focusedNode);
         List<Mutation> mutationList = new ArrayList<Mutation>();
+        
+        //create mutation with replacign orginal node with parseResult
+        if(candidateStringsFromParseResult.size() > 0){
+        	for(String parseResult: candidateStringsFromParseResult){
+        		mutationList.add(new Mutation(focusedNode, parseResult));
+        	}
+        }
+        
+        
         //create mutation with replcacing among astnodes in the same file
         while (improperNodes.size() < candidates.size()) {
             AstNode candidate = candidates.get(Randomizer
@@ -64,12 +73,12 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends A
         if (getDefaultReplacingNode() != null && getDefaultReplacingNode().toSource() != focusedNode.toSource()) {
             mutationList.add(new Mutation(focusedNode, formatAccordingTo(getDefaultReplacingNode(), focusedNode)));
         }
-        //create mutation with replacign orginal node with parseResult
-        if(candidateStringsFromParseResult.size() > 0){
-        	for(String parseResult: candidateStringsFromParseResult){
-        		mutationList.add(new Mutation(focusedNode, parseResult));
-        	}
-        }
+//        //create mutation with replacign orginal node with parseResult
+//        if(candidateStringsFromParseResult.size() > 0){
+//        	for(String parseResult: candidateStringsFromParseResult){
+//        		mutationList.add(new Mutation(focusedNode, parseResult));
+//        	}
+//        }
         
         if(mutationList.size() > 0)return mutationList;
         else return null;
