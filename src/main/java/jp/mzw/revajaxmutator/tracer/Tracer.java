@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import jp.mzw.revajaxmutator.util.FileUtils;
-
+import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -26,7 +25,7 @@ public class Tracer {
 			
 			String test_filename = test_class.replace(".", "/").concat(".java");
 			String test_src_root = (new File(git_root_dir, test_src_root_dir)).getAbsolutePath();
-			String java_content = FileUtils.cat(test_src_root, test_filename);
+			String java_content = FileUtils.readFileToString(new File(test_src_root, test_filename));
 			
 			String[] _java_content = java_content.split("\n");
 			String subject_statement = _java_content[test_line-1];

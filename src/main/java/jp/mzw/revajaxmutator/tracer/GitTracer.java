@@ -101,8 +101,6 @@ public class GitTracer {
 		
 		/// Iterates each commit
 		for(RevCommit commit: git.log().call()) {
-			String commitId = commit.getId().getName();
-
 			/// Traverses diff between current commit and its parents			
 			RevCommit[] parents = commit.getParents();
 			for(int pid = 0; pid < parents.length; pid++) {

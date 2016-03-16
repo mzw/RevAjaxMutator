@@ -1,22 +1,22 @@
 package jp.mzw.revajaxmutator.tracer;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import org.apache.commons.io.FileUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jp.mzw.revajaxmutator.util.FileUtils;
-
 public class JUnitParser {
 	private static Logger log = LoggerFactory.getLogger(JUnitParser.class);
 	
 	protected ArrayList<TraceInfo> errorClassLineList;
 	public JUnitParser(String filename) throws IOException {
-		String content = FileUtils.cat(filename);
+		String content = FileUtils.readFileToString(new File(filename));
 		Document doc = Jsoup.parse(content);
 		if(doc == null) {
 			log.error("Invalid JUnit report file");

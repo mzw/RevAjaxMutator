@@ -1,7 +1,7 @@
 package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.TimerEventAttachment;
+import jp.mzw.ajaxmutator.mutatable.TimerEventAttachment;
 import org.mozilla.javascript.ast.AstNode;
 
 public class TimerEventCallbackERFixer extends AbstractReplacingAmongFixer<TimerEventAttachment> {

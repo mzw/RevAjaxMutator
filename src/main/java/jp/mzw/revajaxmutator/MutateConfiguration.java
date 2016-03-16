@@ -2,11 +2,10 @@ package jp.mzw.revajaxmutator;
 
 import java.util.Set;
 
-import jp.gr.java_conf.daisy.ajax_mutator.MutationTestConductor;
-import jp.gr.java_conf.daisy.ajax_mutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.MutationTestConductor;
+import jp.mzw.ajaxmutator.mutator.Mutator;
 
-@SuppressWarnings("rawtypes")
 public interface MutateConfiguration {
     MutationTestConductor mutationTestConductor();
-    Set<Mutator> mutators();
+    Set<Mutator<?>> mutators();
 }

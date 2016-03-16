@@ -9,10 +9,10 @@ import java.util.Set;
 
 import org.mozilla.javascript.ast.AstNode;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.Mutatable;
-import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.Mutation;
-import jp.gr.java_conf.daisy.ajax_mutator.mutator.AbstractMutator;
-import jp.gr.java_conf.daisy.ajax_mutator.util.Randomizer;
+import jp.mzw.ajaxmutator.mutatable.Mutatable;
+import jp.mzw.ajaxmutator.generator.Mutation;
+import jp.mzw.ajaxmutator.mutator.AbstractMutator;
+import jp.mzw.ajaxmutator.util.Randomizer;
 
 /**
  * @author Junto Nakaoka

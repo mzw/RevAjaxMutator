@@ -1,0 +1,312 @@
+package jp.mzw.ajaxmutator;
+
+import com.google.common.collect.ImmutableSet;
+
+import jp.mzw.ajaxmutator.detector.AbstractDetector;
+import jp.mzw.ajaxmutator.detector.EventAttacherDetector;
+import jp.mzw.ajaxmutator.detector.MutationPointDetector;
+import jp.mzw.ajaxmutator.detector.dom.*;
+import jp.mzw.ajaxmutator.detector.event.AddEventListenerDetector;
+import jp.mzw.ajaxmutator.detector.event.AttachEventDetector;
+import jp.mzw.ajaxmutator.detector.event.TimerEventDetector;
+import jp.mzw.ajaxmutator.detector.jquery.*;
+import jp.mzw.ajaxmutator.mutatable.*;
+import jp.mzw.ajaxmutator.mutatable.genprog.*;
+
+import org.mozilla.javascript.ast.Assignment;
+import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.FunctionCall;
+import org.mozilla.javascript.ast.NodeVisitor;
+import org.mozilla.javascript.ast.IfStatement;
+import org.mozilla.javascript.ast.ReturnStatement;
+import org.mozilla.javascript.ast.Loop;
+
+import java.util.Set;
+import java.util.TreeSet;
+
+/**
+ * Visitor for JavaScript's AST to get information needed to apply mutation
+ * operations.
+ *
+ * @author Kazuki Nishiura
+ */
+public class MutateVisitor implements NodeVisitor {
+    private final ImmutableSet<EventAttacherDetector> eventAttacherDetectors;
+    private final ImmutableSet<TimerEventDetector> timerEventDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMCreation>> domCreationDetectors;
+    private final ImmutableSet<? extends AbstractDetector<AttributeModification>> attributeModificationDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMAppending>> domAppendingDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMCloning>> domCloningDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMNormalization>> domNormalizationDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMReplacement>> domReplacementDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMRemoval>> domRemovalDetectors;
+    private final ImmutableSet<? extends AbstractDetector<DOMSelection>> domSelectionDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Request>> requestDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Statement>> statementDetectors;
+
+    private final Set<EventAttachment> eventAttachments
+        = new TreeSet<EventAttachment>();
+    private final Set<TimerEventAttachment> timerEventAttachmentExpressions
+        = new TreeSet<TimerEventAttachment>();
+    private final Set<DOMCreation> domCreations = new TreeSet<DOMCreation>();
+    private final Set<AttributeModification> attributeModifications
+        = new TreeSet<AttributeModification>();
+    private final Set<DOMAppending> domAppendings = new TreeSet<DOMAppending>();
+    private final Set<DOMCloning> domClonings = new TreeSet<DOMCloning>();
+    private final Set<DOMNormalization> domNormalizations = new TreeSet<DOMNormalization>();
+    private final Set<DOMReplacement> domReplacements = new TreeSet<DOMReplacement>();
+    private final Set<DOMRemoval> domRemovals = new TreeSet<DOMRemoval>();
+    private final Set<DOMSelection> domSelections = new TreeSet<DOMSelection>();
+    private final Set<Request> requests = new TreeSet<Request>();
+    private final Set<Statement> statements = new TreeSet<Statement>();
+
+    public MutateVisitor(
+            Set<EventAttacherDetector> eventAttacherDetectors,
+            Set<TimerEventDetector> timerEventDetectors,
+            Set<? extends AbstractDetector<DOMCreation>> domCreationDetectors,
+            Set<? extends AbstractDetector<AttributeModification>> attributeModificationDetectors,
+            Set<? extends AbstractDetector<DOMAppending>> domAppendingDetectors,
+            Set<? extends AbstractDetector<DOMCloning>> domCloningDetectors,
+            Set<? extends AbstractDetector<DOMNormalization>> domNormalizationDetectors,
+            Set<? extends AbstractDetector<DOMReplacement>> domReplacementDetectors,
+            Set<? extends AbstractDetector<DOMRemoval>> domRemovalDetectors,
+            Set<? extends AbstractDetector<DOMSelection>> domSelectionDetectors,
+            Set<? extends AbstractDetector<Request>> requestDetectors,
+            Set<? extends AbstractDetector<Statement>> statementDetectors) {
+        this.eventAttacherDetectors = immutableCopyOf(eventAttacherDetectors);
+        this.timerEventDetectors = immutableCopyOf(timerEventDetectors);
+        this.domCreationDetectors = immutableCopyOf(domCreationDetectors);
+        this.attributeModificationDetectors = immutableCopyOf(attributeModificationDetectors);
+        this.domAppendingDetectors = immutableCopyOf(domAppendingDetectors);
+        this.domCloningDetectors = immutableCopyOf(domCloningDetectors);
+        this.domNormalizationDetectors = immutableCopyOf(domNormalizationDetectors);
+        this.domReplacementDetectors = immutableCopyOf(domReplacementDetectors);
+        this.domRemovalDetectors = immutableCopyOf(domRemovalDetectors);
+        this.domSelectionDetectors = immutableCopyOf(domSelectionDetectors);
+        this.requestDetectors = immutableCopyOf(requestDetectors);
+        this.statementDetectors = immutableCopyOf(statementDetectors);
+    }
+
+    private <T> ImmutableSet<T> immutableCopyOf(Set<T> original) {
+        if (original == null)
+            return ImmutableSet.of();
+        else
+            return ImmutableSet.copyOf(original);
+    }
+
+    private <T extends Mutatable> void detectAndAdd(
+            MutationPointDetector<T> detector, AstNode node, Set<T> mutatable) {
+        T result = detector.detect(node);
+        if (result != null)
+            mutatable.add(result);
+    }
+
+    @Override
+    public boolean visit(AstNode node) {
+        if (node instanceof FunctionCall) {
+            return visit((FunctionCall) node);
+        } else if (node instanceof Assignment) {
+            for (AbstractDetector<AttributeModification> detector : attributeModificationDetectors)
+                detectAndAdd(detector, node, attributeModifications);
+        }
+        
+        else if (node instanceof IfStatement
+        		|| node instanceof ReturnStatement
+        		|| node instanceof Loop) {
+        	for (AbstractDetector<Statement> detector : statementDetectors)
+        		detectAndAdd(detector, node, statements);
+        }
+        
+        return true;
+    }
+
+    public boolean visit(FunctionCall call) {
+        for (EventAttacherDetector detector : eventAttacherDetectors)
+            detectAndAdd(detector, call, eventAttachments);
+        for (TimerEventDetector detector : timerEventDetectors)
+            detectAndAdd(detector, call, timerEventAttachmentExpressions);
+        for (AbstractDetector<DOMCreation> detector : domCreationDetectors)
+            detectAndAdd(detector, call, domCreations);
+        for (AbstractDetector<DOMAppending> detector: domAppendingDetectors)
+            detectAndAdd(detector, call, domAppendings);
+        for (AbstractDetector<DOMCloning> detector: domCloningDetectors)
+            detectAndAdd(detector, call, domClonings);
+        for (AbstractDetector<DOMNormalization> detector: domNormalizationDetectors)
+            detectAndAdd(detector, call, domNormalizations);
+        for (AbstractDetector<DOMReplacement> detector: domReplacementDetectors)
+            detectAndAdd(detector, call, domReplacements);
+        for (AbstractDetector<DOMRemoval> detector : domRemovalDetectors)
+            detectAndAdd(detector, call, domRemovals);
+        for (AbstractDetector<DOMSelection> detector : domSelectionDetectors)
+            detectAndAdd(detector, call, domSelections);
+        for (AbstractDetector<Request> detector : requestDetectors)
+            detectAndAdd(detector, call, requests);
+        for (AbstractDetector<AttributeModification> detector : attributeModificationDetectors)
+            detectAndAdd(detector, call, attributeModifications);
+        
+        for (AbstractDetector<Statement> detector : statementDetectors)
+        	detectAndAdd(detector, call, statements);
+        
+        return true;
+    }
+
+    public Set<EventAttachment> getEventAttachments() {
+        return eventAttachments;
+    }
+
+    public Set<TimerEventAttachment> getTimerEventAttachmentExpressions() {
+        return timerEventAttachmentExpressions;
+    }
+
+    public Set<DOMCreation> getDomCreations() {
+        return domCreations;
+    }
+
+    public Set<AttributeModification> getAttributeModifications() {
+        return attributeModifications;
+    }
+
+    public Set<DOMAppending> getDomAppendings() {
+        return domAppendings;
+    }
+
+    public Set<DOMCloning> getDomClonings() {
+        return domClonings;
+    }
+
+    public Set<DOMNormalization> getDomNormalizations() {
+        return domNormalizations;
+    }
+
+    public Set<DOMReplacement> getDomReplacements() {
+        return domReplacements;
+    }
+
+    public Set<DOMRemoval> getDomRemovals() {
+        return domRemovals;
+    }
+
+    public Set<DOMSelection> getDomSelections() {
+        return domSelections;
+    }
+
+    public Set<Request> getRequests() {
+        return requests;
+    }
+    
+    public Set<Statement> getStatements() {
+    	return statements;
+    }
+
+    /**
+     * @return Information about mutatables found by visiting AST.
+     */
+    public String getMutatablesInfo() {
+        return getMutatablesInfo(true);
+    }
+
+    /**
+     * @param detailed if true output detailed information about each mutant,
+     *                 otherwise output value only contain number of each mutants
+     * @return Information about mutatables found by visiting AST.
+     */
+    public String getMutatablesInfo(boolean detailed) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("=== Event ===").append(System.lineSeparator());
+        appendMutatablesInfo(
+                "Event attachments", builder, eventAttachments, detailed);
+        appendMutatablesInfo("Timer event attachment", builder,
+                timerEventAttachmentExpressions, detailed);
+        builder.append("=== DOM ===").append(System.lineSeparator());
+        appendMutatablesInfo("DOM creation", builder, domCreations, detailed);
+        appendMutatablesInfo("Attribute modification", builder,
+                attributeModifications, detailed);
+        appendMutatablesInfo("DOM removal", builder, domRemovals, detailed);
+        appendMutatablesInfo("DOM Selection", builder, domSelections, detailed);
+        builder.append("=== Asynchrous communications ===")
+                .append(System.lineSeparator());
+        appendMutatablesInfo("Requests", builder, requests, detailed);
+
+        builder.append("=== Statement ===").append(System.lineSeparator());
+        appendMutatablesInfo("Statements", builder, statements, detailed);
+
+        return builder.toString();
+    }
+
+    private <T> void appendMutatablesInfo(
+            String title, StringBuilder builder, Set<T> set, boolean detailed) {
+        builder.append("  --- ").append(title);
+        builder.append(" (").append(set.size()).append(") ---")
+                .append(System.lineSeparator());
+        if (!detailed) {
+            return;
+        }
+        for (T element : set) {
+            String str = element.toString();
+            String spaceBeforeContent = "    ";
+            builder.append(spaceBeforeContent)
+                    .append(str.replaceAll("\n", "\n" + spaceBeforeContent))
+                    .append(System.lineSeparator());
+        }
+    }
+
+    /**
+     * @return Builder instance with no configuration.
+     */
+    public static MutateVisitorBuilder emptyBuilder() {
+        return new MutateVisitorBuilder();
+    }
+
+    /**
+     * @return Builder instance with typical detector configurations.
+     */
+    public static MutateVisitorBuilder defaultBuilder() {
+        MutateVisitorBuilder builder = new MutateVisitorBuilder();
+        builder.setAttributeModificationDetectors(
+                ImmutableSet.of(new AttributeAssignmentDetector(), new SetAttributeDetector()));
+        builder.setDomAppendingDetectors(
+                ImmutableSet.of(new AppendChildDetector()));
+        builder.setDomCreationDetectors(
+                ImmutableSet.of(new CreateElementDetector()));
+        builder.setDomCloningDetectors(ImmutableSet.of(new CloneNodeDetector()));
+        builder.setDomNormalizationDetectors(ImmutableSet.of(new DOMNormalizationDetector()));
+        builder.setDomReplacementDetectors(ImmutableSet.of(new ReplaceChildDetector()));
+        builder.setDomRemovalDetectors(
+                ImmutableSet.of(new RemoveChildDetector()));
+        builder.setDomSelectionDetectors(
+                ImmutableSet.of(new DOMSelectionDetector()));
+        builder.setEventAttacherDetectors(
+                ImmutableSet.<EventAttacherDetector>of(
+                        new AddEventListenerDetector(), new AttachEventDetector()));
+        builder.setTimerEventDetectors(
+                ImmutableSet.of(new TimerEventDetector()));
+        return builder;
+    }
+
+    public static MutateVisitorBuilder defaultJqueryBuilder() {
+        MutateVisitorBuilder builder = new MutateVisitorBuilder();
+        builder.setAttributeModificationDetectors(
+                ImmutableSet.of(
+                        new AttributeAssignmentDetector(), new SetAttributeDetector(),
+                        new JQueryAttributeModificationDetector()));
+        builder.setDomAppendingDetectors(
+                ImmutableSet.of(new JQueryAppendDetector()));
+        builder.setDomCreationDetectors(
+                ImmutableSet.of(new CreateElementDetector()));
+        builder.setDomCloningDetectors(ImmutableSet.of(new JQueryCloneDetector()));
+        builder.setDomNormalizationDetectors(ImmutableSet.of(new DOMNormalizationDetector()));
+        builder.setDomReplacementDetectors(ImmutableSet.of(new JQueryReplaceWithDetector()));
+        builder.setDomRemovalDetectors(
+                ImmutableSet.of(new RemoveChildDetector(), new JQueryRemoveDetector()));
+        builder.setDomSelectionDetectors(
+                ImmutableSet.of(new JQueryDOMSelectionDetector()));
+        builder.setEventAttacherDetectors(
+                ImmutableSet.<EventAttacherDetector>of(
+                        new JQueryEventAttachmentDetector()));
+        builder.setTimerEventDetectors(
+                ImmutableSet.of(new TimerEventDetector()));
+        builder.setRequestDetectors(
+                ImmutableSet.of( new JQueryRequestDetector()));
+        return builder;
+    }
+}

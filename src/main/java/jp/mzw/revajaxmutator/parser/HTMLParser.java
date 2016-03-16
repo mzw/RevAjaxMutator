@@ -10,22 +10,17 @@ import org.jsoup.nodes.Attribute;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-
-
-
 public class HTMLParser {
 	private Document document;
 	
 	public HTMLParser(String fileUrl) throws IOException {
 		document = Jsoup.parse(new File(fileUrl), "UTF-8");
-//		System.out.println(document.html());
 	}
 	
 	public List<String> getAllAttributes(){
 		List<String> attributes = new ArrayList<String>();
 		for(Element element: document.getAllElements()){
 			for(Attribute attribute: element.attributes()){
-//				System.out.println("key:" + attribute.getKey() + ", value:" + attribute.getValue());
 				if(attribute.getKey().equals("class") || attribute.getKey().equals("id")){
 					//for non-JQuery
 					attributes.add("\"" + attribute.getValue() + "\"");
@@ -47,7 +42,5 @@ public class HTMLParser {
 			return attribute.getValue();
 		}
 	}
-	
-	
 	
 }

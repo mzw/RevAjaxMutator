@@ -9,7 +9,7 @@ import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.MutationFileInformation;
+import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 
 public class MutationResultParser {
 	String mFilename;

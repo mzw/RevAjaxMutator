@@ -4,8 +4,7 @@ import java.util.Collection;
 
 import org.mozilla.javascript.ast.AstNode;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.AttributeModification;
-import jp.gr.java_conf.daisy.ajax_mutator.mutator.replacing_among.AbstractReplacingAmongMutator;
+import jp.mzw.ajaxmutator.mutatable.AttributeModification;
 
 public class AttributeModificationValueERFixer extends AbstractReplacingAmongFixer<AttributeModification> {
 

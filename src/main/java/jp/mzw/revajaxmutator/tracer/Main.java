@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import jp.mzw.revajaxmutator.util.FileUtils;
-
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -33,7 +30,7 @@ public class Main {
 			
 			String test_filename = test_class.replace(".", "/").concat(".java");
 			String test_src_root = (new File(TEST_GIT_REPOSITORY, TEST_SRC_ROOT)).getAbsolutePath();
-			String java_content = FileUtils.cat(test_src_root, test_filename);
+			String java_content = org.apache.commons.io.FileUtils.readFileToString(new File(test_src_root, test_filename));
 			
 			String[] _java_content = java_content.split("\n");
 			String subject_statement = _java_content[test_line-1];

@@ -2,7 +2,7 @@ package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.AttributeModification;
+import jp.mzw.ajaxmutator.mutatable.AttributeModification;
 
 import org.mozilla.javascript.ast.AstNode;
 

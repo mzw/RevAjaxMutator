@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.MutationFileInformation;
+import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;

@@ -3,11 +3,11 @@ package jp.mzw.revajaxmutator.fixer;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.gr.java_conf.daisy.ajax_mutator.JSType;
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.DOMSelection;
-import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.Mutation;
-import jp.gr.java_conf.daisy.ajax_mutator.mutator.AbstractMutator;
-import jp.gr.java_conf.daisy.ajax_mutator.util.StringToAst;
+import jp.mzw.ajaxmutator.JSType;
+import jp.mzw.ajaxmutator.mutatable.DOMSelection;
+import jp.mzw.ajaxmutator.generator.Mutation;
+import jp.mzw.ajaxmutator.mutator.AbstractMutator;
+import jp.mzw.ajaxmutator.util.StringToAst;
 
 import org.mozilla.javascript.ast.AstNode;
 

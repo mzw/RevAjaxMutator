@@ -2,7 +2,7 @@ package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.EventAttachment;
+import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import org.mozilla.javascript.ast.AstNode;
 
 public class EventTargetTSFixer extends AbstractReplacingAmongFixer<EventAttachment> {

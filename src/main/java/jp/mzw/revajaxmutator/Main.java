@@ -2,12 +2,10 @@ package jp.mzw.revajaxmutator;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 
-import jp.gr.java_conf.daisy.ajax_mutator.JUnitExecutor;
-import jp.gr.java_conf.daisy.ajax_mutator.MutationTestConductor;
+import jp.mzw.ajaxmutator.JUnitExecutor;
+import jp.mzw.ajaxmutator.MutationTestConductor;
 import jp.mzw.revajaxmutator.tracer.TestImproveHistoryManager;
 import jp.mzw.revajaxmutator.tracer.Tracer;
 

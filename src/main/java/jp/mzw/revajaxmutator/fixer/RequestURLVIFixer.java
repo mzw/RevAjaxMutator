@@ -2,8 +2,8 @@ package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.Request;
-import jp.gr.java_conf.daisy.ajax_mutator.util.StringToAst;
+import jp.mzw.ajaxmutator.mutatable.Request;
+import jp.mzw.ajaxmutator.util.StringToAst;
 
 import org.mozilla.javascript.ast.AstNode;
 

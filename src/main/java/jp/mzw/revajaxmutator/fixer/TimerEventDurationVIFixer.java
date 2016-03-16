@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jp.gr.java_conf.daisy.ajax_mutator.mutatable.TimerEventAttachment;
-import jp.gr.java_conf.daisy.ajax_mutator.mutation_generator.Mutation;
-import jp.gr.java_conf.daisy.ajax_mutator.mutator.AbstractMutator;
+import jp.mzw.ajaxmutator.mutatable.TimerEventAttachment;
+import jp.mzw.ajaxmutator.generator.Mutation;
+import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 
 import org.mozilla.javascript.ast.AstNode;
 
