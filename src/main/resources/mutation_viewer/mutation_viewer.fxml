@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.*?>
+
+<SplitPane dividerPositions="0.25" focusTraversable="true" maxHeight="-Infinity"
+           maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0"
+           prefWidth="1200.0" xmlns="http://javafx.com/javafx/8"
+           xmlns:fx="http://javafx.com/fxml/1">
+  <items>
+    <BorderPane prefHeight="598.0" prefWidth="227.0">
+      <top>
+        <ToolBar xmlns:fx="http://javafx.com/fxml">
+          <items>
+            <ToggleButton fx:id="toggleButtonAll" mnemonicParsing="false" text="All"/>
+            <ToggleButton fx:id="toggleButtonUnkilled" mnemonicParsing="false"
+                          text="Non-equivalent Unkilled"/>
+            <Button fx:id="saveButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="30.0"
+                    styleClass="saveButton"/>
+            <Button fx:id="reloadButton" mnemonicParsing="false" styleClass="reloadButton"
+                    text="Reload"/>
+          </items>
+        </ToolBar>
+      </top>
+      <center>
+        <TreeView fx:id="mutationTreeView" styleClass="mutantList"/>
+      </center>
+    </BorderPane>
+    <BorderPane prefHeight="200.0" prefWidth="200.0">
+      <top>
+        <Label fx:id="fileInfo" styleClass="fileInfoLabel" AnchorPane.leftAnchor="0.0"
+               AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+      </top>
+      <center>
+        <ScrollPane fx:id="mutationDetailScrollPane" xmlns:fx="http://javafx.com/fxml">
+          <content>
+            <AnchorPane fx:id="mutationDetailAnchorPane">
+              <children>
+                <WebView fx:id="mutationDetail" AnchorPane.bottomAnchor="0.0"
+                         AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                         AnchorPane.topAnchor="0.0"/>
+              </children>
+            </AnchorPane>
+          </content>
+        </ScrollPane>
+      </center>
+    </BorderPane>
+  </items>
+
+  <stylesheets>
+    <URL value="@mutation_viewer.css"/>
+  </stylesheets>
+</SplitPane>

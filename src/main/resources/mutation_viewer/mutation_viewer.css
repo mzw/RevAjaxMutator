@@ -1,0 +1,44 @@
+/*  Right pane */
+/* -- Menu -- */
+.saveButton {
+  -fx-border-image-source: url('file.png');
+  -fx-border-image-slice: 5 5 5 5 fill;
+  -fx-border-image-width: 5;
+  -fx-border-image-repeat: stretch;
+  -fx-border-color: null;
+  -fx-background-color: null;
+}
+
+.saveButton:hover {
+  -fx-border-image-source: url('file_hover.png');
+}
+
+.saveButton:pressed {
+  -fx-border-image-source: url('file_pressed.png');
+}
+
+/* -- TreeView -- */
+.mutant {
+  -fx-padding: 3 0 3 0;
+}
+
+.mutant .mutantName {
+  -fx-padding: 0 3 0 0;
+}
+
+.mutant .checkBox{
+  -fx-padding: 0 5 0 5;
+}
+
+.mutant .killed {
+  -fx-text-fill: #6f6f6f;
+}
+
+.mutant .unkilled {
+  -fx-font-weight: bold;
+}
+
+/* Left pane */
+.fileInfoLabel {
+  -fx-padding: 5;
+}

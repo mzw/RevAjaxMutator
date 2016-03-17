@@ -1,6 +1,7 @@
 package jp.mzw.ajaxmutator.mutatable;
 
 import com.google.common.collect.ImmutableSet;
+
 import org.mozilla.javascript.ast.AstNode;
 
 import java.util.Set;
@@ -16,7 +17,8 @@ public class AttributeModification extends Mutatable {
     private final AstNode attributeValue;
     public static final Set<String> JQUERY_ATTR_SHORTCUTS
         = ImmutableSet.of("height", "width", "text","html");
-    private final boolean usingJQueryShortcut;
+    @SuppressWarnings("unused")
+	private final boolean usingJQueryShortcut;
 
     public AttributeModification(AstNode node, AstNode targetDom,
             AstNode targetAttribute, AstNode attributeValue) {

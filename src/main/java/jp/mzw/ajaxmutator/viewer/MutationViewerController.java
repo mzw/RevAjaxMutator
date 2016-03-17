@@ -1,6 +1,7 @@
 package jp.mzw.ajaxmutator.viewer;
 
 import com.google.common.base.Joiner;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Worker;
@@ -17,6 +18,7 @@ import javafx.scene.web.WebView;
 import javafx.util.Callback;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
+
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
+@SuppressWarnings("restriction")
 public class MutationViewerController implements Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MutationViewerController.class);
     private final String pathToBaseDir;
@@ -85,7 +88,8 @@ public class MutationViewerController implements Initializable {
         mutationTreeView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         setupDetailWebView();
         mutationTreeView.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<TreeItem<CellItem>>() {
-            @Override
+            @SuppressWarnings("resource")
+			@Override
             public void changed(ObservableValue<? extends TreeItem<CellItem>> observableValue,
                                 TreeItem<CellItem> oldValue, TreeItem<CellItem> newValue) {
                 if (newValue == null || newValue.getValue() == null) {
@@ -114,7 +118,7 @@ public class MutationViewerController implements Initializable {
                     LOGGER.error("Fail to open file " + mutation.getFileName() + " under " + pathToBaseDir);
                 }
                 mutationDetail.getEngine().load(getClass().getResource(
-                        "/mutation_viewer/mutation_detail_template.html").toExternalForm() + "#originalContentHeader");
+                        "/viewer/mutation_detail_template.html").toExternalForm() + "#originalContentHeader");
             }
         });
 
@@ -171,7 +175,8 @@ public class MutationViewerController implements Initializable {
         mutationTreeView.setShowRoot(false);
         mutationTreeView.setRoot(root);
         mutationTreeView.setCellFactory(new Callback<TreeView<CellItem>, TreeCell<CellItem>>() {
-            @Override
+            @SuppressWarnings("rawtypes")
+			@Override
             public MutationListCell call(TreeView treeView) {
                 return new MutationListCell();
             }
@@ -200,7 +205,7 @@ public class MutationViewerController implements Initializable {
         mutationTreeView.setRoot(root);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     synchronized private void applyFilterByDeletion() {
         TreeItem root = mutationTreeView.getRoot();
         List<TreeItem> categories = root.getChildren();

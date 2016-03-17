@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+@SuppressWarnings("restriction")
 public class MutationCategoryCellController implements Initializable {
     @FXML
     private HBox container;

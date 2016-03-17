@@ -1,8 +1,9 @@
 
 # workspace
-localenv.sh
+*localenv*
 record/
 */workaround/
+ram.log
 
 # WebScarab files
 /.conversation/

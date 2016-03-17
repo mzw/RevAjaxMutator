@@ -15,6 +15,7 @@ public class JUnitParser {
 	private static Logger log = LoggerFactory.getLogger(JUnitParser.class);
 	
 	protected ArrayList<TraceInfo> errorClassLineList;
+	@SuppressWarnings("unused")
 	public JUnitParser(String filename) throws IOException {
 		String content = FileUtils.readFileToString(new File(filename));
 		Document doc = Jsoup.parse(content);

@@ -345,7 +345,8 @@ public class MutationTestConductor {
     /**
      * @return if successfully file is wrote.
      */
-    private boolean applyMutationFile(
+    @SuppressWarnings("unused")
+	private boolean applyMutationFile(
             List<String> original, MutationFileInformation fileInfo) {
         Patch patch = DiffUtils.parseUnifiedDiff(
                 Util.readFromFile(fileInfo.getAbsolutePath()));

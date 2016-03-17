@@ -35,7 +35,8 @@ public class YUIEventAttachementDetector extends EventAttacherDetector {
 	/**
 	 * All event types come from Whitelisted DOM events at http://yuilibrary.com/yui/docs/event/
 	 */
-    private final Set<String> YUIDOMEvents = ImmutableSet.of(
+    @SuppressWarnings("unused")
+	private final Set<String> YUIDOMEvents = ImmutableSet.of(
     		"abort",
     		"beforeunload",
     		"blur",

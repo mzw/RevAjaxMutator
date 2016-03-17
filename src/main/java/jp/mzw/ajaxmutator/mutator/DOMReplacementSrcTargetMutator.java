@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.DOMReplacement;
-import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.generator.Mutation;
 
 /**

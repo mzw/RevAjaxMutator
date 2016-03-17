@@ -12,6 +12,7 @@ import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+@SuppressWarnings("restriction")
 public class MutantCellController implements Initializable {
     @FXML
     private HBox container;

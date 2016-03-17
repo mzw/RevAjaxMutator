@@ -314,7 +314,6 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
         return result;
     }
 
-    @SuppressWarnings("deprecation")
     private Statement withMethodRules(FrameworkMethod method, Object target,
                                       Statement result) {
         List<TestRule> testRules= getTestRules(target);
@@ -324,7 +323,6 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
         return result;
     }
 
-    @SuppressWarnings("deprecation")
     private List<org.junit.rules.MethodRule> getMethodRules(Object target) {
         return rules(target);
     }
