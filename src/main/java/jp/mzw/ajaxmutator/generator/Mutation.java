@@ -1,6 +1,8 @@
 package jp.mzw.ajaxmutator.generator;
 
 import jp.mzw.ajaxmutator.util.Util;
+import jp.mzw.revajaxmutator.fixer.Candidate;
+
 import org.mozilla.javascript.ast.AstNode;
 
 /**
@@ -12,10 +14,19 @@ import org.mozilla.javascript.ast.AstNode;
 public class Mutation {
     private final AstNode originalNode;
     private final String mutatingContent;
+    @SuppressWarnings("unused")
+	private final Candidate candidate;
+
+    public Mutation(AstNode originalNode, String mutatingContent, Candidate candidate) {
+        this.originalNode = originalNode;
+        this.mutatingContent = mutatingContent;
+        this.candidate = candidate;
+    }
 
     public Mutation(AstNode originalNode, String mutatingContent) {
         this.originalNode = originalNode;
         this.mutatingContent = mutatingContent;
+        this.candidate = new Candidate(Candidate.Type.NONE);
     }
 
     public AstNode getOriginalNode() {

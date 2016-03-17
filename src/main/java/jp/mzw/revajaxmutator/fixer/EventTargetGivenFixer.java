@@ -7,6 +7,11 @@ import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 
+/**
+ * 
+ * @author Junto Nakaoka
+ *
+ */
 public class EventTargetGivenFixer extends AbstractMutator<EventAttachment> {
     private final String target;
 
