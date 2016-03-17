@@ -7,8 +7,7 @@
 	<version>0.1</version>
 	<packaging>jar</packaging>
 	<name>Proxy-based AjaxMutator</name>
-	<description>
-  </description>
+	<description>A tool for mutation testing and automated program repair of Ajax Web applications</description>
 
 	<distributionManagement>
 		<repository>
@@ -65,7 +64,7 @@
 			<artifactId>JSCover</artifactId>
 			<version>1.0.17</version>
 		</dependency>
-		<!--  for AjaxMutator -->
+		<!-- for AjaxMutator -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
