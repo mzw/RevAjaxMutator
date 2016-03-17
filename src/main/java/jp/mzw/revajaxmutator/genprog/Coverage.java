@@ -1,6 +1,7 @@
 package jp.mzw.revajaxmutator.genprog;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Iterator;
@@ -34,9 +35,9 @@ public class Coverage {
 		}
 		return null;
 	}
-	public static JSONObject parse(String filename) throws IOException, JSONException {
+	public static JSONObject parse(File file) throws IOException, JSONException {
 		// Parse JSCover result
-		FileReader fr = new FileReader(filename);
+		FileReader fr = new FileReader(file);
 		BufferedReader br = new BufferedReader(fr); 
 		StringBuilder builder = new StringBuilder();
 		String line; 

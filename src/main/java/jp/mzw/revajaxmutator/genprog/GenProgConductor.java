@@ -24,7 +24,6 @@ import jp.mzw.ajaxmutator.mutator.genprog.StatementDeleteMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementInsertMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementSwapMutator;
 import jp.mzw.revajaxmutator.config.AppConfigBase;
-import jp.mzw.revajaxmutator.config.AppConfigUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -68,7 +67,7 @@ public class GenProgConductor {
 	public GenProgConductor(Class<?> config) throws InstantiationException, IllegalAccessException, IOException {
 		this.config = (AppConfigBase) config.newInstance();
 		
-		this.mutationFileWriter = new MutationFileWriter(new File(AppConfigUtils.getAbsolutePathToRecordedJSFile(this.config)));
+		this.mutationFileWriter = new MutationFileWriter(this.config.getRecordedJsFile());
 		this.mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
 		
 	}
@@ -364,7 +363,7 @@ public class GenProgConductor {
 	}
 	
 	private Set<Statement> getStatements() throws MalformedURLException, UnsupportedEncodingException {
-		String path_to_js_file = AppConfigUtils.getAbsolutePathToRecordedJSFile(this.config);
+		String path_to_js_file = config.pathToJsFile();
 		
 		MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
         builder.setStatementDetectors(ImmutableSet.of(
@@ -378,11 +377,11 @@ public class GenProgConductor {
 	}
 	
 	private Set<Statement> setWeight(Set<Statement> statements) throws IOException, JSONException {
-		JSONObject success_coverage_json = Coverage.parse(config.getPathToSuccessCoverageFile());
-		JSONObject failure_coverage_json = Coverage.parse(config.getPathToFailureCoverageFile());
+		JSONObject success_coverage_json = Coverage.parse(config.getSuccessCoverageFile());
+		JSONObject failure_coverage_json = Coverage.parse(config.getFailureCoverageFile());
 		
 		//path for parsing coverage
-        String url_path_to_js_file = AppConfigUtils.getPathToJSFileToParseCoverageJson(config);
+        String url_path_to_js_file = config.pathToJsFile();
 		
         JSONArray success = Coverage.getCoverageData(success_coverage_json, url_path_to_js_file);
         JSONArray failure = Coverage.getCoverageData(failure_coverage_json, url_path_to_js_file);
