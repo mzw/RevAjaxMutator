@@ -22,6 +22,37 @@ Then, RevAjaxMutator is available in your testing project.
 </dependency>
 ```
 
+### Properties
+In your class-path, 
+
+### Test Case Implementation
+We recommend to use ``jp.mzw.revajaxmutator.test.WebAppTestBase``.
+```
+...
+import jp.mzw.revajaxmutator.test.WebAppTestBase;
+public class YourAppTest extends WebAppTestBase {
+...
+	@BeforeClass
+	public static void beforeTestClass() throws StoreException, InterruptedException, IOException {
+		WebAppTestBase.beforeTestClass(APP_CONFIG);
+	}
+	@AfterClass
+	public static void afterTestClass() {
+		try {
+			Properties config = getConfig(APP_CONFIG);
+			String jscover_report_dir = config.getProperty("jscover_report_dir") != null ? config.getProperty("jscover_report_dir") : null;
+			if(jscover_report_dir != null) {
+				File cov_result = new File(jscover_report_dir, "jscoverage.json");
+		        if (cov_result.exists()) cov_result.delete();
+		        ((JavascriptExecutor) driver).executeScript("jscoverage_report();");
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		driver.quit();
+	}
+```
+
 ### Configuration
 As a configuration for RevAjaxMutator,
 we typically implement a class, as follows.

@@ -5,14 +5,18 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import jp.mzw.ajaxmutator.JUnitExecutor;
+import jp.mzw.ajaxmutator.JUnitTestRunner;
+import jp.mzw.ajaxmutator.JUnitTheoryRunner;
 import jp.mzw.ajaxmutator.MutationTestConductor;
 import jp.mzw.revajaxmutator.tracer.TestImproveHistoryManager;
 import jp.mzw.revajaxmutator.tracer.Tracer;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoHeadException;
+import org.junit.experimental.theories.Theories;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
+import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -64,7 +68,18 @@ public class Main {
 
     public static void test(String[] args) throws ClassNotFoundException, InitializationError {
         String className = args[0];
-        Runner runner = new BlockJUnit4ClassRunner(Class.forName(className));
+        Class<?> testClass = Class.forName(className);
+
+        Runner runner = null;
+    	RunWith runWith = testClass.getAnnotation(RunWith.class);
+    	if(runWith == null) {
+            runner = new JUnitTestRunner(testClass, true);
+    	} else if(Theories.class.equals(runWith.value())) {
+    		runner = new JUnitTheoryRunner(testClass, true);
+    	} else {
+            runner = new BlockJUnit4ClassRunner(Class.forName(className));
+    	}
+        
         Result result = (new JUnitCore()).run(runner);
         System.out.println(String.format("%d tests,  %d fail",
                 result.getRunCount(), result.getFailureCount()));

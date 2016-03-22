@@ -15,6 +15,11 @@ public class RevAjaxMutatorBase {
 	private static Proxy mProxy;
 	
 	public static void launchProxyServer(List<ProxyPlugin> plugins, String port) throws StoreException, InterruptedException {
+//		java.util.logging.Logger.getLogger("org.owasp.webscarab.plugin.Framework").setLevel(java.util.logging.Level.OFF);
+//		java.util.logging.Logger.getLogger("org.owasp.webscarab.httpclient.URLFetcher").setLevel(java.util.logging.Level.OFF);
+//		java.util.logging.Logger.getLogger("org.owasp.webscarab.plugin.proxy.Listener").setLevel(java.util.logging.Level.OFF);
+		java.util.logging.Logger.getLogger("").setLevel(java.util.logging.Level.OFF);
+		
         Framework framework = new Framework();
         Preferences.setPreference("Proxy.listeners", "127.0.0.1:" + port);
         framework.setSession("FileSystem", new File(".conversation"), "");

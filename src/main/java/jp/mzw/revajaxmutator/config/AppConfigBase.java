@@ -41,7 +41,7 @@ public abstract class AppConfigBase implements IAppConfigBase {
 	}
 	
 	public File getRecordDir() {
-		String record_dir = config.getProperty("record_dir") != null ? config.getProperty("record_dir") : "record/app";
+		String record_dir = config.getProperty("ram_record_dir") != null ? config.getProperty("ram_record_dir") : "record/app";
 		return new File(record_dir);
 	}
 	
