@@ -384,10 +384,10 @@ public class MutationTestConductor {
         }
 
          int numberOfMaxMutants
-                = mutationListManager.getNumberOfUnkilledMutants();
+                = mutationListManager.getNumberOfMaxMutants();
         LOGGER.info(detailedInfo.toString());
         LOGGER.info(numberOfUnkilledMutatns + " unkilled mutants "
-                + " among " + numberOfAppliedMutation + ", kill score is "
+                + " among " + numberOfAppliedMutation + "(" + numberOfMaxMutants + "), kill score is "
                 + Math.floor((1.0 - (1.0 * numberOfUnkilledMutatns / numberOfMaxMutants)) * 100) / 100);
     }
 
@@ -397,7 +397,7 @@ public class MutationTestConductor {
             public void run() {
                 // restore backup
                 Util.copyFile(pathToBackupFile(), pathToJsFile);
-                System.out.println("backup file restored");
+                LOGGER.info("backup file restored");
             }
         });
     }

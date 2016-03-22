@@ -56,6 +56,18 @@ public class MutationListManager {
         return total;
     }
 
+    public int getNumberOfMaxMutants() {
+        int total = 0;
+        for (List<MutationFileInformation> fileInfoList: mutationFiles.values()) {
+            for (MutationFileInformation fileInfo: fileInfoList) {
+                if (fileInfo.getState() != MutationFileInformation.State.EQUIVALENT) {
+                    total++;
+                }
+            }
+        }
+        return total;
+    }
+
     private String generateContentsOfMutationReport() {
         StringBuilder builder = new StringBuilder();
         for (String title: mutationTitles) {
