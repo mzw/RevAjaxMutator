@@ -6,6 +6,7 @@ import java.util.List;
 import jp.mzw.ajaxmutator.mutatable.DOMReplacement;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 /**
  * 
@@ -29,7 +30,7 @@ public class DOMReplacementSrcTargetFixer extends
 		replacement = replacement.replace(PLACE_HOLDER, replacingNodeStr);
 		List<Mutation> mutationList = new ArrayList<Mutation>();
 		mutationList.add(new Mutation(originalNode.getAstNode(), replacement,
-				new Candidate(replacement)));
+				new RepairValue(replacement)));
 		return mutationList;
 	}
 }

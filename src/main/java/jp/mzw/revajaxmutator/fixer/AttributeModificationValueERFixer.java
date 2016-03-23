@@ -6,6 +6,7 @@ import java.util.List;
 import org.mozilla.javascript.ast.AstNode;
 
 import jp.mzw.ajaxmutator.mutatable.AttributeModification;
+import jp.mzw.revajaxmutator.parser.RepairSource;
 
 public class AttributeModificationValueERFixer extends
 		AbstractReplacingAmongFixer<AttributeModification> {

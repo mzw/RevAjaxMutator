@@ -77,7 +77,16 @@ public class MutationListManager {
             for (MutationFileInformation info: mutationFiles.get(title)) {
                 builder.append(info.getFileName()).append(',')
                         .append(info.getKilledStatusAsString()).append(',')
-                        .append(info.getAbsolutePath())
+                        .append(info.getAbsolutePath()).append(',')
+                        .append(info.getStartLine()).append(',')
+                        .append(info.getEndLine()).append(',')
+                        .append(info.getMutatable()).append(',')
+                        .append(info.getFixer()).append(',')
+                        .append(info.getRepairValue()).append(',')
+                        .append(info.getRepairSource()).append(',')
+                        .append(info.getNumOfPassedTest()).append(',')
+                        .append(info.getNumOfFailedTest()).append(',')
+                        .append(info.getTestResults().toString())
                         .append(System.lineSeparator());
             }
         }

@@ -24,6 +24,7 @@ import jp.mzw.ajaxmutator.mutator.genprog.StatementDeleteMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementInsertMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementSwapMutator;
 import jp.mzw.revajaxmutator.config.AppConfigBase;
+import jp.mzw.revajaxmutator.search.Coverage;
 
 import org.json.JSONArray;
 import org.json.JSONException;

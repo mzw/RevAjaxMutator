@@ -8,6 +8,7 @@ import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 import jp.mzw.ajaxmutator.util.AstUtil;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.ExpressionStatement;
 import org.mozilla.javascript.ast.VariableDeclaration;
@@ -37,7 +38,7 @@ public abstract class ReplacingToNoOpFixer<T extends Mutatable> extends Abstract
     	List<Mutation> mutationList = new ArrayList<Mutation>();
     	mutationList.add(new Mutation(
                 AstUtil.parentOfAnyTypes(originalNode.getAstNode(), CLASS_OF_STATEMENT, true),
-                NO_OPERATION_STR, new Candidate("")));
+				NO_OPERATION_STR, new RepairValue("")));
     	return mutationList;
     }
 }

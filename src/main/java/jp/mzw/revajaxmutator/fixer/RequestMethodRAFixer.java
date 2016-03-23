@@ -3,6 +3,7 @@ package jp.mzw.revajaxmutator.fixer;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryRequestDetector;
 import jp.mzw.ajaxmutator.mutatable.Request;
 import jp.mzw.ajaxmutator.util.StringToAst;
+import jp.mzw.revajaxmutator.parser.RepairSource;
 
 import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.StringLiteral;

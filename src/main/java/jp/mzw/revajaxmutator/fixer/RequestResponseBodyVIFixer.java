@@ -6,6 +6,7 @@ import java.util.List;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutatable.Request;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.AstNode;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class RequestResponseBodyVIFixer extends AbstractMutator<Request> {
 					.append(".apply(this, [/* blank response mutation */'', textStatus, jqXHR]);}");
 			List<Mutation> mutationList = new ArrayList<Mutation>();
 			mutationList.add(new Mutation(successHandler, replacementBuilder
-					.toString(), new Candidate(replacementBuilder.toString())));
+					.toString(), new RepairValue(replacementBuilder.toString())));
 			return mutationList;
 		} else {
 			LOGGER.info("Unknown request type for " + originalNode.getAstNode());

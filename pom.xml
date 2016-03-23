@@ -64,6 +64,11 @@
 			<artifactId>JSCover</artifactId>
 			<version>1.0.17</version>
 		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jdt</groupId>
+			<artifactId>org.eclipse.jdt.core</artifactId>
+			<version>3.10.0</version>
+		</dependency>
 		<!-- for AjaxMutator -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -115,6 +120,7 @@
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
+					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.EventAttachment;
+import jp.mzw.revajaxmutator.parser.RepairSource;
 
 import org.mozilla.javascript.ast.AstNode;
 

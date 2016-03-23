@@ -1,4 +1,4 @@
-package jp.mzw.revajaxmutator.genprog;
+package jp.mzw.revajaxmutator.search;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -19,6 +19,7 @@ public class Coverage {
 			return 0;
 		}
 	}
+	
 	@SuppressWarnings("unchecked")
 	public static JSONArray getCoverageData(JSONObject coverage, String path_to_js_file) throws JSONException {
 		for(Iterator<Object> i = coverage.keys() ; i.hasNext();){
@@ -35,6 +36,7 @@ public class Coverage {
 		}
 		return null;
 	}
+	
 	public static JSONObject parse(File file) throws IOException, JSONException {
 		// Parse JSCover result
 		FileReader fr = new FileReader(file);

@@ -1,71 +1,165 @@
 package jp.mzw.ajaxmutator.generator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Data class that represents generated mutation file.
  *
  * @author Kazuki Nishiura
  */
 public class MutationFileInformation {
-    private final String fileName;
-    private final String absolutePath;
-    private State state;
+	private final String fileName;
+	private final String absolutePath;
+	private State state;
 
-    public enum State {
-        NON_EQUIVALENT_LIVE("non-equivalent live"), EQUIVALENT("equivalent"), KILLED("killed");
+	private int startLine = 0;
+	private int endLine = 0;
+	private String mutatable = "none";
+	private String fixer = "none";
+	private String repairValue = "none";
+	private String repairSource = "none";
+	private double weight = 0.0;
+	private Map<String, Boolean> testResults = new HashMap<String, Boolean>();
+	private int numOfPassedTest = 0;
+	private int numOfFailedTest = 0;
 
-        private final String stringExpression;
-        private State(String stringExpression) {
-            this.stringExpression = stringExpression;
-        }
+	public enum State {
+		NON_EQUIVALENT_LIVE("non-equivalent live"), EQUIVALENT("equivalent"), KILLED(
+				"killed");
 
-        public static State fromString(String key) {
-            key = key.trim();
-            for (int i = 0; i < values().length; i++) {
-                if (values()[i].stringExpression.equals(key)) {
-                    return values()[i];
-                }
-            }
-            return null;
-        }
-    }
+		private final String stringExpression;
 
-    public MutationFileInformation(String fileName, String absolutePath) {
-        this(fileName, absolutePath, State.NON_EQUIVALENT_LIVE);
-    }
+		private State(String stringExpression) {
+			this.stringExpression = stringExpression;
+		}
 
-    public MutationFileInformation(
-            String fileName, String absolutePath, State state) {
-        this.fileName = fileName;
-        this.absolutePath = absolutePath;
-        this.state = state;
-    }
+		public static State fromString(String key) {
+			key = key.trim();
+			for (int i = 0; i < values().length; i++) {
+				if (values()[i].stringExpression.equals(key)) {
+					return values()[i];
+				}
+			}
+			return null;
+		}
+	}
 
-    public String getFileName() {
-        return fileName;
-    }
+	public MutationFileInformation(String fileName, String absolutePath) {
+		this(fileName, absolutePath, State.NON_EQUIVALENT_LIVE);
+	}
 
-    public String getAbsolutePath() {
-        return absolutePath;
-    }
+	public MutationFileInformation(String fileName, String absolutePath,
+			State state) {
+		this.fileName = fileName;
+		this.absolutePath = absolutePath;
+		this.state = state;
+	}
 
-    public boolean canBeSkipped() {
-        return state != State.NON_EQUIVALENT_LIVE;
-    }
+	public MutationFileInformation(String fileName, String absolutePath,
+			State state, int startLine, int endLine, String mutatable,
+			String fixer, String repairValue, String repairSource) {
+		this.fileName = fileName;
+		this.absolutePath = absolutePath;
+		this.state = state;
+		this.startLine = startLine;
+		this.endLine = endLine;
+		this.mutatable = mutatable;
+		this.fixer = fixer;
+		this.repairValue = repairValue;
+		this.repairSource = repairSource;
+	}
 
-    public void setState(State state) {
-        this.state = state;
-    }
+	public String getFileName() {
+		return fileName;
+	}
 
-    public State getState() {
-        return state;
-    }
+	public String getAbsolutePath() {
+		return absolutePath;
+	}
 
-    public String getKilledStatusAsString() {
-        return state.stringExpression;
-    }
+	public boolean canBeSkipped() {
+		return state != State.NON_EQUIVALENT_LIVE;
+	}
 
-    @Override
-    public String toString() {
-        return fileName + ":" + getKilledStatusAsString();
-    }
+	public void setState(State state) {
+		this.state = state;
+	}
+
+	public State getState() {
+		return state;
+	}
+
+	public String getKilledStatusAsString() {
+		return state.stringExpression;
+	}
+	
+
+    public int getStartLine() {
+		return startLine;
+	}
+
+	public int getEndLine() {
+		return endLine;
+	}
+
+	public String getMutatable() {
+		return mutatable;
+	}
+
+	public String getFixer() {
+		return fixer;
+	}
+
+	public String getRepairValue() {
+		this.repairValue = this.repairValue.replace(System.lineSeparator(), "");
+		if(this.repairValue.contains(",")){
+			this.repairValue = "";
+		}
+		return this.repairValue;
+	}
+
+	public String getRepairSource() {
+		return repairSource;
+	}
+
+    public double getWeight() {
+		return weight;
+	}
+
+	public void setWeight(double weight) {
+		this.weight = weight;
+	}
+
+	public Map<String, Boolean> getTestResults() {
+		return testResults;
+	}
+
+	public void setTestResults(Map<String, Boolean> testResults) {
+		if(!testResults.equals(null)){
+			this.testResults = testResults;
+		}
+		this.numOfFailedTest = 0;
+		this.numOfPassedTest = 0;
+		for(Boolean result: testResults.values()){
+			if(result){
+				numOfPassedTest++;
+			} else {
+				numOfFailedTest++;
+			}
+		}
+	}
+
+	public int getNumOfPassedTest() {
+		return numOfPassedTest;
+	}
+
+	public int getNumOfFailedTest() {
+		return numOfFailedTest;
+	}
+
+	@Override
+	public String toString() {
+		return fileName + ":" + getKilledStatusAsString();
+	}
 }

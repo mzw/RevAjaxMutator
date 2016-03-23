@@ -10,6 +10,8 @@ import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 import jp.mzw.ajaxmutator.util.Randomizer;
+import jp.mzw.revajaxmutator.parser.RepairSource;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.AstNode;
 
@@ -50,7 +52,7 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends A
         //create mutation with replacing original node with parseResult
         if(repairSources.size() > 0){
         	for(RepairSource repairSource: repairSources){
-        		mutationList.add(new Mutation(focusedNode, repairSource.getRepairValue(), new Candidate(repairSource)));
+        		mutationList.add(new Mutation(focusedNode, repairSource.getValue(), new RepairValue(repairSource)));
         	}
         }
         
@@ -65,12 +67,12 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends A
                 improperNodes.add(candidate);
             } else {
                 mutationList.add(new Mutation(
-                        focusedNode, formatAccordingTo(candidate, focusedNode), new Candidate(candidate)));
+                        focusedNode, formatAccordingTo(candidate, focusedNode), new RepairValue(candidate)));
                 break;
             }
         }
         if (getDefaultReplacingNode() != null && getDefaultReplacingNode().toSource() != focusedNode.toSource()) {
-            mutationList.add(new Mutation(focusedNode, formatAccordingTo(getDefaultReplacingNode(), focusedNode), new Candidate(getDefaultReplacingNode())));
+            mutationList.add(new Mutation(focusedNode, formatAccordingTo(getDefaultReplacingNode(), focusedNode), new RepairValue(getDefaultReplacingNode())));
         }
         
         if(mutationList.size() > 0)return mutationList;

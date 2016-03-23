@@ -6,6 +6,8 @@ import java.util.List;
 import jp.mzw.ajaxmutator.mutatable.TimerEventAttachment;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
+import jp.mzw.revajaxmutator.parser.RepairSource;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.AstNode;
 
@@ -29,7 +31,7 @@ public class TimerEventDurationVIFixer extends
 		List<Mutation> mutationList = new ArrayList<Mutation>();
 		for (RepairSource repairSource : repairSources) {
 			mutationList.add(new Mutation(focusedNode, repairSource
-					.getRepairValue(), new Candidate(repairSource)));
+					.getValue(), new RepairValue(repairSource)));
 		}
 		return mutationList;
 	}

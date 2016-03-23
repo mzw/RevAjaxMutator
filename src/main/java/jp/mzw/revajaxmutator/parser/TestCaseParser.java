@@ -1,65 +1,97 @@
 package jp.mzw.revajaxmutator.parser;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import org.apache.commons.io.FileUtils;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.StringLiteral;
 
 public class TestCaseParser {
-	Scanner scanner;
-	Matcher matcher;
-	
-	public TestCaseParser(String filePath) throws FileNotFoundException {
-		InputStream in = new FileInputStream(filePath);
-		scanner = new Scanner(in);
-		
+
+	protected List<ASTNode> nodes;
+
+	public TestCaseParser(File file) throws IOException {
+		String src = FileUtils.readFileToString(file);
+		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		parser.setSource(src.toCharArray());
+		CompilationUnit cu = (CompilationUnit) parser
+				.createAST(new NullProgressMonitor());
+		AllElementsFindVisitor visitor = new AllElementsFindVisitor();
+		cu.accept(visitor);
+		nodes = visitor.getNodes();
 	}
-	
-	public List<String> getFindElementSelector(){
-		String regex = "By.id(.*)|By.className(.*)";
-		Pattern pattern = Pattern.compile(regex);
-		List<String> rtnList = new ArrayList<String>();
-		while(scanner.hasNext()){
-			String str = scanner.next();
-			matcher = pattern.matcher(str);
-			while(matcher.find()){
-				rtnList.add(matcher.group());
-				System.out.println(matcher.group());
+
+	public List<ASTNode> getNodes() {
+		return this.nodes;
+	}
+
+	public List<String> getIdValues() {
+		ArrayList<String> values = new ArrayList<>();
+		for (ASTNode node : nodes) {
+			if (node instanceof MethodInvocation) {
+				MethodInvocation _node = (MethodInvocation) node;
+				if ("id".equals(_node.getName().toString())) {
+					Object arg = _node.arguments().get(0);
+					if (arg instanceof StringLiteral) {
+						StringLiteral _arg = (StringLiteral) arg;
+						String modified = "\"#" + _arg.getLiteralValue() + "\"";
+						values.add(modified);
+					}
+				}
 			}
 		}
-		return rtnList;
+		return values;
 	}
-	
-	public List<String> getAttributeValues(List<String> list){
-		final int BEGININDEX_ID = 7;
-//		final int ENDINDEX_ID = 9;
-		final int BEGININDEX_CLASS = 14;
-//		final int ENDINDEX_CLASS = 16;
-		List<String> attributeList = new ArrayList<String>();
-		for(String statement: list){
-			if(statement.startsWith("By.id")){
-				String str = statement.substring(BEGININDEX_ID);
-				int endIndex = str.indexOf("\"");
-				String value = str.substring(0,endIndex);
-				attributeList.add("\"" + value + "\"");
-				attributeList.add("\"" + "#" + value + "\"");
-			}else if(statement.startsWith("By.className")){
-				String str = statement.substring(BEGININDEX_CLASS);
-				int endIndex = str.indexOf("\"");
-				System.out.println("temp:" + str + "num:" + endIndex);
-				String value = str.substring(0,endIndex);
-				attributeList.add("\"" + value + "\"");
-				attributeList.add("\"" + "." + value + "\"");
+
+	public List<String> getTagNames() {
+		ArrayList<String> values = new ArrayList<>();
+		for (ASTNode node : nodes) {
+			if (node instanceof MethodInvocation) {
+				MethodInvocation _node = (MethodInvocation) node;
+				if ("tagName".equals(_node.getName().toString())) {
+					Object arg = _node.arguments().get(0);
+					if (arg instanceof StringLiteral) {
+						StringLiteral _arg = (StringLiteral) arg;
+						String modified = "\"" + _arg.getLiteralValue() + "\"";
+						values.add(modified);
+					}
+				}
 			}
 		}
-		return attributeList;
+		return values;
 	}
-	
-	
-	
-	
+
+	public List<String> getClassValues() {
+		ArrayList<String> values = new ArrayList<>();
+		for (ASTNode node : nodes) {
+			if (node instanceof MethodInvocation) {
+				MethodInvocation _node = (MethodInvocation) node;
+				if ("className".equals(_node.getName().toString())) {
+					Object arg = _node.arguments().get(0);
+					if (arg instanceof StringLiteral) {
+						StringLiteral _arg = (StringLiteral) arg;
+						String modified = "\"." + _arg.getLiteralValue() + "\"";
+						values.add(modified);
+					}
+				}
+			}
+		}
+		return values;
+	}
+
+	public List<String> getAttributeValues() {
+		ArrayList<String> ret = new ArrayList<>();
+		ret.addAll(getIdValues());
+		ret.addAll(getClassValues());
+		return ret;
+	}
+
 }

@@ -8,7 +8,7 @@ import org.mozilla.javascript.ast.Name;
 import jp.mzw.ajaxmutator.mutatable.Request;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.mutator.AbstractMutator;
-import jp.mzw.revajaxmutator.fixer.Candidate;
+import jp.mzw.revajaxmutator.parser.RepairValue;
 
 public class MootoolsRequestMethodFixer extends AbstractMutator<Request> {
     public MootoolsRequestMethodFixer() {
@@ -21,10 +21,10 @@ public class MootoolsRequestMethodFixer extends AbstractMutator<Request> {
         String name = requestMethodName.getIdentifier();
         List<Mutation> mutationList = new ArrayList<Mutation>();
         if ("send".equals(name)) {
-            mutationList.add(new Mutation(requestMethodName, "get", new Candidate("get")));
+            mutationList.add(new Mutation(requestMethodName, "get", new RepairValue("get")));
         }
         else {
-            mutationList.add(new Mutation(requestMethodName, "send", new Candidate("set")));
+            mutationList.add(new Mutation(requestMethodName, "send", new RepairValue("set")));
         }
         return mutationList;
     }

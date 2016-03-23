@@ -6,6 +6,7 @@ import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.Request;
 import jp.mzw.ajaxmutator.util.StringToAst;
+import jp.mzw.revajaxmutator.parser.RepairSource;
 
 import org.mozilla.javascript.ast.AstNode;
 
