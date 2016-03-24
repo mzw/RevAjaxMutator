@@ -4,7 +4,7 @@ Written by [Yuta Maezawa](http://mzw.jp) and greatest contributors
 ## Description
 A tool for "mutation testing" and "automated program repair" of Ajax Web Applications
 
-## Get Started
+## Let's Get Started
 
 ### Maven Settings
 Add our in-house Maven repository.
@@ -41,11 +41,10 @@ path_to_js_file 		= quizzy/quizzy.js
 path_to_html_file 		= main.php
 path_to_test_case_file 	= src/main/java/jp/mzw/revajaxmutator/test/quizzy/QuizzyTest.java
 ram_record_dir			= record/quizzy
+failure_cov_file 		= jscover/quizzy/jscoverage.failure.json
 proxy					= ram
 #proxy					= ram record
 #proxy					= ram rewrite
-success_cov_file 		= jscover/quizzy/jscoverage.success.json
-failure_cov_file 		= jscover/quizzy/jscoverage.failure.json
 ```
 
 ### Test Case
@@ -61,8 +60,7 @@ We provide a typical Makefile working on a project under test.
 ```
 ram				:= java -cp target/classes:target/test-classes:target/dependency/* jp.mzw.revajaxmutator.Main
 test-class		:= jp.mzw.revajaxmutator.test.quizzy.QuizzyTest
-mutate-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig\$$MutateConfiguration
-repair-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig\$$RepairConfiguration
+config-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig
 config-file 	:= target/classes/quizzy.properties
 
 compile:
@@ -73,19 +71,21 @@ rec:
 	${ram} test ${test-class}
 	
 mutate:
-	${ram} mutate ${mutate-class}
+	${ram} mutate ${config-class}\$$MutateConfiguration
 	
 analysis:
 	echo "proxy=ram rewrite" >> ${config-file}
-	${ram} analysis ${mutate-class} ${test-class}
+	${ram} analysis ${config-class}\$$MutateConfiguration ${test-class}
 	
 repair:
-	${ram} mutate ${repair-class}
+	${ram} mutate ${config-class}\$$RepairConfiguration
 	
 search:
-	${ram} search
+	${ram} search ${config-class}
+
+find:
 	echo "proxy=ram rewrite" >> ${config-file}
-	${ram} analysis ${repair-class} ${test-class}
+	${ram} analysis ${config-class}\$$RepairConfiguration ${test-class}
 ```
 
 For mutation testing:
@@ -102,6 +102,7 @@ $ make compile
 $ make rec
 $ make repair
 $ make search
+$ make find
 ```
 
 ## License
