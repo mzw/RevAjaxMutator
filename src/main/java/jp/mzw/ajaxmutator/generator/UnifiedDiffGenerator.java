@@ -17,7 +17,7 @@ import java.util.Scanner;
  *
  * @author Kazuki Nishiura
  */
-class UnifiedDiffGenerator {
+public class UnifiedDiffGenerator {
     private String fileName;
     private long targetFileLastModifiedMillis;
     private List<String> contentsOfOriginalFile;
@@ -175,5 +175,40 @@ class UnifiedDiffGenerator {
             AstNode mutatedNode, List<String> mutatingContent) {
         return generateUnifiedDiffHeader()
                 + generateUnifiedDiffBody(mutatedNode, mutatingContent);
+    }
+    
+    protected DiffLine getDiffLine(AstNode mutatedNode, List<String> mutatingContent) {
+    	int absolutePosition = mutatedNode.getAbsolutePosition();
+        int startLine = 0;
+        int sumLength = 0;
+        while (sumLength + numOfCharsForLine.get(startLine) < absolutePosition) {
+            sumLength += numOfCharsForLine.get(startLine);
+            sumLength += System.lineSeparator().length();
+            startLine++;
+        }
+        int endLine = startLine;
+        int absoluteEndPosition = absolutePosition + mutatedNode.getLength();
+        while (sumLength + numOfCharsForLine.get(endLine) < absoluteEndPosition) {
+            sumLength += numOfCharsForLine.get(endLine);
+            sumLength += System.lineSeparator().length();
+            endLine++;
+        }
+        return new DiffLine(startLine+1, endLine+1);
+    	
+    }
+    
+    public static class DiffLine {
+    	private int startLine = 0;
+    	private int endLine = 0;
+    	public DiffLine(int startLine, int endLine) {
+    		this.startLine = startLine;
+    		this.endLine = endLine;
+    	}
+    	public int getStartLine() {
+    		return this.startLine;
+    	}
+    	public int getEndLine() {
+    		return this.endLine;
+    	}
     }
 }

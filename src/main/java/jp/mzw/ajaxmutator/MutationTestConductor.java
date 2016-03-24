@@ -14,6 +14,7 @@ import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
+import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
 import jp.mzw.ajaxmutator.mutator.Mutator;
 import jp.mzw.ajaxmutator.util.Randomizer;
 import jp.mzw.ajaxmutator.util.Util;
@@ -284,11 +285,21 @@ public class MutationTestConductor {
 						LOGGER.error("failed to generate mutation file");
 						continue;
 					}
+
+					DiffLine diffLine = mutationFileWriter
+							.getDiffLine(mutation);
+					MutationFileInformation info = new MutationFileInformation(
+							generatedFile.getName(),
+							generatedFile.getAbsolutePath(),
+							MutationFileInformation.State.NON_EQUIVALENT_LIVE,
+							diffLine.getStartLine(), diffLine.getEndLine(),
+							mutatable.getClass().getSimpleName(),
+							mutator.mutationName(), mutation.getRepairValue()
+									.getValue(), mutation.getRepairSource()
+									.name());
+
 					mutationListManager.addMutationFileInformation(
-							mutator.mutationName(),
-							new MutationFileInformation(
-									generatedFile.getName(), generatedFile
-											.getAbsolutePath()));
+							mutator.mutationName(), info);
 				}
 			}
 		}
@@ -409,7 +420,7 @@ public class MutationTestConductor {
 			}
 			detailedInfo.append(System.lineSeparator());
 		}
-		
+
 		LOGGER.info(detailedInfo.toString());
 
 		int numberOfMaxMutants = mutationListManager.getNumberOfMaxMutants();

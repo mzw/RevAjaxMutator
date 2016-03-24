@@ -1,6 +1,7 @@
 package jp.mzw.ajaxmutator.generator;
 
 import jp.mzw.ajaxmutator.util.Util;
+import jp.mzw.revajaxmutator.parser.RepairSource;
 import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.AstNode;
@@ -14,8 +15,6 @@ import org.mozilla.javascript.ast.AstNode;
 public class Mutation {
     private final AstNode originalNode;
     private final String mutatingContent;
-
-    @SuppressWarnings("unused")
 	private final RepairValue repairValue;
     
     /**
@@ -39,6 +38,14 @@ public class Mutation {
         this.originalNode = originalNode;
         this.mutatingContent = mutatingContent;
         this.repairValue = repairValue;
+    }
+    
+    public RepairValue getRepairValue() {
+    	return this.repairValue;
+    }
+    
+    public RepairSource.Type getRepairSource() {
+    	return this.repairValue.getRepairSourceType();
     }
 
     public AstNode getOriginalNode() {

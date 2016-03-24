@@ -45,7 +45,7 @@ public class RepairValue {
 		return this.type;
 	}
 
-	public String getRepairValue() {
+	public String getValue() {
 		if (this.type == Type.MUTATABLE && this.astNode != null) {
 			return this.astNode.toSource();
 		} else if (this.type == Type.REPAIRSOURCE && this.repairSource != null) {
@@ -56,7 +56,7 @@ public class RepairValue {
 		return "";
 	}
 
-	public RepairSource.Type getRepairSource() {
+	public RepairSource.Type getRepairSourceType() {
 		if (this.type == Type.MUTATABLE && this.astNode != null) {
 			return RepairSource.Type.JavaScript;
 		} else if (this.type == Type.REPAIRSOURCE && this.repairSource != null) {

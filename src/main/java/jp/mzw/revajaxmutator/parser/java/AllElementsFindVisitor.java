@@ -1,4 +1,4 @@
-package jp.mzw.revajaxmutator.parser;
+package jp.mzw.revajaxmutator.parser.java;
 
 import java.util.ArrayList;
 import java.util.List;

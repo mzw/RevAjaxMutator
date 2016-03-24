@@ -11,6 +11,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
+import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
+
 /**
  * Class that actually create a file that represents mutation.
  *
@@ -121,5 +123,13 @@ public class MutationFileWriter {
 
     public void setFileNamePrefix(String fileNamePrefix) {
         this.fileNamePrefix = fileNamePrefix;
+    }
+    
+    public DiffLine getDiffLine(Mutation mutation) {
+    	AstNode originalNode = mutation.getOriginalNode();
+        String mutatingContent = mutation.getMutatingContent();
+        return diffGenerator.getDiffLine(
+                originalNode,
+                Arrays.asList(mutatingContent.split(System.lineSeparator())));
     }
 }

@@ -9,6 +9,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
+import jp.mzw.revajaxmutator.parser.java.TestCaseParser;
+
 import org.junit.Test;
 
 public class TestCaseParserTest {

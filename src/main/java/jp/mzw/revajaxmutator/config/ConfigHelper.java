@@ -5,14 +5,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jp.mzw.revajaxmutator.parser.EventSet;
-import jp.mzw.revajaxmutator.parser.HTMLParser;
 import jp.mzw.revajaxmutator.parser.RepairSource;
-import jp.mzw.revajaxmutator.parser.TestCaseParser;
+import jp.mzw.revajaxmutator.parser.html.EventSet;
+import jp.mzw.revajaxmutator.parser.html.HTMLParser;
+import jp.mzw.revajaxmutator.parser.java.TestCaseParser;
+import jp.mzw.revajaxmutator.parser.javascript.JavaScriptParser;
 
 public class ConfigHelper {
 	private TestCaseParser testCaseParser;
 	private HTMLParser htmlParser;
+	private JavaScriptParser jsParser;
 	private EventSet eventSet = null;
 
 	public ConfigHelper parseHtml(File file) throws IOException {
@@ -25,22 +27,34 @@ public class ConfigHelper {
 		return this;
 	}
 
+	public ConfigHelper parseJavaScript(File file) throws IOException {
+		this.jsParser = new JavaScriptParser(file);
+		return this;
+	}
+
 	public List<RepairSource> getRepairSourcesForDomSelectionAttributeFixer() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
 		repairSources.add(new RepairSource("document",
 				RepairSource.Type.DEFAULT));
+
 		// From Test Case
 		for (String attr : testCaseParser.getAttributeValues()) {
-			System.out.println(attr);
-			repairSources
-					.add(new RepairSource(attr, RepairSource.Type.TESTCASE));
+			if (!duplicate.contains(attr)) {
+				duplicate.add(attr);
+				repairSources.add(new RepairSource(attr,
+						RepairSource.Type.TESTCASE));
+			}
 		}
 		// From HTML
-		List<String> htmlAttributes = htmlParser.getAllElementIdentifier();
-		for (String attr : htmlAttributes) {
-			repairSources.add(new RepairSource(attr, RepairSource.Type.HTML));
+		for (String attr : htmlParser.getAllElementIdentifier()) {
+			if (!duplicate.contains(attr)) {
+				duplicate.add(attr);
+				repairSources
+						.add(new RepairSource(attr, RepairSource.Type.HTML));
+			}
 		}
 
 		return repairSources;
@@ -51,13 +65,20 @@ public class ConfigHelper {
 			eventSet = htmlParser.getAllEventSet();
 		}
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		ArrayList<String> duplicate = new ArrayList<>();
+
 		// add default
 		repairSources.add(new RepairSource("$(document)",
 				RepairSource.Type.DEFAULT));
-		// add testcase
-		repairSources.add(new RepairSource("$('.categories-search')",
-				RepairSource.Type.TESTCASE));
-
+		// From Test Case
+		for (String attr : testCaseParser.getAttributeValues()) {
+			if (!duplicate.contains(attr)) {
+				duplicate.add(attr);
+				repairSources.add(new RepairSource("$(" + attr + ")",
+						RepairSource.Type.TESTCASE));
+			}
+		}
+		// From HTML
 		for (String eventTarget : eventSet.getTargetSet()) {
 			repairSources.add(new RepairSource(eventTarget,
 					RepairSource.Type.HTML));
@@ -69,10 +90,15 @@ public class ConfigHelper {
 		if (eventSet == null) {
 			eventSet = htmlParser.getAllEventSet();
 		}
+		// From HTML
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		ArrayList<String> duplicate = new ArrayList<>();
 		for (String eventType : eventSet.getTypeSet()) {
-			repairSources.add(new RepairSource(eventType,
-					RepairSource.Type.HTML));
+			if (!duplicate.contains(eventType)) {
+				duplicate.add(eventType);
+				repairSources.add(new RepairSource(eventType,
+						RepairSource.Type.HTML));
+			}
 		}
 		return repairSources;
 	}
@@ -82,18 +108,24 @@ public class ConfigHelper {
 			eventSet = htmlParser.getAllEventSet();
 		}
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		for (String eventCallback : eventSet.getCallbackSet()) {
-			repairSources.add(new RepairSource(eventCallback,
-					RepairSource.Type.HTML));
-		}
-		// add for quizzy
-		// Set<String> quizzyFunctionsSet =
-		// ImmutableSet.of("checkRadioButton","showAndHideDiscription","startQuiz","requestNextQuestion","checkQuestion","restartQuizzy");
-		// for(String quizzyString : quizzyFunctionsSet){
-		// repairSources.add(new RepairSource(quizzyString,
-		// CandidateSource.JS));
-		// }
+		ArrayList<String> duplicate = new ArrayList<>();
 
+		// From HTML
+		for (String eventCallback : eventSet.getCallbackSet()) {
+			if (!duplicate.contains(eventCallback)) {
+				duplicate.add(eventCallback);
+				repairSources.add(new RepairSource(eventCallback,
+						RepairSource.Type.HTML));
+			}
+		}
+		// From JavaScript
+		for (String name : jsParser.getFunctionNames()) {
+			if (!duplicate.contains(name)) {
+				duplicate.add(name);
+				repairSources.add(new RepairSource(name,
+						RepairSource.Type.JavaScript));
+			}
+		}
 		return repairSources;
 	}
 
@@ -111,28 +143,20 @@ public class ConfigHelper {
 
 	public List<RepairSource> getRepairSourcesForAttributeValues() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		List<String> attributeValues = htmlParser.getAllAttributeValues();
-		for (String attributeValue : attributeValues) {
-			repairSources.add(new RepairSource(attributeValue,
-					RepairSource.Type.HTML));
+		ArrayList<String> duplicate = new ArrayList<>();
+		// From HTML
+		for (String value : htmlParser.getAllAttributeValues()) {
+			if (!duplicate.contains(value)) {
+				duplicate.add(value);
+				repairSources.add(new RepairSource(value,
+						RepairSource.Type.HTML));
+			}
 		}
-		repairSources.add(new RepairSource("\"editinlineschedule-\" + id",
-				RepairSource.Type.JavaScript));
-		repairSources
-				.add(new RepairSource(
-						"\"https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places&callback=hmapspro_map_initialiser\"",
-						RepairSource.Type.TESTCASE));
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForAppendedDOM() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		// repairSources.add(new
-		// RepairSource("'<h2 class=\"screen-reader-text\">' + pressThisL10n.allMediaHeading + '</h2><ul class=\"wppt-all-media-list\"/>'",
-		// CandidateSource.TESTCASE));
-		// repairSources.add(new
-		// RepairSource("$( '<p class=\"' + className +'\">' + stripTags( msg ) + '</p>' )",
-		// CandidateSource.TESTCASE));
 		return repairSources;
 	}
 }
