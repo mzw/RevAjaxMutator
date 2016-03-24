@@ -79,7 +79,9 @@ public class JUnitExecutor implements TestExecutor {
         Runner runner;
         try {
         	RunWith runWith = testClass.getAnnotation(RunWith.class);
-        	if(Theories.class.equals(runWith.value())) {
+        	if(runWith == null) {
+                runner = new JUnitTestRunner(testClass, shouldRunAllTest);
+        	} else if(Theories.class.equals(runWith.value())) {
         		runner = new JUnitTheoryRunner(testClass, shouldRunAllTest);
         	} else {
                 runner = new JUnitTestRunner(testClass, shouldRunAllTest);
