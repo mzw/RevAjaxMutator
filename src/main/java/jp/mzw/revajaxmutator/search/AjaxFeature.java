@@ -35,16 +35,4 @@ public enum AjaxFeature {
 			return null;
 		}
 	}
-
-	private int[][] permutationTable = { { 0, 1, 2 }, { 0, 2, 1 }, { 1, 0, 2 },
-			{ 1, 2, 0 }, { 2, 0, 1 }, { 2, 1, 0 } };
-
-	/**
-	 * @param num
-	 *            should be 0 to 5
-	 * @return
-	 */
-	public int getValueForAllPermutationsTrial(int num) {
-		return permutationTable[num][this.value];
-	}
 }

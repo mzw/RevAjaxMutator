@@ -37,7 +37,6 @@ public enum FixerClass {
 				return values()[i];
 			}
 		}
-		System.out.println("the cause of null: " + name);
 		return null;
 	}
 }

@@ -49,6 +49,15 @@ public class Sorter {
 	public enum SortType {
 		SIMPLE_LOCATION, SIMPLE_AJAX_DEFECT, SIMPLE_REPAIR_SOURCE, RSREPAIR, DFS, REPAIR_SOURCE_DFS, BFS_REPAIR_SOURCE, BFS_FIXER_CLASS, BFS_DEFECT_CLASS, BFS_AJAX_FEATURE, RANDOM, IDDFS_CANDIDATE_SOURCE, IDDFS_FIXER_CLASS, IDDFS_DEFECT_CLASS, IDDFS_AJAX_FEATURE, IDDFS_CANDIDATE_SOURCE_PERCENTAGE, IDDFS_FIXER_CLASS_PERCENTAGE, IDDFS_DEFECT_CLASS_PERCENTAGE, IDDFS_AJAX_FEATURE_PERCENTAGE
 	}
+	
+	public static SortType getSortType(String type) {
+		for(SortType _type : SortType.values()) {
+			if(_type.name().equals(type)) {
+				return _type;
+			}
+		}
+		return SortType.REPAIR_SOURCE_DFS; // default
+	}
 
 	public List<MutationFileInformation> sort(SortType sortType) {
 		switch (sortType) {

@@ -21,17 +21,25 @@ public class Searcher {
 
 	AppConfigBase config;
 	MutationListManager manager;
+	Sorter.SortType sortType;
 
 	public Searcher(Class<?> clazz) throws InstantiationException,
 			IllegalAccessException, JSONException, IOException {
 		config = (AppConfigBase) clazz.newInstance();
 		manager = getMutationListManager();
+		sortType = Sorter.SortType.REPAIR_SOURCE_DFS; // default
+	}
+
+	public Searcher(Class<?> clazz, String sort) throws InstantiationException,
+			IllegalAccessException, JSONException, IOException {
+		config = (AppConfigBase) clazz.newInstance();
+		manager = getMutationListManager();
+		sortType = Sorter.getSortType(sort);
 	}
 
 	public void search() throws IOException {
 		Sorter sorter = new Sorter(manager);
-		List<MutationFileInformation> list = sorter
-				.sort(Sorter.SortType.BFS_REPAIR_SOURCE);
+		List<MutationFileInformation> list = sorter.sort(sortType);
 
 		String path = manager.getMutationListFilePath();
 		File file = new File(path);
