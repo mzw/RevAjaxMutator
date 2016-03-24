@@ -33,17 +33,21 @@ timeout=5
 
 In addition, deploy another property file for an application under test.
 ```
-url 				= http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php
-path_to_js_file 	= quizzy/quizzy.js
-ram_record_dir		= record/quizzy
-proxy				= ram
-#proxy				= ram record
-#proxy				= ram rewrite
+url 					= http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php
+path_to_js_file 		= quizzy/quizzy.js
+path_to_html_file 		= main.php
+path_to_test_case_file 	= src/main/java/jp/mzw/revajaxmutator/test/quizzy/QuizzyTest.java
+ram_record_dir			= record/quizzy
+proxy					= ram
+#proxy					= ram record
+#proxy					= ram rewrite
+success_cov_file 		= jscover/quizzy/jscoverage.success.json
+failure_cov_file 		= jscover/quizzy/jscoverage.failure.json
 ```
 
 ### Test Case
 Test cases need to be extended from ``jp.mzw.revajaxmutator.test.WebAppTestBase``.
-Otherwise, you need to instantiate our read/write proxy server manually.
+Otherwise, you need to instantiate our record/rewrite proxy server manually.
 ```
 import jp.mzw.revajaxmutator.test.WebAppTestBase;
 public class YourAppTest extends WebAppTestBase {...
