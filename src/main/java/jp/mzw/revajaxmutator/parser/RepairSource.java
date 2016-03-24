@@ -1,6 +1,6 @@
 package jp.mzw.revajaxmutator.parser;
 
-public class RepairSource implements Comparable<RepairSource>{
+public class RepairSource implements Comparable<RepairSource> {
 
 	private String value;
 	private Type type;
@@ -11,41 +11,38 @@ public class RepairSource implements Comparable<RepairSource>{
 	}
 
 	@Override
-	public int compareTo(RepairSource o) {	
-		if(this.value.equals(o.getValue())) return 0;
-		else return 1;
+	public int compareTo(RepairSource o) {
+		if (this.value.equals(o.getValue()))
+			return 0;
+		else
+			return 1;
 	}
-	
+
 	public enum Type {
-		DEFAULT,
-		TESTCASE,
-		JavaScript,
-		HTML,
-		NONE,
+		DEFAULT(0), TESTCASE(1), JavaScript(2), HTML(3), NONE(4);
+		int weight;
+		Type(int weight) {
+			this.weight = weight;
+		}
+		public int getWeight() {
+			return this.weight;
+		}
 	}
-	
+
 	public String getValue() {
 		return this.value;
 	}
-	
+
 	public Type getType() {
 		return this.type;
 	}
-	
-//	public int getOrder() {
-//		switch(this.type) {
-//		case DEFAULT:
-//			return 0;
-//		case TESTCASE:
-//			return 1;
-//		case JavaScript:
-//			return 2;
-//		case HTML:
-//			return 3;
-//		case NONE:
-//			return 4;
-//		}
-//		return Integer.MAX_VALUE;
-//	}
-	
+
+	public static Type getType(String name) {
+		for(Type type : Type.values()) {
+			if(type.name().equals(name)) {
+				return type;
+			}
+		}
+		return Type.NONE;
+	}
 }

@@ -8,11 +8,9 @@ import jp.mzw.ajaxmutator.JUnitExecutor;
 import jp.mzw.ajaxmutator.JUnitTestRunner;
 import jp.mzw.ajaxmutator.JUnitTheoryRunner;
 import jp.mzw.ajaxmutator.MutationTestConductor;
-import jp.mzw.revajaxmutator.tracer.TestImproveHistoryManager;
-import jp.mzw.revajaxmutator.tracer.Tracer;
+import jp.mzw.revajaxmutator.search.Searcher;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.NoHeadException;
+import org.json.JSONException;
 import org.junit.experimental.theories.Theories;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
@@ -51,12 +49,8 @@ public class Main {
                 proxy(rargs);
                 System.exit(0);
             }
-            if ("history".equals(cmd)) {
-                history(rargs);
-                System.exit(0);
-            }
-            if ("trace".equals(cmd)) {
-                trace(rargs);
+            if ("search".equals(cmd)) {
+                search(rargs);
                 System.exit(0);
             }
             usage();
@@ -141,32 +135,18 @@ public class Main {
         }
     }
     
-    /**
-     * To be moved into "analysis" at bottom
-     * @param args
-     * @throws IOException 
-     * @throws InterruptedException 
-     */
-    public static void history(String[] args) throws IOException, InterruptedException {
-    	String mutants_dir = args[0];
-    	String test_dir = args[1];
-    	
-    	TestImproveHistoryManager history = new TestImproveHistoryManager(mutants_dir, test_dir);
-    	history.saveMutationAnalysisResult();
-    	history.analyzeTestImprovement();
-    	history.notifyImprovement();
-    }
-    
-    public static void trace(String[] args) throws NoHeadException, IOException, GitAPIException {
-    	String git_root_dir = args[0];
-    	String test_src_root_dir = args[1];
-    	String junit_report_file = args[2];
-    	
-    	Tracer.trace(git_root_dir, test_src_root_dir, junit_report_file);
+    public static void search(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException, JSONException, IOException {
+        if (args.length == 0) {
+            System.err.println("please specify configuration filename");
+            System.exit(1);
+        }
+        Class<?> clazz = Class.forName(args[0]);
+        Searcher searcher = new Searcher(clazz);
+        searcher.search();
     }
     
     public static void usage() {
-        System.err.println("please specify command (test, mutate, analysis, proxy, history)");
+        System.err.println("please specify command (test, mutate, analysis, proxy, search)");
     }
 
     public static Class<?> getClass(String className) throws ClassNotFoundException {
@@ -178,13 +158,5 @@ public class Main {
         }
         int i = className.lastIndexOf('.');
         return Class.forName(className.substring(0, i) + '$' + className.substring(i+1));
-    }
-    
-    /**
-     * mutate -> improve(analysis -> history) -> clean or save?
-     * @param args
-     */
-    public static void clean(String[] args) {
-    	
     }
 }

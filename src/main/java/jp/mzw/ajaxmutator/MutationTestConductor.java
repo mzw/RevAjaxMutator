@@ -347,6 +347,7 @@ public class MutationTestConductor {
 						& (numberOfAppliedMutation % saveInformationInterval == 0)) {
 					mutationListManager.generateMutationListFile();
 				}
+				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
 				if (testExecutor.execute()) { // This mutant cannot be killed
 					unkilledMutantsInfo.put(description,
 							mutationFileInformation.toString());

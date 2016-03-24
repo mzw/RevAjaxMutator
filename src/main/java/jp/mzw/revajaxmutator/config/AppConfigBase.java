@@ -23,6 +23,9 @@ public abstract class AppConfigBase implements IAppConfigBase {
 		config = new Properties();
 		config.load(AppConfigBase.class.getClassLoader().getResourceAsStream(filename));
 	}
+	public AppConfigBase(Properties config) {
+		this.config = config;
+	}
 	
 	public File getRecordDir() {
 		String record_dir = config.getProperty("ram_record_dir") != null ? config.getProperty("ram_record_dir") : "record/app";

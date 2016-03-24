@@ -1,4 +1,4 @@
-package jp.mzw.genprog.detector;
+package jp.mzw.ajaxmutator.detector.genprog;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

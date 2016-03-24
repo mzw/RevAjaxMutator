@@ -20,7 +20,7 @@ import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
  */
 public class MutationFileWriter {
     private static final String DEFAULT_FILE_NAME_PREFIX = "mutant";
-    private static final String DEFAULT_FOLDER_NAME = "mutants";
+    public static final String DEFAULT_FOLDER_NAME = "mutants";
     private static final String EXTENSION = ".diff";
     private static final Logger LOGGER
             = LoggerFactory.getLogger(MutationFileWriter.class);
