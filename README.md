@@ -1,6 +1,9 @@
 # RevAjaxMutator
 Written by [Yuta Maezawa](http://mzw.jp) and greatest contributors
 
+## Description
+A tool for "mutation testing" and "automated program repair" of Ajax Web Applications
+
 ## Get Started
 
 ### Maven Settings
@@ -52,6 +55,57 @@ Otherwise, you need to instantiate our record/rewrite proxy server manually.
 import jp.mzw.revajaxmutator.test.WebAppTestBase;
 public class YourAppTest extends WebAppTestBase {...
 ```
+
+### Run
+We provide a typical Makefile working on a project under test.
+```
+ram				:= java -cp target/classes:target/test-classes:target/dependency/* jp.mzw.revajaxmutator.Main
+test-class		:= jp.mzw.revajaxmutator.test.quizzy.QuizzyTest
+mutate-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig\$$MutateConfiguration
+repair-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig\$$RepairConfiguration
+config-file 	:= target/classes/quizzy.properties
+
+compile:
+	mvn clean compile test-compile dependency:copy-dependencies
+	
+rec:
+	echo "proxy=ram record" >> ${config-file}
+	${ram} test ${test-class}
+	
+mutate:
+	${ram} mutate ${mutate-class}
+	
+analysis:
+	echo "proxy=ram rewrite" >> ${config-file}
+	${ram} analysis ${mutate-class} ${test-class}
+	
+repair:
+	${ram} mutate ${repair-class}
+	
+search:
+	${ram} search
+	echo "proxy=ram rewrite" >> ${config-file}
+	${ram} analysis ${repair-class} ${test-class}
+```
+
+For mutation testing:
+```
+$ make compile
+$ make rec
+$ make mutate
+$ make analysis
+```
+
+For automated program repair:
+```
+$ make compile
+$ make rec
+$ make repair
+$ make search
+```
+
+## License
+[Apache 2.0 License](blob/master/LICENSE)
 
 ## Contributors
 - Kazuki Nishiura (AjaxMutator)
