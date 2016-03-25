@@ -16,7 +16,7 @@ Add our in-house Maven repository.
 	</repository>
 </repositories>
 ```
-Then, RevAjaxMutator is available in your testing project.
+Then, RevAjaxMutator is available in a project under test.
 ```
 <dependency>
 	<groupId>jp.mzw.revajaxmutator</groupId>
@@ -70,39 +70,28 @@ rec:
 	echo "proxy=ram record" >> ${config-file}
 	${ram} test ${test-class}
 	
-mutate:
+mutation:
 	${ram} mutate ${config-class}\$$MutateConfiguration
 	
-analysis:
+testing:
 	echo "proxy=ram rewrite" >> ${config-file}
 	${ram} analysis ${config-class}\$$MutateConfiguration ${test-class}
 	
-repair:
+automated:
 	${ram} mutate ${config-class}\$$RepairConfiguration
 	
-search:
+program:
 	${ram} search ${config-class}
 
-find:
+repair:
 	echo "proxy=ram rewrite" >> ${config-file}
 	${ram} analysis ${config-class}\$$RepairConfiguration ${test-class}
 ```
 
-For mutation testing:
+Enjoy RevAjaxMutator!
 ```
-$ make compile
-$ make rec
-$ make mutate
-$ make analysis
-```
-
-For automated program repair:
-```
-$ make compile
-$ make rec
-$ make repair
-$ make search
-$ make find
+$ make mutation testing
+$ make automated program repair
 ```
 
 ## License
