@@ -8,6 +8,8 @@ import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
 import org.junit.runner.notification.Failure;
 import org.junit.runners.model.InitializationError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -21,6 +23,8 @@ import java.util.TreeMap;
  * @author Kazuki Nishiura
  */
 public class JUnitExecutor implements TestExecutor {
+	protected Logger LOGGER = LoggerFactory.getLogger(JUnitExecutor.class);
+	
     private final boolean shouldRunAllTest;
     private final Class<?>[] targetClasses;
     private Map<String, Boolean> testResults;
@@ -84,6 +88,7 @@ public class JUnitExecutor implements TestExecutor {
         	} else if(Theories.class.equals(runWith.value())) {
         		runner = new JUnitTheoryRunner(testClass, shouldRunAllTest);
         	} else {
+        		LOGGER.debug("Found unimplemented test-runner: {}", runWith.value());
                 runner = new JUnitTestRunner(testClass, shouldRunAllTest);
         	}
         } catch (InitializationError error) {
@@ -107,6 +112,7 @@ public class JUnitExecutor implements TestExecutor {
         }
         if (!result.wasSuccessful()) {
             for (Failure failure: result.getFailures()) {
+            	LOGGER.debug("Failure trace: {}", failure.getTrace());
                 if (failure.getDescription().getMethodName() == null) {
                     testResults.put("setup or teardown", false);
                     continue;
