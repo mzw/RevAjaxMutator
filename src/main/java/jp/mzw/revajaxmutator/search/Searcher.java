@@ -75,8 +75,10 @@ public class Searcher {
 	protected void setWeight(MutationListManager manager) throws JSONException,
 			IOException {
 		// Parse
+		File file = config.getFailureCoverageFile();
+		if(!file.exists()) return;
 		JSONArray failure = Coverage.getCoverageData(
-				Coverage.parse(config.getFailureCoverageFile()),
+				Coverage.parse(file),
 				new URL(config.getUrl(), config.pathToJsFile()).getPath());
 		if(failure == null) return;
 		int line_num = failure.length();
