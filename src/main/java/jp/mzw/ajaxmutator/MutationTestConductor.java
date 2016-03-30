@@ -455,7 +455,7 @@ public class MutationTestConductor {
 					while (conducting && !reader.ready()) {
 						Thread.sleep(300);
 					}
-					if (!conducting || isQuitCommand(reader.readLine()))
+					if (!conducting || isQuitCommand(reader.readLine()) || isQuitMessage())
 						break;
 				} catch (InterruptedException e) {
 					LOGGER.info("I/O thread interrupt, "
@@ -475,6 +475,14 @@ public class MutationTestConductor {
 				return true;
 
 			LOGGER.info(command);
+			return false;
+		}
+		
+		private boolean isQuitMessage() {
+			if(new File("ram_quit_message").exists()) {
+				return true;
+			}
+			
 			return false;
 		}
 	}
