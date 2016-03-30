@@ -347,7 +347,8 @@ public class MutationTestConductor {
 						& (numberOfAppliedMutation % saveInformationInterval == 0)) {
 					mutationListManager.generateMutationListFile();
 				}
-				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
+				LOGGER.info("Executing test(s) on {}",
+						mutationFileInformation.getAbsolutePath());
 				if (testExecutor.execute()) { // This mutant cannot be killed
 					unkilledMutantsInfo.put(description,
 							mutationFileInformation.toString());
@@ -455,7 +456,7 @@ public class MutationTestConductor {
 					while (conducting && !reader.ready()) {
 						Thread.sleep(300);
 					}
-					if (!conducting || isQuitCommand(reader.readLine()) || isQuitMessage())
+					if (!conducting || isQuitCommand(reader.readLine()))
 						break;
 				} catch (InterruptedException e) {
 					LOGGER.info("I/O thread interrupt, "
@@ -473,16 +474,7 @@ public class MutationTestConductor {
 		private boolean isQuitCommand(String command) {
 			if (null == command || "q".equals(command))
 				return true;
-
 			LOGGER.info(command);
-			return false;
-		}
-		
-		private boolean isQuitMessage() {
-			if(new File("ram_quit_message").exists()) {
-				return true;
-			}
-			
 			return false;
 		}
 	}
