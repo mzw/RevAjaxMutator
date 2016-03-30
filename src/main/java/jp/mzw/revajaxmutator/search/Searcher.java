@@ -78,6 +78,7 @@ public class Searcher {
 		JSONArray failure = Coverage.getCoverageData(
 				Coverage.parse(config.getFailureCoverageFile()),
 				new URL(config.getUrl(), config.pathToJsFile()).getPath());
+		if(failure == null) return;
 		int line_num = failure.length();
 		double[] weight = new double[line_num];
 		int max = 0;
