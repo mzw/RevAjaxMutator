@@ -69,6 +69,9 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends
 			} else {
 				mutationList.add(new Mutation(focusedNode, formatAccordingTo(
 						candidate, focusedNode), new RepairValue(candidate)));
+                if (focusedNode.toSource().contains("http"))
+                    mutationList.add(new Mutation(focusedNode, focusedNode
+                    		.toSource().replace("http", "https"), new RepairValue(candidate)));
 				break;
 			}
 		}
