@@ -28,6 +28,13 @@ public class JavaScriptParserTest {
 		assertEquals(Arrays.asList("startQuiz", "requestNextQuestion", "checkQuestion", "restartQuizzy"), parser.getFunctionNames());
 	}
 
+	@Test
+	public void getAttributeValuesFromInfixExpression() throws URISyntaxException, IOException {
+		File file = getTestCaseFile("jsparser_test.js");
+		JavaScriptParser parser = new JavaScriptParser(file);
+		assertEquals(Arrays.asList("\"myid\""), parser.getAttributeValuesFromInfixExpression());
+	}
+
 	private File getTestCaseFile(String filename) throws URISyntaxException {
 		ClassLoader loader = JavaScriptParserTest.class.getClassLoader();
 		URL res = loader.getResource(filename);

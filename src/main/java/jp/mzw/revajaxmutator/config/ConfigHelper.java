@@ -144,6 +144,14 @@ public class ConfigHelper {
 	public List<RepairSource> getRepairSourcesForAttributeValues() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		ArrayList<String> duplicate = new ArrayList<>();
+		// From JavaScript
+		for(String value : jsParser.getAttributeValuesFromInfixExpression()) {
+			if (!duplicate.contains(value)) {
+				duplicate.add(value);
+				repairSources.add(new RepairSource(value,
+						RepairSource.Type.JavaScript));
+			}
+		}
 		// From HTML
 		for (String value : htmlParser.getAllAttributeValues()) {
 			if (!duplicate.contains(value)) {
