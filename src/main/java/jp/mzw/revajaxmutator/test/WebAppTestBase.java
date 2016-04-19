@@ -9,6 +9,7 @@ import java.util.Properties;
 import jp.mzw.revajaxmutator.FilterPlugin;
 import jp.mzw.revajaxmutator.RecorderPlugin;
 import jp.mzw.revajaxmutator.RewriterPlugin;
+import jp.mzw.revajaxmutator.config.AppConfigBase;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -139,6 +140,7 @@ public class WebAppTestBase {
      --------------------------------------------------*/
     public static void beforeTestClass(String filename) throws IOException, StoreException, InterruptedException {
     	Properties config = getConfig(filename);
+    	AppConfig appConfig = new AppConfig(filename);
 		
 		URL = config.getProperty("url") != null ? config.getProperty("url") : "";
 		ADMIN_URL = config.getProperty("admin_url") != null ? config.getProperty("admin_url") : "";
@@ -162,7 +164,9 @@ public class WebAppTestBase {
 			}
 
 			if(proxy.contains("rewrite")) {
-				plugins.add(new RewriterPlugin(dir));
+				RewriterPlugin plugin = new RewriterPlugin(dir);
+				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
+				plugins.add(plugin);
 			}
 
 			if(proxy.contains("filter")) {
@@ -173,6 +177,12 @@ public class WebAppTestBase {
 
 			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY_PORT);
 		}
+    }
+    
+    private static class AppConfig extends AppConfigBase {
+    	private AppConfig(String config) throws IOException {
+    		super(config);
+    	}
     }
     
     public static void afterTestClass() {

@@ -6,6 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
@@ -14,9 +16,11 @@ import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RewriterPlugin extends ProxyPlugin {
     private String mDirname;
+    private List<String> mRewriteFiles;
 
     public RewriterPlugin(String dirname) {
         mDirname = dirname;
+        mRewriteFiles = new ArrayList<String>();
     }
 
     @Override
@@ -28,10 +32,28 @@ public class RewriterPlugin extends ProxyPlugin {
     public HTTPClient getProxyPlugin(HTTPClient client) {
         return new Plugin(client);
     }
+    
+    public void setRewriteFile(String filename) {
+    	if(filename != null && !mRewriteFiles.contains(filename)) {
+    		mRewriteFiles.add(filename);
+    	}
+    }
 
     private void rewriteResponseContent(Request request, Response response) {
         try {
             String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
+            
+            boolean matched = false;
+            for(String _filename : mRewriteFiles) {
+            	if(filename.equals(_filename)) {
+            		matched = true;
+            		break;
+            	}
+            }
+            if(!matched) {
+            	return;
+            }
+            
             BufferedInputStream in = new BufferedInputStream(
                     new FileInputStream(mDirname + "/" + filename));
             ByteArrayOutputStream out = new ByteArrayOutputStream();
