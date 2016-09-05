@@ -65,7 +65,12 @@ public class MutateVisitorBuilder {
 				domCreationDetectors, attributeModificationDetectors, domAppendingDetectors,
 				domCloningDetectors, domNormalizationDetectors, domReplacementDetectors,
 				domRemovalDetectors, domSelectionDetectors, requestDetectors,
-				statementDetectors);
+				statementDetectors,
+				assignmentDetectors,breakDetectors,continueDetectors,
+				forDetectors,funcNodeDetectors,ifDetectors,
+				returnDetectors,switchDetectors,variableDeclarationDetectors,
+				whileDetectors
+				);
 	}
 
 	public void setEventAttacherDetectors(
