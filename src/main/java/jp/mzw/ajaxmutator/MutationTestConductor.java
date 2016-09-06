@@ -229,6 +229,39 @@ public class MutationTestConductor {
 
 		System.out.println("******************Statements******************");
 		generateMutationFiles(visitor.getStatements(), mutators);
+		
+		//genelic
+		System.out.println("******************AssignmentExpressions******************");
+		generateMutationFiles(visitor.getAssignmentExpressions(), mutators);
+		
+		System.out.println("******************Breaks******************");
+		generateMutationFiles(visitor.getBreaks(), mutators);
+		
+		System.out.println("******************Continues******************");
+		generateMutationFiles(visitor.getContinues(), mutators);
+		
+		System.out.println("******************Fors******************");
+		generateMutationFiles(visitor.getFors(), mutators);
+		
+		System.out.println("******************Funcnodes******************");
+		generateMutationFiles(visitor.getFuncnodes(), mutators);
+		
+		System.out.println("******************Ifs******************");
+		generateMutationFiles(visitor.getIfs(), mutators);
+		
+		System.out.println("******************Returns******************");
+		generateMutationFiles(visitor.getReturns(), mutators);
+		
+		System.out.println("******************Switches******************");
+		generateMutationFiles(visitor.getSwitches(), mutators);
+		
+		System.out.println("******************VariableDecss******************");
+		generateMutationFiles(visitor.getVariableDecss(), mutators);
+		
+		System.out.println("******************Whiles******************");
+		generateMutationFiles(visitor.getWhiles(), mutators);
+		
+
 
 		LOGGER.debug("Random values used for generating mutations: "
 				+ Arrays.toString(Randomizer.getReturnedValues()));

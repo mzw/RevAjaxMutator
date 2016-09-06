@@ -17,10 +17,17 @@ import jp.mzw.ajaxmutator.mutatable.genprog.*;
 import org.bouncycastle.crypto.engines.ISAACEngine;
 import org.mozilla.javascript.ast.Assignment;
 import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.BreakStatement;
+import org.mozilla.javascript.ast.ContinueStatement;
+import org.mozilla.javascript.ast.ForLoop;
 import org.mozilla.javascript.ast.FunctionCall;
+import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.NodeVisitor;
 import org.mozilla.javascript.ast.IfStatement;
 import org.mozilla.javascript.ast.ReturnStatement;
+import org.mozilla.javascript.ast.SwitchStatement;
+import org.mozilla.javascript.ast.VariableDeclaration;
+import org.mozilla.javascript.ast.WhileLoop;
 import org.mozilla.javascript.ast.Loop;
 
 import java.util.Set;
@@ -153,15 +160,44 @@ public class MutateVisitor implements NodeVisitor {
         } else if (node instanceof Assignment) {
             for (AbstractDetector<AttributeModification> detector : attributeModificationDetectors)
                 detectAndAdd(detector, node, attributeModifications);
-        }
-        
-        else if (node instanceof IfStatement
-        		|| node instanceof ReturnStatement
-        		|| node instanceof Loop) {
+            for (AbstractDetector<AssignmentExpression> detector : assignmentDetectors)
+            	detectAndAdd(detector, node, assignmentExpressions);
+        } else if (node instanceof Loop){
         	for (AbstractDetector<Statement> detector : statementDetectors)
         		detectAndAdd(detector, node, statements);
-        }
-        
+        } else if(node instanceof BreakStatement){
+        	for (AbstractDetector<Break> detector : breakDetectors)
+            	detectAndAdd(detector, node, breaks);
+        } else if(node instanceof ContinueStatement){
+        	for (AbstractDetector<Continue> detector : continueDetectors)
+            	detectAndAdd(detector, node, continues);
+        } else if(node instanceof ForLoop){
+        	for (AbstractDetector<For> detector : forDetectors)
+            	detectAndAdd(detector, node, fors);
+        } else if(node instanceof FunctionNode){
+            for (AbstractDetector<FuncNode> detector : funcNodeDetectors)
+            	detectAndAdd(detector, node, funcNodes);
+        } else if (node instanceof IfStatement){
+        	for (AbstractDetector<Statement> detector : statementDetectors)
+        		detectAndAdd(detector, node, statements);
+        	for (AbstractDetector<If> detector : ifDetectors)
+            	detectAndAdd(detector, node, ifs);
+        } else if (node instanceof ReturnStatement){
+        	for (AbstractDetector<Statement> detector : statementDetectors)
+        		detectAndAdd(detector, node, statements);
+        	for (AbstractDetector<Return> detector : returnDetectors)
+            	detectAndAdd(detector, node, returns);
+        } else if (node instanceof SwitchStatement){
+        	for (AbstractDetector<Switch> detector : switchDetectors)
+            	detectAndAdd(detector, node, switches);
+        } else if(node instanceof VariableDeclaration){
+        	for (AbstractDetector<VariableDec> detector : variableDeclarationDetectors)
+            	detectAndAdd(detector, node, variableDecs);
+        } else if(node instanceof WhileLoop){
+        	for (AbstractDetector<While> detector : whileDetectors)
+            	detectAndAdd(detector, node, whiles);
+        } 
+       
         return true;
     }
 
@@ -190,16 +226,12 @@ public class MutateVisitor implements NodeVisitor {
             detectAndAdd(detector, call, attributeModifications);
         for (AbstractDetector<Statement> detector : statementDetectors)
         	detectAndAdd(detector, call, statements);
-        for (AbstractDetector<AssignmentExpression> detector : assignmentDetectors)
-        	detectAndAdd(detector, call, assignmentExpressions);
         for (AbstractDetector<Break> detector : breakDetectors)
         	detectAndAdd(detector, call, breaks);
         for (AbstractDetector<Continue> detector : continueDetectors)
         	detectAndAdd(detector, call, continues);
         for (AbstractDetector<For> detector : forDetectors)
         	detectAndAdd(detector, call, fors);
-        for (AbstractDetector<FuncNode> detector : funcNodeDetectors)
-        	detectAndAdd(detector, call, funcNodes);
         for (AbstractDetector<If> detector : ifDetectors)
         	detectAndAdd(detector, call, ifs);
         for (AbstractDetector<Return> detector : returnDetectors)
