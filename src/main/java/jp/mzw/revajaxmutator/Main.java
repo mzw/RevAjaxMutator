@@ -8,6 +8,7 @@ import jp.mzw.ajaxmutator.JUnitExecutor;
 import jp.mzw.ajaxmutator.JUnitTestRunner;
 import jp.mzw.ajaxmutator.JUnitTheoryRunner;
 import jp.mzw.ajaxmutator.MutationTestConductor;
+import jp.mzw.revajaxmutator.genprog.GenProgConductor;
 import jp.mzw.revajaxmutator.search.Searcher;
 
 import org.json.JSONException;
@@ -51,6 +52,10 @@ public class Main {
             }
             if ("search".equals(cmd)) {
                 search(rargs);
+                System.exit(0);
+            }
+            if ("genprog".equals(cmd)) {
+                genprog(rargs);
                 System.exit(0);
             }
             usage();
@@ -145,8 +150,16 @@ public class Main {
         searcher.search();
     }
     
+    public static void genprog(String[] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, JSONException, InterruptedException {
+        String className = args[0];
+        String testClassName = args[1];
+
+		GenProgConductor conductor = new GenProgConductor(Class.forName(className));
+		conductor.search(Class.forName(testClassName));
+    }
+    
     public static void usage() {
-        System.err.println("please specify command (test, mutate, analysis, proxy, search)");
+        System.err.println("please specify command (test, mutate, analysis, proxy, search, genprog)");
     }
 
     public static Class<?> getClass(String className) throws ClassNotFoundException {
