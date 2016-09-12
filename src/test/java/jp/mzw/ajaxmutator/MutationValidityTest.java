@@ -16,6 +16,7 @@ import jp.mzw.ajaxmutator.mutator.DOMSelectionSelectNearbyMutator;
 import jp.mzw.ajaxmutator.mutator.Mutator;
 import jp.mzw.ajaxmutator.mutator.generic.ChangeConditionSwitchStatementMutator;
 import jp.mzw.ajaxmutator.mutator.generic.ChangeValueVariableDecMutator;
+import jp.mzw.ajaxmutator.mutator.generic.IfStatementMutator;
 import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakContinueForLoopMutator;
 import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakContinueWhileLoopMutator;
 import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakFromSwitchStatementMutator;
@@ -99,6 +100,7 @@ public class MutationValidityTest {
 				new RequestUrlRAMutator(visitor.getRequests()),
 				new ChangeConditionSwitchStatementMutator(),
 				new ChangeValueVariableDecMutator(),
+				new IfStatementMutator(),
 				new RemoveBreakContinueForLoopMutator(),
 				new RemoveBreakContinueWhileLoopMutator(),
 				new RemoveBreakFromSwitchStatementMutator(),
