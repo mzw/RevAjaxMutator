@@ -3,6 +3,8 @@ package jp.mzw.revajaxmutator.test;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
 
@@ -17,6 +19,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Proxy;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
@@ -25,6 +28,7 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.owasp.webscarab.model.StoreException;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
@@ -35,6 +39,8 @@ public class WebAppTestBase {
 	protected static String ADMIN_URL;
     protected static WebDriver driver;
     protected static WebDriverWait wait;
+    protected WebDriver mDriver;
+    protected WebDriverWait mWait;
 
     private static String CONFIG_FILENAME = "localenv.properties";
     
@@ -42,8 +48,11 @@ public class WebAppTestBase {
     protected static String FIREFOX_BIN;
     protected static String PHANTOMJS_BIN;
     protected static String PROXY;
+    protected static String PROXY_IP;
     protected static String PROXY_PORT;
+    protected static String SELENIUMGRID_HUB;
     protected static int TIMEOUT;
+    protected static DesiredCapabilities firefox;
     
     /**
      * Before instantiating this class,
@@ -57,6 +66,7 @@ public class WebAppTestBase {
     public static void beforeTestBaseClass() throws IOException {
     	readTestBaseConfig();
     	launchBrowser();
+    	System.out.println("beforeTestBaseClass");
     }
 	
     /**
@@ -64,7 +74,7 @@ public class WebAppTestBase {
      */
     private static void launchBrowser() {
         DesiredCapabilities cap = new DesiredCapabilities();
-        
+
         if(FIREFOX_BIN != null) {
             org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
             proxy.setHttpProxy(PROXY);
@@ -91,8 +101,23 @@ public class WebAppTestBase {
             cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_BIN);
             driver = new PhantomJSDriver(cap);
         }
+        //concurrent
+        else{
+//        	DesiredCapabilities firefox = DesiredCapabilities.firefox();
+        	firefox = DesiredCapabilities.firefox();
+            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+            proxy.setHttpProxy(PROXY);
+            proxy.setFtpProxy(PROXY);
+            proxy.setSslProxy(PROXY);
+            firefox.setCapability(CapabilityType.PROXY, proxy);
+//        	try {
+//    			driver = new RemoteWebDriver(new URL("http://" + SELENIUMGRID_HUB +":4444/wd/hub"), firefox);
+//    		} catch (MalformedURLException e) {
+//    			e.printStackTrace();
+//    		}
+        }
         
-        wait = new WebDriverWait(driver, TIMEOUT);
+//        wait = new WebDriverWait(driver, TIMEOUT);
     }
     
     /**
@@ -104,8 +129,10 @@ public class WebAppTestBase {
 
 		FIREFOX_BIN = CONFIG.getProperty("firefox-bin");
 		PHANTOMJS_BIN = CONFIG.getProperty("phantomjs-bin");
+		PROXY_IP = CONFIG.getProperty("proxy_ip") != null ? CONFIG.getProperty("proxy_ip") : "127.0.0.1";
 		PROXY_PORT = CONFIG.getProperty("proxy_port") != null ? CONFIG.getProperty("proxy_port") : "80";
-		PROXY = "127.0.0.1:" + PROXY_PORT;
+		PROXY = PROXY_IP + ":" + PROXY_PORT;
+		SELENIUMGRID_HUB = CONFIG.getProperty("seleniumgrid_hub_ip") != null ? CONFIG.getProperty("seleniumgrid_hub_ip") : "";
 		TIMEOUT = CONFIG.getProperty("timeout") != null ? Integer.parseInt(CONFIG.getProperty("timeout")) : 3;
 	}
 
@@ -165,6 +192,7 @@ public class WebAppTestBase {
 
 			if(proxy.contains("rewrite")) {
 				RewriterPlugin plugin = new RewriterPlugin(dir);
+				//other.propatiesのjsファイル（url付き)
 				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
 				plugins.add(plugin);
 			}
@@ -175,7 +203,8 @@ public class WebAppTestBase {
 				plugins.add(new FilterPlugin(filter_url_prefix, filter_method));
 			}
 
-			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY_PORT);
+			//プロキシサーバ公開
+			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY);
 		}
     }
     

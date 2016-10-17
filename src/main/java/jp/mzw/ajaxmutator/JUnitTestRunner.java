@@ -39,17 +39,23 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 
     @Override
     protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
+    	
+    	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"runChild");
         Description description= describeChild(method);
         if (method.getAnnotation(Ignore.class) != null || skipNextExecution) {
             notifier.fireTestIgnored(description);
         } else {
             if (!shouldRunAllTest) {
+            	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"!shouldRunAllTest");
                 if (reporter == null || !lastNotifier.equals(notifier)) {
+                	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"reporter == null || !lastNotifier.equals(notifier)");
                     reporter = new RunNotifierFailureReporter(notifier);
                     lastNotifier = notifier;
                 }
             } else {
+            	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"shouldRunAllTest");
             	if(reporter == null) {
+            		System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"reporter == null");
                     reporter = new RunNotifierFailureReporter(notifier);
             	}
             }

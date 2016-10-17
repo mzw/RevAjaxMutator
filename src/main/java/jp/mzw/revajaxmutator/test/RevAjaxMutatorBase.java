@@ -14,9 +14,11 @@ import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 public class RevAjaxMutatorBase {
 	private static Proxy mProxy;
 	
-	public static void launchProxyServer(List<ProxyPlugin> plugins, String port) throws StoreException, InterruptedException {
+	public static void launchProxyServer(List<ProxyPlugin> plugins, String proxy) throws StoreException, InterruptedException {
         Framework framework = new Framework();
-        Preferences.setPreference("Proxy.listeners", "127.0.0.1:" + port);
+        
+        Preferences.setPreference("Proxy.listeners", proxy);
+        
         framework.setSession("FileSystem", new File(".conversation"), "");
         
         mProxy = new Proxy(framework);

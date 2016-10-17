@@ -2,6 +2,7 @@ package jp.mzw.revajaxmutator;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -39,31 +40,65 @@ public class RewriterPlugin extends ProxyPlugin {
     	}
     }
 
-    private void rewriteResponseContent(Request request, Response response) {
+    private synchronized void rewriteResponseContent(Request request, Response response) {
         try {
+        	
             String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
             
             boolean matched = false;
+            
             for(String _filename : mRewriteFiles) {
+            	//リスエストのurlとファイル名があっている場合
             	if(filename.equals(_filename)) {
             		matched = true;
             		break;
             	}
             }
+            
             if(!matched) {
             	return;
             }
             
+            System.out.println("ファイル名一致");
+            
+            File jsFile = new File(mDirname + "/" + filename);
+//            System.out.println("jsFileName:"+jsFile.getName());
+            File dir = new File(mDirname + "/" + "tested");
+            File[] files = dir.listFiles();
+            for(File file : files){
+            	//隠しファイルでない
+            	if(!file.isHidden()){
+            		System.out.println("ファイル名："+file.getName());
+            		if(file.renameTo( jsFile )){
+            			System.out.println("ファイル移動成功");
+            		}else{
+            			System.out.println("ファイル移動失敗");
+            		}
+                	break;
+            	}
+            }
+            
+            //record/appフォルダのjsファイルの読み込み
             BufferedInputStream in = new BufferedInputStream(
                     new FileInputStream(mDirname + "/" + filename));
+            
+            //出力用の領域
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[1024 * 8];
             int len = 0;
+            
+            
+            //jsファイルの中身を書き込む
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
             in.close();
+            
+            
+            //応答の内容を書き換え
             response.setContent(out.toByteArray());
+            
+
         }
         catch (FileNotFoundException e) {
             // ignore non-recorded urls

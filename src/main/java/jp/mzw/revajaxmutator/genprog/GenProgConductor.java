@@ -428,7 +428,6 @@ public class GenProgConductor {
         MutateVisitor visitor = builder.build();
         conductor = new MutationTestConductor();
         conductor.setup(path_to_js_file, "", visitor);
-        
         return visitor.getStatements();
 	}
 	

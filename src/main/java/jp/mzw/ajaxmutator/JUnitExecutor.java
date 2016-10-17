@@ -22,10 +22,9 @@ import java.util.TreeMap;
  *
  * @author Kazuki Nishiura
  */
-public class JUnitExecutor implements TestExecutor {
+public class JUnitExecutor implements TestExecutor ,Cloneable{
 	protected Logger LOGGER = LoggerFactory.getLogger(JUnitExecutor.class);
-	
-    private final boolean shouldRunAllTest;
+	private final boolean shouldRunAllTest;
     private final Class<?>[] targetClasses;
     private Map<String, Boolean> testResults;
     private String executionMessage;
@@ -38,6 +37,19 @@ public class JUnitExecutor implements TestExecutor {
         this.shouldRunAllTest = shouldRunAllTest;
         this.targetClasses = targetClasses;
     }
+
+    @Override
+	protected JUnitExecutor clone() throws CloneNotSupportedException {
+    	
+    	JUnitExecutor executor = null;
+        try {
+        	executor = (JUnitExecutor)super.clone();
+        } catch (CloneNotSupportedException e) {
+			throw new InternalError(e.toString());
+		}
+        
+        return executor;
+	}
     
     public List<Result> run() {
         ArrayList<Result> results = new ArrayList<Result>();
@@ -69,7 +81,10 @@ public class JUnitExecutor implements TestExecutor {
     @Override
     public boolean execute() {
         testResults = new TreeMap<String, Boolean>();
+        
         for (Class<?> testClass: targetClasses) {
+        	
+        	//テストクラス数分テスト実行
             if (!executeSingleTest(testClass)) {
                 updateMessage(false);
                 return false;
@@ -79,11 +94,15 @@ public class JUnitExecutor implements TestExecutor {
         return true;
     }
     
+    
     private boolean executeSingleTest(Class<?> testClass) {
         Runner runner;
         try {
+        	//Runwith:テスト実行方法に際してのクラスを指定するためのアノテーション
+        	//testClassは実行するテストのクラス
         	RunWith runWith = testClass.getAnnotation(RunWith.class);
         	if(runWith == null) {
+        		//アノテーション指定なし
                 runner = new JUnitTestRunner(testClass, shouldRunAllTest);
         	} else if(Theories.class.equals(runWith.value())) {
         		runner = new JUnitTheoryRunner(testClass, shouldRunAllTest);
@@ -94,13 +113,26 @@ public class JUnitExecutor implements TestExecutor {
         } catch (InitializationError error) {
             throw new IllegalStateException(error);
         }
+        
+        //ランナーを走らせる
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"JUnitCore run()");
         Result result = (new JUnitCore()).run(runner);
+        
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result.getFailureCount():"+result.getFailureCount());
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result.getRunCount():"+result.getRunCount());
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result.getRunTime():"+result.getRunTime());
+        
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"storeResult");
         storeResult(result);
+        
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result.wasSuccessful():"+result.wasSuccessful());
         return result.wasSuccessful();
     }
 
     private void storeResult(Result result) {
+    	
         List<String> testMethods = new ArrayList<String>();
+        
         for (Class<?> clazz: targetClasses) {
             for (Method method: clazz.getMethods()) {
                 if (method.isAnnotationPresent(Test.class))
@@ -111,12 +143,15 @@ public class JUnitExecutor implements TestExecutor {
             testResults.put(methodName, true);
         }
         if (!result.wasSuccessful()) {
+        	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"テスト失敗");
             for (Failure failure: result.getFailures()) {
             	LOGGER.debug("Failure trace: {}", failure.getTrace());
                 if (failure.getDescription().getMethodName() == null) {
                     testResults.put("setup or teardown", false);
                     continue;
                 }
+                
+                System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"testResults.put");
                 testResults.put(failure.getDescription().getMethodName(), false);
             }
         }
@@ -125,9 +160,11 @@ public class JUnitExecutor implements TestExecutor {
     private void updateMessage(boolean result) {
         StringBuilder messageBuilder = new StringBuilder();
         if (result) {
+        	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result=true");
             messageBuilder.append("Test succeed (failed to kill mutants), ")
                     .append(testResults.size()).append(" tests ran.\n");
         } else {
+        	System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"result=false");
             messageBuilder.append("Mutant is killed; tests failed within ")
                 .append(testResults.size()).append('\n');
         }
@@ -136,7 +173,9 @@ public class JUnitExecutor implements TestExecutor {
                     .append(entry.getValue() ? 'x' : 'o').append(", ");
         }
         messageBuilder.append("result: " + (result ? 'x' : 'o'));
+        
         executionMessage = messageBuilder.toString();
+        System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"executionMessage:"+ executionMessage);
     }
 
     @Override

@@ -105,8 +105,13 @@ public class Main {
         String className = args[0];
         String testClassName = args[1];
 
+        //テスト対象アプリからMutateConfigurationを読み込み
         MutateConfiguration config = (MutateConfiguration) Class.forName(className).newInstance();
+        
+        //MutationTestConducterを取得
         MutationTestConductor conductor = config.mutationTestConductor();
+        
+        //MutationAnalisis実行
         conductor.mutationAnalysisUsingExistingMutations(
                 new JUnitExecutor(false, Class.forName(testClassName)));
     }
