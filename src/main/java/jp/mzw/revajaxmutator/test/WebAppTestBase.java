@@ -151,6 +151,7 @@ public class WebAppTestBase {
     	quitBrowser();
     }
     
+    
     private static void quitBrowser() {
     	driver.quit();
     }

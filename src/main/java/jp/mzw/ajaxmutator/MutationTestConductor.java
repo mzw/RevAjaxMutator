@@ -442,24 +442,12 @@ public class MutationTestConductor {
 				
 				futureList.add(future);
 			 
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-//				
-//				if(futureList.size() % 2 == 0){
-//					//終了待ち
-//				    for (Future<Boolean> f : futureList) {
-//				    	try {
-//							f.get();
-//						} catch (InterruptedException e) {
-//							e.printStackTrace();
-//						} catch (ExecutionException e) {
-//							e.printStackTrace();
-//						}
-//				    }
+//				try {
+//					Thread.sleep(1000);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
 //				}
+
 
 //				if (testExecutor.execute()) { // This mutant cannot be killed
 //					unkilledMutantsInfo.put(description,
@@ -496,7 +484,7 @@ public class MutationTestConductor {
 			}
 	    }
 	    
-	    //参照検証
+	    //結果表示
 	    for (String description : nameOfMutations) {
 	    	for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
