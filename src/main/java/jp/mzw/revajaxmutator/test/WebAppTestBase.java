@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import jp.mzw.ajaxmutator.JUnitExecutor;
 import jp.mzw.revajaxmutator.FilterPlugin;
 import jp.mzw.revajaxmutator.RecorderPlugin;
 import jp.mzw.revajaxmutator.RewriterPlugin;
@@ -19,7 +20,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Proxy;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
@@ -33,16 +33,17 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.owasp.webscarab.model.StoreException;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
-public class WebAppTestBase {
+public class WebAppTestBase{
 
 	protected static String URL;
 	protected static String ADMIN_URL;
+	
     protected static WebDriver driver;
     protected static WebDriverWait wait;
-    protected WebDriver mDriver;
-    protected WebDriverWait mWait;
+    protected static ThreadLocal<WebDriver> currentDriver = new ThreadLocal<WebDriver>();
+    protected static ThreadLocal<WebDriverWait> currentWait = new ThreadLocal<WebDriverWait>();
 
-    private static String CONFIG_FILENAME = "localenv.properties";
+    protected static String CONFIG_FILENAME = "localenv.properties";
     
     protected static Properties CONFIG;
     protected static String FIREFOX_BIN;
@@ -50,9 +51,8 @@ public class WebAppTestBase {
     protected static String PROXY;
     protected static String PROXY_IP;
     protected static String PROXY_PORT;
-    protected static String SELENIUMGRID_HUB;
+    protected static String SELENIUMGRID_HUB_URL;
     protected static int TIMEOUT;
-    protected static DesiredCapabilities firefox;
     
     /**
      * Before instantiating this class,
@@ -66,7 +66,6 @@ public class WebAppTestBase {
     public static void beforeTestBaseClass() throws IOException {
     	readTestBaseConfig();
     	launchBrowser();
-    	System.out.println("beforeTestBaseClass");
     }
 	
     /**
@@ -74,7 +73,7 @@ public class WebAppTestBase {
      */
     private static void launchBrowser() {
         DesiredCapabilities cap = new DesiredCapabilities();
-
+        
         if(FIREFOX_BIN != null) {
             org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
             proxy.setHttpProxy(PROXY);
@@ -85,6 +84,7 @@ public class WebAppTestBase {
         	FirefoxBinary binary = new FirefoxBinary(new File(FIREFOX_BIN));
         	cap.setCapability(FirefoxDriver.BINARY, binary);
         	driver = new FirefoxDriver(cap);
+        	wait = new WebDriverWait(driver, TIMEOUT);
         } else if(PHANTOMJS_BIN != null) {
         	ArrayList<String> cliArgsCap = new ArrayList<String>();
         	cliArgsCap.add("--proxy="+PROXY);
@@ -100,26 +100,41 @@ public class WebAppTestBase {
         	cap.setCapability("phantomjs.page.settings.resourceTimeout","20000");
             cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_BIN);
             driver = new PhantomJSDriver(cap);
+            wait = new WebDriverWait(driver, TIMEOUT);
         }
         //concurrent
         else{
-//        	DesiredCapabilities firefox = DesiredCapabilities.firefox();
-        	firefox = DesiredCapabilities.firefox();
+        	final DesiredCapabilities firefox = DesiredCapabilities.firefox();
             org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
             proxy.setHttpProxy(PROXY);
             proxy.setFtpProxy(PROXY);
             proxy.setSslProxy(PROXY);
             firefox.setCapability(CapabilityType.PROXY, proxy);
-//        	try {
-//    			driver = new RemoteWebDriver(new URL("http://" + SELENIUMGRID_HUB +":4444/wd/hub"), firefox);
-//    		} catch (MalformedURLException e) {
-//    			e.printStackTrace();
-//    		}
+            WebDriver driver = null;
+    		try {
+    			driver = new RemoteWebDriver(new URL(SELENIUMGRID_HUB_URL), firefox);
+    		} catch (MalformedURLException e) {
+    			e.printStackTrace();
+    		}
+    		currentDriver.set(driver);
+            currentWait.set(new WebDriverWait(driver, TIMEOUT));
         }
-        
-//        wait = new WebDriverWait(driver, TIMEOUT);
     }
     
+    protected static WebDriver getDriver() {
+    	WebDriver rDriver = null;
+    	if(driver != null){
+    		rDriver = driver;
+    	}else if(currentDriver.get() != null){
+    		rDriver = currentDriver.get();
+    	}
+    	return rDriver;
+	}
+    
+    protected static WebDriverWait getWait() {
+		return currentWait.get();
+	}
+
     /**
      * Read configuration to specify firefox and proxy
      * @throws IOException indicates "localenv.properties" not found on the resource path
@@ -132,8 +147,9 @@ public class WebAppTestBase {
 		PROXY_IP = CONFIG.getProperty("proxy_ip") != null ? CONFIG.getProperty("proxy_ip") : "127.0.0.1";
 		PROXY_PORT = CONFIG.getProperty("proxy_port") != null ? CONFIG.getProperty("proxy_port") : "80";
 		PROXY = PROXY_IP + ":" + PROXY_PORT;
-		SELENIUMGRID_HUB = CONFIG.getProperty("seleniumgrid_hub_ip") != null ? CONFIG.getProperty("seleniumgrid_hub_ip") : "";
+		SELENIUMGRID_HUB_URL = CONFIG.getProperty("seleniumgrid_hub_url") != null ? CONFIG.getProperty("seleniumgrid_hub_url") : "";
 		TIMEOUT = CONFIG.getProperty("timeout") != null ? Integer.parseInt(CONFIG.getProperty("timeout")) : 3;
+		
 	}
 
     @Before
@@ -151,9 +167,8 @@ public class WebAppTestBase {
     	quitBrowser();
     }
     
-    
     private static void quitBrowser() {
-    	driver.quit();
+    	getDriver().quit();
     }
     
     public static Properties getConfig(String filename) throws IOException {
@@ -193,7 +208,6 @@ public class WebAppTestBase {
 
 			if(proxy.contains("rewrite")) {
 				RewriterPlugin plugin = new RewriterPlugin(dir);
-				//other.propatiesのjsファイル（url付き)
 				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
 				plugins.add(plugin);
 			}
@@ -204,7 +218,6 @@ public class WebAppTestBase {
 				plugins.add(new FilterPlugin(filter_url_prefix, filter_method));
 			}
 
-			//プロキシサーバ公開
 			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY);
 		}
     }
@@ -216,7 +229,7 @@ public class WebAppTestBase {
     }
     
     public static void afterTestClass() {
-    	JSCoverBase.interruptProxyServer(driver, TIMEOUT);
+    	JSCoverBase.interruptProxyServer(getDriver(), TIMEOUT);
     	RevAjaxMutatorBase.interruptProxyServer();
     }
     
@@ -226,7 +239,7 @@ public class WebAppTestBase {
      --------------------------------------------------*/
     public static void takeScreenshot(String filename) {
     	try {
-    		File screenshot = ( (TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+    		File screenshot = ( (TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
     		FileUtils.copyFile(screenshot, new File(filename));
     	} catch (IOException e) {
     		e.printStackTrace();
