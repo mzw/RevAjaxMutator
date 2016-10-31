@@ -43,7 +43,7 @@ public class WebAppTestBase{
     protected static ThreadLocal<WebDriver> currentDriver = new ThreadLocal<WebDriver>();
     protected static ThreadLocal<WebDriverWait> currentWait = new ThreadLocal<WebDriverWait>();
 
-    protected static String CONFIG_FILENAME = "localenv.properties";
+    private static String CONFIG_FILENAME = "localenv.properties";
     
     protected static Properties CONFIG;
     protected static String FIREFOX_BIN;
@@ -132,7 +132,13 @@ public class WebAppTestBase{
 	}
     
     protected static WebDriverWait getWait() {
-		return currentWait.get();
+    	WebDriverWait rWait = null;
+    	if(wait != null){
+    		rWait = wait;
+    	}else if(currentWait.get() != null){
+    		rWait = currentWait.get();
+    	}
+    	return rWait;
 	}
 
     /**

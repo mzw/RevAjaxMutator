@@ -9,6 +9,7 @@ import com.google.common.collect.Multimap;
 import difflib.DiffUtils;
 import difflib.Patch;
 import difflib.PatchFailedException;
+import groovy.transform.Synchronized;
 import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
@@ -387,10 +388,10 @@ public class MutationTestConductor {
 				.getListOfMutationName();
 		
 		//無制限実行
-	    ExecutorService executor = Executors.newCachedThreadPool();
+//	    ExecutorService executor = Executors.newCachedThreadPool();
 		
 		//スレッド数指定実行
-//		ExecutorService executor = Executors.newFixedThreadPool(2);
+		ExecutorService executor = Executors.newFixedThreadPool(5);
 		
 		//逐次実行
 //		ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -540,30 +541,35 @@ public class MutationTestConductor {
 			System.out.println("mutationFileInformations"+ "(" +description + ")" + ":" + mutationListManager.getMutationFileInformationList(description).size());
 			
 			if (testExecutor.execute()) { // This mutant cannot be killed
-				unkilledMutantsInfo.put(description,
-				mutationFileInformation.toString());
-				LOGGER.info("mutant {} is not be killed", description);
+				synchronized (unkilledMutantsInfo) {
+					unkilledMutantsInfo.put(description,mutationFileInformation.toString());
+				}
+				synchronized (LOGGER) {
+					LOGGER.info("mutant {} is not be killed", description);
+				}
 				testSucceed = false;
 			} else {
-				mutationFileInformation
-					.setState(MutationFileInformation.State.KILLED);
+				synchronized (mutationFileInformation) {
+					mutationFileInformation.setState(MutationFileInformation.State.KILLED);
+				}
 				testSucceed = true;
 			}
 	
+			//スレッドセーフじゃない
 			String message = testExecutor.getMessageOnLastExecution();
 			
 			System.out.println("messaae:"+ message);
 			if (message != null) {
 				LOGGER.info(message);
 			}
+			//スレッドセーフじゃない→修正
 			logProgress(numberOfAppliedMutation, numberOfMaxMutants);
-			System.out.println("logProgress:"+ numberOfAppliedMutation);
 			return testSucceed;
 		}
 		
 	}
 	
-	private void logProgress(int finished, int total) {
+	private synchronized void logProgress(int finished, int total) {
 		LOGGER.info("{} in {} finished: {} %", finished, total,
 				Math.floor(finished * 1000.0 / total) / 10);
 	}

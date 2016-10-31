@@ -48,7 +48,6 @@ public class RewriterPlugin extends ProxyPlugin {
             boolean matched = false;
             
             for(String _filename : mRewriteFiles) {
-            	//リスエストのurlとファイル名があっている場合
             	if(filename.equals(_filename)) {
             		matched = true;
             		break;
