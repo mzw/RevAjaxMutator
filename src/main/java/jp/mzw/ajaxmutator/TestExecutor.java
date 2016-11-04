@@ -17,4 +17,6 @@ public interface TestExecutor {
     public boolean execute();
 
     public String getMessageOnLastExecution();
+    
+    public String getTargetClassName();
 }

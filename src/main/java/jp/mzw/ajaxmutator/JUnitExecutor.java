@@ -37,19 +37,6 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
         this.shouldRunAllTest = shouldRunAllTest;
         this.targetClasses = targetClasses;
     }
-
-    @Override
-	protected JUnitExecutor clone() throws CloneNotSupportedException {
-    	
-    	JUnitExecutor executor = null;
-        try {
-        	executor = (JUnitExecutor)super.clone();
-        } catch (CloneNotSupportedException e) {
-			throw new InternalError(e.toString());
-		}
-        
-        return executor;
-	}
     
     public List<Result> run() {
         ArrayList<Result> results = new ArrayList<Result>();
@@ -176,6 +163,11 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
         
         executionMessage = messageBuilder.toString();
         System.out.println("[ThredID="+Thread.currentThread().getId()+"]"+"executionMessage:"+ executionMessage);
+    }
+    
+    @Override
+    public String getTargetClassName(){
+    	return targetClasses[0].getName();
     }
 
     @Override

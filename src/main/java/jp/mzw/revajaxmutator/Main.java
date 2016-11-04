@@ -1,15 +1,27 @@
 package jp.mzw.revajaxmutator;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import jp.mzw.ajaxmutator.JUnitExecutor;
 import jp.mzw.ajaxmutator.JUnitTestRunner;
 import jp.mzw.ajaxmutator.JUnitTheoryRunner;
 import jp.mzw.ajaxmutator.MutationTestConductor;
+import jp.mzw.ajaxmutator.TestExecutor;
+import jp.mzw.ajaxmutator.generator.MutationFileWriter;
+import jp.mzw.ajaxmutator.util.Util;
+import jp.mzw.revajaxmutator.config.AppConfigBase;
 import jp.mzw.revajaxmutator.genprog.GenProgConductor;
 import jp.mzw.revajaxmutator.search.Searcher;
+import jp.mzw.revajaxmutator.test.WebAppTestBase;
 
 import org.json.JSONException;
 import org.junit.experimental.theories.Theories;
@@ -44,6 +56,14 @@ public class Main {
             }
             if ("analysis".equals(cmd)) {
                 analysis(rargs);
+                System.exit(0);
+            }
+            if ("concurrent_analysis".equals(cmd)) {
+                concurrent_analysis(rargs);
+                System.exit(0);
+            }
+            if ("createfile".equals(cmd)) {
+                createfile(rargs);
                 System.exit(0);
             }
             if ("proxy".equals(cmd)) {
@@ -115,6 +135,113 @@ public class Main {
         conductor.mutationAnalysisUsingExistingMutations(
                 new JUnitExecutor(false, Class.forName(testClassName)));
     }
+    
+    public static void concurrent_analysis(String[] args) throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+        String className = args[0];
+        String testClassName = args[1];
+        String configFileName = args[2];
+
+        MutateConfiguration config = (MutateConfiguration) Class.forName(className).newInstance();
+        MutationTestConductor conductor = config.mutationTestConductor();
+        
+        List<String> mutantNames = getMutantNames(configFileName);
+        
+        List<TestExecutor> executors = createJUnitExecuterList(testClassName,mutantNames);
+        
+        conductor.mutationAnalysisUsingExistingMutations(executors);
+    }
+    public static void createfile(String[] args){
+    	String configFileName = args[0];
+    	
+    	List<String> mutantNames = getMutantNames(configFileName);
+        
+    	createMutantTestFile(new File("src/com/ito/sampleTest/SlideTest.java"),mutantNames);
+    }
+    
+    
+    private static List<String> getMutantNames(String configFileName){
+    	Properties propaties = new Properties();
+        try {
+			propaties.load(AppConfigBase.class.getClassLoader().getResourceAsStream(new File(configFileName).getName()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        File mutantsDir = new File(propaties.getProperty("ram_record_dir") + File.separator + MutationFileWriter.DEFAULT_FOLDER_NAME);
+        
+        List<String> list = new ArrayList<String>();
+        
+        for(File file : mutantsDir.listFiles()){
+        	if(file.getName().contains("mutant")){
+        		list.add(Util.getFileNameWithoutExtension(file.getName()));
+        	}
+        }
+        return list;
+    }
+    
+    private static void createMutantTestFile(File testFile,List<String> mutantNames){
+        
+        String originalfilename = testFile.getName();
+        
+        List<String> original = Util.readFromFile(testFile.getPath());
+        
+        for(String mutantname : mutantNames){
+        	
+        		String content = applyMutantNameToTestCode(
+        				original,
+        				Util.getFileNameWithoutExtension(originalfilename),
+        				mutantname
+        				);
+        		
+        		String newfilepath = 
+        				testFile.getParent() +
+        				File.separator +
+        				mutantname +
+        				originalfilename;
+        		
+        		Util.writeToFile(newfilepath, content);
+        }
+    }
+    
+    private static List<TestExecutor> createJUnitExecuterList(String testClassName, List<String> mutantNames) throws ClassNotFoundException{
+    	
+    	List<TestExecutor> executors = new ArrayList<TestExecutor>();
+    	
+    	String[] splitedTestClassName = testClassName.split("\\.");
+    	
+    	for(String mutantname : mutantNames){
+    		
+    		String[] name = splitedTestClassName.clone();
+    		
+    		name[name.length - 1] = mutantname + name[name.length - 1];
+			
+    		String newTestClassName = Util.join(name, ".");
+    		
+    		executors.add(new JUnitExecutor(false,Class.forName(newTestClassName)));
+    	}
+    	
+    	return executors;
+    }
+    
+    private static String applyMutantNameToTestCode(List<String> original,String originalfilename,String mutantname){
+    	
+    	List<String> clone = new ArrayList<String>(original);
+    	
+    	for(int i = 0; i < clone.size(); i++){
+    		if(clone.get(i).contains("class "+ originalfilename)){
+    			clone.set(i,
+    					clone.get(i).replaceFirst(originalfilename, mutantname + originalfilename)
+    					);
+    		}
+    		if(clone.get(i).contains(WebAppTestBase.class.getSimpleName() + ".")){
+    			clone.set(i,
+    					clone.get(i).replaceFirst("\\);",",\"" + mutantname + "\");")
+    					);
+    		}
+    	}
+    	
+    	return Util.join(clone.toArray(new String[0]),System.lineSeparator());
+    }
+    
 
     public static void proxy(String[] args) throws StoreException {
         Framework framework = new Framework();

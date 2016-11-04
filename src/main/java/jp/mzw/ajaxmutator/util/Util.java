@@ -127,6 +127,16 @@ public class Util {
     public static String omitLineBreak(String string) {
         return string.replaceAll("(\r)?\n", "");
     }
+    
+	public static String getFileNameWithoutExtension(String fileName)
+	{
+	  int index = fileName.lastIndexOf('.');
+	  if (index!=-1)
+	  {
+	    return fileName.substring(0, index);
+	  }
+	  return "";
+	}
 
     /**
      * Convert line separator of given file to System's default line separator

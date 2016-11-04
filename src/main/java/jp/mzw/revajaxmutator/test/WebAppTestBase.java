@@ -228,6 +228,48 @@ public class WebAppTestBase{
 		}
     }
     
+    //concurrent
+    public static void beforeTestClass(String filename,String mutantname) throws IOException, StoreException, InterruptedException {
+    	Properties config = getConfig(filename);
+    	AppConfig appConfig = new AppConfig(filename);
+		
+		URL = config.getProperty("url") != null ? config.getProperty("url") : "";
+		ADMIN_URL = config.getProperty("admin_url") != null ? config.getProperty("admin_url") : "";
+		
+		String proxy = config.getProperty("proxy") != null ? config.getProperty("proxy") : "";
+		// JSCover
+		if("jscover".equals(proxy)) {
+			String dir = config.getProperty("jscover_report_dir") != null ? config.getProperty("jscover_report_dir") : "jscover";
+			String instr = config.getProperty("jscover_instr_regx") != null ? config.getProperty("jscover_instr_regx") : "";
+			String no_instr = config.getProperty("jscover_no_instr_regx") != null ? config.getProperty("jscover_no_instr_regx") : "";
+			
+			JSCoverBase.launchProxyServer(dir, PROXY_PORT, instr.split(","), no_instr.split(","));
+		}
+		// RevAjaxMutator
+		else if(proxy.startsWith("ram")) {
+			String dir = config.getProperty("ram_record_dir") != null ? config.getProperty("ram_record_dir") : "record";
+			
+			ArrayList<ProxyPlugin> plugins = new ArrayList<ProxyPlugin>();
+			if(proxy.contains("record")) {
+				plugins.add(new RecorderPlugin(dir));
+			}
+
+			if(proxy.contains("rewrite")) {
+				RewriterPlugin plugin = new RewriterPlugin(dir, mutantname);
+				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
+				plugins.add(plugin);
+			}
+
+			if(proxy.contains("filter")) {
+				String filter_url_prefix = config.getProperty("ram_filter_url_prefix") != null ? config.getProperty("ram_filter_url_prefix") : "http://localhost:80";
+				String filter_method = config.getProperty("ram_filter_method") != null ? config.getProperty("ram_filter_method") : "POST";
+				plugins.add(new FilterPlugin(filter_url_prefix, filter_method));
+			}
+
+			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY);
+		}
+    }
+    
     private static class AppConfig extends AppConfigBase {
     	private AppConfig(String config) throws IOException {
     		super(config);

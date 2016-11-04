@@ -17,10 +17,18 @@ import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RewriterPlugin extends ProxyPlugin {
     private String mDirname;
+    private String mMutantname;
     private List<String> mRewriteFiles;
 
     public RewriterPlugin(String dirname) {
         mDirname = dirname;
+        mRewriteFiles = new ArrayList<String>();
+    }
+    
+    public RewriterPlugin(String dirname, String mutantname) {
+        mDirname = dirname;
+        mMutantname = mutantname;
+        
         mRewriteFiles = new ArrayList<String>();
     }
 
@@ -58,22 +66,20 @@ public class RewriterPlugin extends ProxyPlugin {
             	return;
             }
             
-            System.out.println("ファイル名一致");
-            
             File jsFile = new File(mDirname + "/" + filename);
-//            System.out.println("jsFileName:"+jsFile.getName());
             File dir = new File(mDirname + "/" + "tested");
             File[] files = dir.listFiles();
             for(File file : files){
-            	//隠しファイルでない
-            	if(!file.isHidden()){
-            		System.out.println("ファイル名："+file.getName());
+            	System.out.println("mMutantname:"+mMutantname);
+            	System.out.println("file.getName():"+file.getName());
+            	
+            	if(file.getName().contains(mMutantname)){
             		if(file.renameTo( jsFile )){
             			System.out.println("ファイル移動成功");
             		}else{
             			System.out.println("ファイル移動失敗");
             		}
-                	break;
+            		break;
             	}
             }
             
@@ -86,17 +92,14 @@ public class RewriterPlugin extends ProxyPlugin {
             byte[] buf = new byte[1024 * 8];
             int len = 0;
             
-            
             //jsファイルの中身を書き込む
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
             in.close();
             
-            
             //応答の内容を書き換え
             response.setContent(out.toByteArray());
-            
 
         }
         catch (FileNotFoundException e) {

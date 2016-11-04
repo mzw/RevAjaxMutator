@@ -74,16 +74,6 @@ public class MutationFileInformation {
 	public String getFileName() {
 		return fileName;
 	}
-	
-	public String getFileNameWithoutExtension()
-	{
-	  int index = fileName.lastIndexOf('.');
-	  if (index!=-1)
-	  {
-	    return fileName.substring(0, index);
-	  }
-	  return "";
-	}
 
 	public String getAbsolutePath() {
 		return absolutePath;
