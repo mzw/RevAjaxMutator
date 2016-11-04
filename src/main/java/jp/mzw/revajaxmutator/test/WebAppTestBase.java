@@ -24,6 +24,7 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
@@ -52,26 +53,25 @@ public class WebAppTestBase{
     protected static String PROXY_IP;
     protected static String PROXY_PORT;
     protected static String SELENIUMGRID_HUB_URL;
+    protected static String XPI_FILE_PATH;
     protected static int TIMEOUT;
     
-    /**
-     * Before instantiating this class,
-     * explicitly call methods in the following order:
-     * 1. readConfig
-     * 2. launchBrowser
-     * although multiple "@BeforeClass" can be allowed.
-     * @throws IOException indicates "localenv.properties" not found on the resource path
-     */
-    @BeforeClass
-    public static void beforeTestBaseClass() throws IOException {
+    public static void beforeTestBaseClass(String config) throws IOException, StoreException, InterruptedException {
     	readTestBaseConfig();
-    	launchBrowser();
+    	launchBrowser("");
+    	beforeTestClass(config);
     }
-	
-    /**
+    
+    public static void beforeTestBaseClass(String config,String mutantname) throws IOException, StoreException, InterruptedException {
+    	readTestBaseConfig();
+    	launchBrowser(mutantname);
+    	beforeTestClass(config);
+    }
+    
+	/**
      * Launch given Firefox browser with given proxy configuration
      */
-    private static void launchBrowser() {
+    private static void launchBrowser(String mutantname) {
         DesiredCapabilities cap = new DesiredCapabilities();
         
         if(FIREFOX_BIN != null) {
@@ -101,23 +101,38 @@ public class WebAppTestBase{
             cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_BIN);
             driver = new PhantomJSDriver(cap);
             wait = new WebDriverWait(driver, TIMEOUT);
-        }
-        //concurrent
-        else{
+        }else{
         	final DesiredCapabilities firefox = DesiredCapabilities.firefox();
-            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+        	FirefoxProfile profile = new FirefoxProfile();
+        	File modifyHeaders = new File(XPI_FILE_PATH);
+        	profile.setEnableNativeEvents(false); 
+        	try {
+        		profile.addExtension(modifyHeaders); 
+        	} catch (IOException e) {
+        		e.printStackTrace();
+        	}
+        	profile.setPreference("modifyheaders.headers.count", 1);
+        	profile.setPreference("modifyheaders.headers.action0", "Add");
+        	profile.setPreference("modifyheaders.headers.name0", "mutant");
+        	profile.setPreference("modifyheaders.headers.value0", mutantname);
+        	profile.setPreference("modifyheaders.headers.enabled0", true);
+        	profile.setPreference("modifyheaders.config.active", true);
+        	profile.setPreference("modifyheaders.config.alwaysOn", true);
+        	firefox.setCapability(FirefoxDriver.PROFILE, profile);
+        	org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+        	 
             proxy.setHttpProxy(PROXY);
             proxy.setFtpProxy(PROXY);
             proxy.setSslProxy(PROXY);
             firefox.setCapability(CapabilityType.PROXY, proxy);
             WebDriver driver = null;
-    		try {
-    			driver = new RemoteWebDriver(new URL(SELENIUMGRID_HUB_URL), firefox);
-    		} catch (MalformedURLException e) {
-    			e.printStackTrace();
-    		}
-    		currentDriver.set(driver);
-            currentWait.set(new WebDriverWait(driver, TIMEOUT));
+     		try {
+     			driver = new RemoteWebDriver(new URL(SELENIUMGRID_HUB_URL), firefox);
+     		} catch (MalformedURLException e) {
+     			e.printStackTrace();
+     		}
+     		currentDriver.set(driver);
+     		currentWait.set(new WebDriverWait(driver, TIMEOUT));
         }
     }
     
@@ -154,6 +169,7 @@ public class WebAppTestBase{
 		PROXY_PORT = CONFIG.getProperty("proxy_port") != null ? CONFIG.getProperty("proxy_port") : "80";
 		PROXY = PROXY_IP + ":" + PROXY_PORT;
 		SELENIUMGRID_HUB_URL = CONFIG.getProperty("seleniumgrid_hub_url") != null ? CONFIG.getProperty("seleniumgrid_hub_url") : "";
+		XPI_FILE_PATH = CONFIG.getProperty("xpi_file_path") != null ? CONFIG.getProperty("xpi_file_path") : "";
 		TIMEOUT = CONFIG.getProperty("timeout") != null ? Integer.parseInt(CONFIG.getProperty("timeout")) : 3;
 		
 	}
@@ -188,6 +204,7 @@ public class WebAppTestBase{
 		For test classes
      --------------------------------------------------*/
     public static void beforeTestClass(String filename) throws IOException, StoreException, InterruptedException {
+    	
     	Properties config = getConfig(filename);
     	AppConfig appConfig = new AppConfig(filename);
 		
@@ -228,47 +245,6 @@ public class WebAppTestBase{
 		}
     }
     
-    //concurrent
-    public static void beforeTestClass(String filename,String mutantname) throws IOException, StoreException, InterruptedException {
-    	Properties config = getConfig(filename);
-    	AppConfig appConfig = new AppConfig(filename);
-		
-		URL = config.getProperty("url") != null ? config.getProperty("url") : "";
-		ADMIN_URL = config.getProperty("admin_url") != null ? config.getProperty("admin_url") : "";
-		
-		String proxy = config.getProperty("proxy") != null ? config.getProperty("proxy") : "";
-		// JSCover
-		if("jscover".equals(proxy)) {
-			String dir = config.getProperty("jscover_report_dir") != null ? config.getProperty("jscover_report_dir") : "jscover";
-			String instr = config.getProperty("jscover_instr_regx") != null ? config.getProperty("jscover_instr_regx") : "";
-			String no_instr = config.getProperty("jscover_no_instr_regx") != null ? config.getProperty("jscover_no_instr_regx") : "";
-			
-			JSCoverBase.launchProxyServer(dir, PROXY_PORT, instr.split(","), no_instr.split(","));
-		}
-		// RevAjaxMutator
-		else if(proxy.startsWith("ram")) {
-			String dir = config.getProperty("ram_record_dir") != null ? config.getProperty("ram_record_dir") : "record";
-			
-			ArrayList<ProxyPlugin> plugins = new ArrayList<ProxyPlugin>();
-			if(proxy.contains("record")) {
-				plugins.add(new RecorderPlugin(dir));
-			}
-
-			if(proxy.contains("rewrite")) {
-				RewriterPlugin plugin = new RewriterPlugin(dir, mutantname);
-				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
-				plugins.add(plugin);
-			}
-
-			if(proxy.contains("filter")) {
-				String filter_url_prefix = config.getProperty("ram_filter_url_prefix") != null ? config.getProperty("ram_filter_url_prefix") : "http://localhost:80";
-				String filter_method = config.getProperty("ram_filter_method") != null ? config.getProperty("ram_filter_method") : "POST";
-				plugins.add(new FilterPlugin(filter_url_prefix, filter_method));
-			}
-
-			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY);
-		}
-    }
     
     private static class AppConfig extends AppConfigBase {
     	private AppConfig(String config) throws IOException {

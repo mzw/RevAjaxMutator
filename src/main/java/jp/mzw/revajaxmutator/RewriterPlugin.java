@@ -17,18 +17,10 @@ import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RewriterPlugin extends ProxyPlugin {
     private String mDirname;
-    private String mMutantname;
     private List<String> mRewriteFiles;
 
     public RewriterPlugin(String dirname) {
         mDirname = dirname;
-        mRewriteFiles = new ArrayList<String>();
-    }
-    
-    public RewriterPlugin(String dirname, String mutantname) {
-        mDirname = dirname;
-        mMutantname = mutantname;
-        
         mRewriteFiles = new ArrayList<String>();
     }
 
@@ -53,6 +45,17 @@ public class RewriterPlugin extends ProxyPlugin {
         	
             String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
             
+            //print request
+//            System.out.println("====<REQUEST>====");
+//            System.out.println(request.getMethod());
+//            System.out.println(request.getURL());
+//            System.out.println(request.getVersion());
+//            String[] headers=request.getHeaderNames();
+//            for(String header : headers){
+//            	System.out.println(header+" : " + request.getHeader(header));
+//            }
+//            System.out.println("====</REQUEST>====");
+            
             boolean matched = false;
             
             for(String _filename : mRewriteFiles) {
@@ -66,26 +69,24 @@ public class RewriterPlugin extends ProxyPlugin {
             	return;
             }
             
+            String mutantname = request.getHeader("mutant");
+            
+            String testedFilename = "";
+            
             File jsFile = new File(mDirname + "/" + filename);
             File dir = new File(mDirname + "/" + "tested");
             File[] files = dir.listFiles();
             for(File file : files){
-            	System.out.println("mMutantname:"+mMutantname);
-            	System.out.println("file.getName():"+file.getName());
-            	
-            	if(file.getName().contains(mMutantname)){
-            		if(file.renameTo( jsFile )){
-            			System.out.println("ファイル移動成功");
-            		}else{
-            			System.out.println("ファイル移動失敗");
-            		}
-            		break;
+            	if(file.getName().contains(mutantname)){
+            		testedFilename = file.getName();
             	}
             }
             
+            System.out.println("testedFilename:"+testedFilename);;
+            
             //record/appフォルダのjsファイルの読み込み
             BufferedInputStream in = new BufferedInputStream(
-                    new FileInputStream(mDirname + "/" + filename));
+                    new FileInputStream(mDirname + "/" + "tested" + "/" +testedFilename));
             
             //出力用の領域
             ByteArrayOutputStream out = new ByteArrayOutputStream();

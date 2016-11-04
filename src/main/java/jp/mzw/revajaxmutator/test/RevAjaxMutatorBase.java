@@ -13,7 +13,7 @@ import org.owasp.webscarab.plugin.proxy.Proxy;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RevAjaxMutatorBase {
-	protected static ThreadLocal<Proxy> mProxy = new ThreadLocal<Proxy>();
+	protected static Proxy mProxy;
 	
 	public static void launchProxyServer(List<ProxyPlugin> plugins, String proxy) throws StoreException, InterruptedException {
         Framework framework = new Framework();
@@ -22,38 +22,37 @@ public class RevAjaxMutatorBase {
         
         framework.setSession("FileSystem", new File(".conversation"), "");
         
-        
-        mProxy.set(new Proxy(framework));
+        mProxy = new Proxy(framework);
         
         for(ProxyPlugin plugin : plugins) {
-        	mProxy.get().addPlugin(plugin);
+        	mProxy.addPlugin(plugin);
         }
 		
-        mProxy.get().run();
+        mProxy.run();
     	Thread.sleep(300); // wait for launching proxy server
 	}
 	
 
     public static void relaunchProxyServerWith(FilterPlugin filter_plugin) throws InterruptedException, StoreException {
-    	if(mProxy.get() != null && mProxy.get().stop()) {
-    		mProxy.get().addPlugin(filter_plugin);
-    		mProxy.get().run();
+    	if(mProxy != null && mProxy.stop()) {
+    		mProxy.addPlugin(filter_plugin);
+    		mProxy.run();
     		Thread.sleep(300); // wait for launching proxy server
     	}
     }
     
     public static void disableFilterPlugin() throws InterruptedException {
-    	if(mProxy.get() != null && mProxy.get().stop()) {
-    		FilterPlugin filter_plugin = (FilterPlugin) mProxy.get().getPlugin("FilterPlugin");
+    	if(mProxy != null && mProxy.stop()) {
+    		FilterPlugin filter_plugin = (FilterPlugin) mProxy.getPlugin("FilterPlugin");
     		filter_plugin.setEnabled(false);
-    		mProxy.get().run();
+    		mProxy.run();
     		Thread.sleep(300); // wait for launching proxy server
     	}
     }
     
     public static void interruptProxyServer() {
-    	if(mProxy.get() != null) {
-    		mProxy.get().stop();
+    	if(mProxy != null) {
+    		mProxy.stop();
     	}
     }
 }
