@@ -22,9 +22,10 @@ import java.util.TreeMap;
  *
  * @author Kazuki Nishiura
  */
-public class JUnitExecutor implements TestExecutor ,Cloneable{
+public class JUnitExecutor implements TestExecutor {
 	protected Logger LOGGER = LoggerFactory.getLogger(JUnitExecutor.class);
-	private final boolean shouldRunAllTest;
+	
+    private final boolean shouldRunAllTest;
     private final Class<?>[] targetClasses;
     private Map<String, Boolean> testResults;
     private String executionMessage;
@@ -68,9 +69,7 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
     @Override
     public boolean execute() {
         testResults = new TreeMap<String, Boolean>();
-        
         for (Class<?> testClass: targetClasses) {
-        	
             if (!executeSingleTest(testClass)) {
                 updateMessage(false);
                 return false;
@@ -79,7 +78,6 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
         updateMessage(true);
         return true;
     }
-    
     
     private boolean executeSingleTest(Class<?> testClass) {
         Runner runner;
@@ -96,18 +94,13 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
         } catch (InitializationError error) {
             throw new IllegalStateException(error);
         }
-        
         Result result = (new JUnitCore()).run(runner);
-        
         storeResult(result);
-        
         return result.wasSuccessful();
     }
 
     private void storeResult(Result result) {
-    	
         List<String> testMethods = new ArrayList<String>();
-        
         for (Class<?> clazz: targetClasses) {
             for (Method method: clazz.getMethods()) {
                 if (method.isAnnotationPresent(Test.class))
@@ -124,7 +117,6 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
                     testResults.put("setup or teardown", false);
                     continue;
                 }
-                
                 testResults.put(failure.getDescription().getMethodName(), false);
             }
         }
@@ -144,17 +136,17 @@ public class JUnitExecutor implements TestExecutor ,Cloneable{
                     .append(entry.getValue() ? 'x' : 'o').append(", ");
         }
         messageBuilder.append("result: " + (result ? 'x' : 'o'));
-        
         executionMessage = messageBuilder.toString();
-    }
-    
-    @Override
-    public String getTargetClassName(){
-    	return targetClasses[0].getName();
     }
 
     @Override
     public String getMessageOnLastExecution() {
         return executionMessage;
     }
+    
+    @Override
+    public String getTargetClassName(){
+    	return targetClasses[0].getName();
+    }
 }
+

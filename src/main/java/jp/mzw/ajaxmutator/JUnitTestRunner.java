@@ -39,7 +39,6 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 
     @Override
     protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
-    	
         Description description= describeChild(method);
         if (method.getAnnotation(Ignore.class) != null || skipNextExecution) {
             notifier.fireTestIgnored(description);
