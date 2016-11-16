@@ -68,6 +68,33 @@ public class WebAppTestBase{
     	beforeTestClass(config);
     }
     
+    private static org.openqa.selenium.Proxy getProxy(){
+    	org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
+        proxy.setHttpProxy(PROXY);
+        proxy.setFtpProxy(PROXY);
+        proxy.setSslProxy(PROXY);
+    	return proxy;
+    }
+    
+    private static FirefoxProfile getFirefoxProfile(String mutantname){
+    	FirefoxProfile profile = new FirefoxProfile();
+    	File modifyHeaders = new File(XPI_FILE_PATH);
+    	profile.setEnableNativeEvents(false); 
+    	try {
+    		profile.addExtension(modifyHeaders); 
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    	profile.setPreference("modifyheaders.headers.count", 1);
+    	profile.setPreference("modifyheaders.headers.action0", "Add");
+    	profile.setPreference("modifyheaders.headers.name0", "mutant");
+    	profile.setPreference("modifyheaders.headers.value0", mutantname);
+    	profile.setPreference("modifyheaders.headers.enabled0", true);
+    	profile.setPreference("modifyheaders.config.active", true);
+    	profile.setPreference("modifyheaders.config.alwaysOn", true);
+    	return profile;
+    }
+    
 	/**
      * Launch given Firefox browser with given proxy configuration
      */
@@ -75,12 +102,7 @@ public class WebAppTestBase{
         DesiredCapabilities cap = new DesiredCapabilities();
         
         if(FIREFOX_BIN != null) {
-            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-            proxy.setHttpProxy(PROXY);
-            proxy.setFtpProxy(PROXY);
-            proxy.setSslProxy(PROXY);
-            cap.setCapability(CapabilityType.PROXY, proxy);
-            
+            cap.setCapability(CapabilityType.PROXY, getProxy());
         	FirefoxBinary binary = new FirefoxBinary(new File(FIREFOX_BIN));
         	cap.setCapability(FirefoxDriver.BINARY, binary);
         	driver = new FirefoxDriver(cap);
@@ -101,30 +123,12 @@ public class WebAppTestBase{
             cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_BIN);
             driver = new PhantomJSDriver(cap);
             wait = new WebDriverWait(driver, TIMEOUT);
-        }else{
+        }
+        //concurrent
+        else{
         	final DesiredCapabilities firefox = DesiredCapabilities.firefox();
-        	FirefoxProfile profile = new FirefoxProfile();
-        	File modifyHeaders = new File(XPI_FILE_PATH);
-        	profile.setEnableNativeEvents(false); 
-        	try {
-        		profile.addExtension(modifyHeaders); 
-        	} catch (IOException e) {
-        		e.printStackTrace();
-        	}
-        	profile.setPreference("modifyheaders.headers.count", 1);
-        	profile.setPreference("modifyheaders.headers.action0", "Add");
-        	profile.setPreference("modifyheaders.headers.name0", "mutant");
-        	profile.setPreference("modifyheaders.headers.value0", mutantname);
-        	profile.setPreference("modifyheaders.headers.enabled0", true);
-        	profile.setPreference("modifyheaders.config.active", true);
-        	profile.setPreference("modifyheaders.config.alwaysOn", true);
-        	firefox.setCapability(FirefoxDriver.PROFILE, profile);
-        	org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-        	 
-            proxy.setHttpProxy(PROXY);
-            proxy.setFtpProxy(PROXY);
-            proxy.setSslProxy(PROXY);
-            firefox.setCapability(CapabilityType.PROXY, proxy);
+        	firefox.setCapability(FirefoxDriver.PROFILE, getFirefoxProfile(mutantname));
+            firefox.setCapability(CapabilityType.PROXY, getProxy());
             WebDriver driver = null;
      		try {
      			driver = new RemoteWebDriver(new URL(SELENIUMGRID_HUB_URL), firefox);

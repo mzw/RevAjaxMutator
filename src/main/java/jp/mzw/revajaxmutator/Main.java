@@ -38,6 +38,9 @@ import org.owasp.webscarab.plugin.Framework;
 import org.owasp.webscarab.plugin.proxy.Proxy;
 
 public class Main {
+	
+	private static final String MUTANT = "mutant";
+	
     public static void main(String[] args) {
         if (args.length == 0) {
             usage();
@@ -125,13 +128,10 @@ public class Main {
         String className = args[0];
         String testClassName = args[1];
 
-        //テスト対象アプリからMutateConfigurationを読み込み
         MutateConfiguration config = (MutateConfiguration) Class.forName(className).newInstance();
         
-        //MutationTestConducterを取得
         MutationTestConductor conductor = config.mutationTestConductor();
         
-        //MutationAnalisis実行
         conductor.mutationAnalysisUsingExistingMutations(
                 new JUnitExecutor(false, Class.forName(testClassName)));
     }
@@ -150,14 +150,28 @@ public class Main {
         
         conductor.mutationAnalysisUsingExistingMutations(executors);
     }
+    
     public static void createfile(String[] args){
     	String configFileName = args[0];
     	
+    	String testFilePath = getTestFilePath(configFileName);
+    	
     	List<String> mutantNames = getMutantNames(configFileName);
-        
-    	createMutantTestFile(new File("src/com/ito/sampleTest/SlideTest.java"),mutantNames);
+    	
+    	createMutantTestFile(new File(testFilePath),mutantNames);
     }
     
+    
+    private static String getTestFilePath(String configFileName){
+    	
+    	Properties propaties = new Properties();
+        try {
+			propaties.load(AppConfigBase.class.getClassLoader().getResourceAsStream(new File(configFileName).getName()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        return propaties.getProperty("path_to_test_case_file");
+    }
     
     private static List<String> getMutantNames(String configFileName){
     	Properties propaties = new Properties();
@@ -171,7 +185,7 @@ public class Main {
         List<String> list = new ArrayList<String>();
         
         for(File file : mutantsDir.listFiles()){
-        	if(file.getName().contains("mutant")){
+        	if(file.getName().contains(MUTANT)){
         		list.add(Util.getFileNameWithoutExtension(file.getName()));
         	}
         }
@@ -183,6 +197,14 @@ public class Main {
         String originalfilename = testFile.getName();
         
         List<String> original = Util.readFromFile(testFile.getPath());
+        
+        File testCodeDir = testFile.getParentFile();
+        
+        for(File file : testCodeDir.listFiles()){
+        	if(file.getName().contains(MUTANT)){
+        		file.delete();
+        	}
+        }
         
         for(String mutantname : mutantNames){
         	

@@ -71,9 +71,7 @@ public class MutationTestConductor {
 		this.pathToJsFile = pathToJSFile;
 		File jsFile = new File(pathToJSFile);
 		Util.normalizeLineBreak(jsFile);
-		//diffファイルとかを作るオブジェクト
 		mutationFileWriter = new MutationFileWriter(jsFile);
-		//ファイルのバックアップを作成
 		Util.copyFile(pathToJSFile, pathToBackupFile());
 
 		parser = ParserWithBrowser.getParser();
@@ -140,7 +138,6 @@ public class MutationTestConductor {
 		unkilledMutantsInfo = ArrayListMultimap.create();
 
 		checkIfSetuped();
-		//ここでテスト実行
 		applyMutationAnalysis(testExecutor, new Stopwatch().start());
 	}
 	
@@ -151,7 +148,6 @@ public class MutationTestConductor {
 		unkilledMutantsInfo = ArrayListMultimap.create();
 
 		checkIfSetuped();
-		//ここでテスト実行
 		applyMutationAnalysis(testExecutors, new Stopwatch().start());
 	}
 
@@ -397,195 +393,109 @@ public class MutationTestConductor {
 	}
 
 	private int applyMutationAnalysis(TestExecutor testExecutor) {
-		
 		int numberOfAppliedMutation = 0;
-		
 		int numberOfMaxMutants = mutationListManager
 				.getNumberOfUnkilledMutants();
-		
-		//コメント出力
-		System.out.println("numberOfMaxMutants:" + numberOfMaxMutants);
-		
 		Thread commandReceiver = new Thread(new CommandReceiver());
-		
 		commandReceiver.start();
-		
-		//元のテスト対象javascriptファイル
 		List<String> original = Util.readFromFile(pathToJsFile);
-		
 		List<String> nameOfMutations = mutationListManager
 				.getListOfMutationName();
-		
-		//無制限実行
-//	    ExecutorService executor = Executors.newCachedThreadPool();
-		
-		//スレッド数指定実行
-		ExecutorService executor = Executors.newFixedThreadPool(5);
-		
-		//逐次実行
-//		ExecutorService executor = Executors.newSingleThreadExecutor();
-		
-	    List<Future<Boolean>> futureList = new ArrayList<Future<Boolean>>();
-	    
-		//nameOfMutations = unKilledMutantsの数
 		for (String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
-			
-			//mutationFileInformation = 出力されるDiffのこと
 			for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
-				
 				// execution can be canceled from outside.
 				if (!conducting) {
 					break;
 				}
-				
 				if (mutationFileInformation.canBeSkipped()
 						|| !applyMutationFile(original, mutationFileInformation)) {
 					continue;
 				}
-				
 				numberOfAppliedMutation++;
 				if (numberOfAppliedMutation >= saveInformationInterval
 						& (numberOfAppliedMutation % saveInformationInterval == 0)) {
-					System.out.println("generateMutationListFile");
 					mutationListManager.generateMutationListFile();
 				}
-				
 				LOGGER.info("Executing test(s) on {}",
 						mutationFileInformation.getAbsolutePath());
-				
-			    Future<Boolean> future = null;
-			    future = executor.submit(new TestCallable(
-						testExecutor,
-						mutationFileInformation,
-						description,
-						numberOfAppliedMutation,
-						numberOfMaxMutants));
-					
-				
-				futureList.add(future);
-			 
-//				try {
-//					Thread.sleep(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-
-
-//				if (testExecutor.execute()) { // This mutant cannot be killed
-//					unkilledMutantsInfo.put(description,
-//					mutationFileInformation.toString());
-//					LOGGER.info("mutant {} is not be killed", description);
-//				} else {
-//					mutationFileInformation
-//						.setState(MutationFileInformation.State.KILLED);
-//				}
-//		
-//				String message = testExecutor.getMessageOnLastExecution();
-//				
-//				System.out.println("messaae:"+ message);
-//				if (message != null) {
-//					LOGGER.info(message);
-//				}
-//				logProgress(numberOfAppliedMutation, numberOfMaxMutants);
+				if (testExecutor.execute()) { // This mutant cannot be killed
+					unkilledMutantsInfo.put(description,
+							mutationFileInformation.toString());
+					LOGGER.info("mutant {} is not be killed", description);
+				} else {
+					mutationFileInformation
+							.setState(MutationFileInformation.State.KILLED);
+				}
+				String message = testExecutor.getMessageOnLastExecution();
+				if (message != null) {
+					LOGGER.info(message);
+				}
+				logProgress(numberOfAppliedMutation, numberOfMaxMutants);
 			}
-		    
 			// execution can be canceled from outside.
 			if (!conducting) {
 				break;
 			}
 		}
-		
-		//終了待ち
-	    for (Future<Boolean> future : futureList) {
-	    	try {
-				future.get();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-	    }
-	    
-	    //結果表示
-	    for (String description : nameOfMutations) {
+		for (String description : nameOfMutations) {
 	    	for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
 	    		System.out.println(mutationFileInformation.getState());
 	    	}
 	    }
-	    
-	    //JVMを正しく終了させるために必ず呼ぶ。
-	    executor.shutdown();
-
 		if (conducting) {
 			commandReceiver.interrupt();
 			conducting = false;
 		}
-		
 		return numberOfAppliedMutation;
 	}
 	
 	private int applyMutationAnalysis(List<TestExecutor> testExecutors) {
 		
 		int numberOfAppliedMutation = 0;
-		
 		int numberOfMaxMutants = mutationListManager
 				.getNumberOfUnkilledMutants();
-		
 		Thread commandReceiver = new Thread(new CommandReceiver());
-		
 		commandReceiver.start();
-		
-		//元のテスト対象javascriptファイル
 		List<String> original = Util.readFromFile(pathToJsFile);
-		
 		List<String> nameOfMutations = mutationListManager
 				.getListOfMutationName();
 		
-		//無制限実行
-//	    ExecutorService executor = Executors.newCachedThreadPool();
+		//スレッド数無制限実行
+	    ExecutorService executor = Executors.newCachedThreadPool();
 		
 		//スレッド数指定実行
 //		ExecutorService executor = Executors.newFixedThreadPool(5);
 		
 		//逐次実行
-		ExecutorService executor = Executors.newSingleThreadExecutor();
+//		ExecutorService executor = Executors.newSingleThreadExecutor();
 		
 	    List<Future<Boolean>> futureList = new ArrayList<Future<Boolean>>();
 	    
-		//nameOfMutations = unKilledMutantsの数
 		for (String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
 			
-			//mutationFileInformation = 出力されるDiffのこと
 			for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
-				
 				// execution can be canceled from outside.
 				if (!conducting) {
 					break;
 				}
-				
 				if (mutationFileInformation.canBeSkipped()
-						|| !applyMutationFile(original, mutationFileInformation)) {
+						|| !createMutationFile(original, mutationFileInformation)) {
 					continue;
 				}
-				
 				numberOfAppliedMutation++;
 				if (numberOfAppliedMutation >= saveInformationInterval
 						& (numberOfAppliedMutation % saveInformationInterval == 0)) {
 					mutationListManager.generateMutationListFile();
 				}
-				
 				LOGGER.info("Executing test(s) on {}",
 						mutationFileInformation.getAbsolutePath());
-				
 			    Future<Boolean> future = null;
-			    
 			    String mutantname = Util.getFileNameWithoutExtension(mutationFileInformation.getFileName());
-			    
 			    future = executor.submit(new TestCallable(
 						getTargetTestExecutor(testExecutors, mutantname),
 						mutationFileInformation,
@@ -593,9 +503,7 @@ public class MutationTestConductor {
 						numberOfAppliedMutation,
 						numberOfMaxMutants)
 			    		);
-				
 				futureList.add(future);
-			 
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -608,8 +516,6 @@ public class MutationTestConductor {
 				break;
 			}
 		}
-		
-		//終了待ち
 	    for (Future<Boolean> future : futureList) {
 	    	try {
 				future.get();
@@ -620,7 +526,6 @@ public class MutationTestConductor {
 			}
 	    }
 	    
-	    //結果表示
 	    for (String description : nameOfMutations) {
 	    	for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
@@ -628,14 +533,12 @@ public class MutationTestConductor {
 	    	}
 	    }
 	    
-	    //JVMを正しく終了させるために必ず呼ぶ。
 	    executor.shutdown();
 
 		if (conducting) {
 			commandReceiver.interrupt();
 			conducting = false;
 		}
-		
 		return numberOfAppliedMutation;
 	}
 	
@@ -647,9 +550,6 @@ public class MutationTestConductor {
 		}
 		return null;
 	}
-	
-	
-	private int cnt = 0;
 	
 	public class TestCallable implements Callable<Boolean>{
 		private TestExecutor testExecutor;
@@ -675,14 +575,7 @@ public class MutationTestConductor {
 		@Override
 		public Boolean call() throws Exception {
 			
-			boolean testSucceed;
-			
-			cnt++;
-			System.out.println("スレッド実行" + cnt + "回目");
-			System.out.println("MutationTestConducter_ThreadId = " + Thread.currentThread().getId());
-			
-			//コメント出力
-			System.out.println("mutationFileInformations"+ "(" +description + ")" + ":" + mutationListManager.getMutationFileInformationList(description).size());
+			boolean testSuccess;
 			
 			if (testExecutor.execute()) { // This mutant cannot be killed
 				synchronized (unkilledMutantsInfo) {
@@ -691,22 +584,21 @@ public class MutationTestConductor {
 				synchronized (LOGGER) {
 					LOGGER.info("mutant {} is not be killed", description);
 				}
-				testSucceed = false;
+				testSuccess = false;
 			} else {
 				synchronized (mutationFileInformation) {
 					mutationFileInformation.setState(MutationFileInformation.State.KILLED);
 				}
-				testSucceed = true;
+				testSuccess = true;
 			}
 	
 			String message = testExecutor.getMessageOnLastExecution();
 			
-			System.out.println("messaae:"+ message);
 			if (message != null) {
 				LOGGER.info(message);
 			}
 			logProgress(numberOfAppliedMutation, numberOfMaxMutants);
-			return testSucceed;
+			return testSuccess;
 		}
 		
 	}
@@ -725,14 +617,32 @@ public class MutationTestConductor {
 		Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo
 				.getAbsolutePath()));
 		try {
+			List<?> mutated = patch.<String> applyTo(original);
+			Util.writeToFile(
+					pathToJsFile,
+					Util.join(mutated.toArray(new String[0]),
+							System.lineSeparator()));
+		} catch (PatchFailedException e) {
+			LOGGER.error("Applying mutation file '{}' failed.",
+					fileInfo.getFileName(), e);
+			return false;
+		}
+		return true;
+	}
+	/**
+	 * @return if successfully file is wrote.
+	 */
+	@SuppressWarnings("unused")
+	private boolean createMutationFile(List<String> original,
+			MutationFileInformation fileInfo) {
+		Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo
+				.getAbsolutePath()));
+		try {
 			
-			//ミューテーションされたファイルの内容
 			List<?> mutated = patch.<String> applyTo(original);
 			
-			//jsファイルパス名分割
 			String[] pathHierarchyOfJsFile = pathToJsFile.split("/",0);
 			
-			//jsファイルパス取得
 			String newPathToJsFile = pathHierarchyOfJsFile[0];
 			if(pathHierarchyOfJsFile.length != 0){
 				for(int i = 1; i < pathHierarchyOfJsFile.length - 1; i++){
@@ -740,14 +650,14 @@ public class MutationTestConductor {
 				}
 			}
 			
-			 //"tested"フォルダ生成
 			 File testedDir = new File(newPathToJsFile + "/tested");
-			 testedDir.mkdir();
 			 
-			//"tested"フォルダにテスト対象ファイルを格納するようパス設定
+			 if(!testedDir.exists()){
+				 testedDir.mkdir();
+			 }
+			 
 			newPathToJsFile = testedDir.getPath() + "/"  + Util.getFileNameWithoutExtension(fileInfo.getFileName())  + "-" + pathHierarchyOfJsFile[pathHierarchyOfJsFile.length-1];
 			
-			//対象ミュータント用のjsファイルを新規作成
 			Util.writeToFile(
 					newPathToJsFile,
 					Util.join(mutated.toArray(new String[0]),

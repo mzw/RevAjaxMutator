@@ -43,18 +43,9 @@ public class RewriterPlugin extends ProxyPlugin {
     private synchronized void rewriteResponseContent(Request request, Response response) {
         try {
         	
+        	final String MUTANT_HEADER_NAME ="mutant";
+        	
             String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
-            
-            //print request
-//            System.out.println("====<REQUEST>====");
-//            System.out.println(request.getMethod());
-//            System.out.println(request.getURL());
-//            System.out.println(request.getVersion());
-//            String[] headers=request.getHeaderNames();
-//            for(String header : headers){
-//            	System.out.println(header+" : " + request.getHeader(header));
-//            }
-//            System.out.println("====</REQUEST>====");
             
             boolean matched = false;
             
@@ -69,37 +60,37 @@ public class RewriterPlugin extends ProxyPlugin {
             	return;
             }
             
-            String mutantname = request.getHeader("mutant");
+            BufferedInputStream in;
             
-            String testedFilename = "";
-            
-            File jsFile = new File(mDirname + "/" + filename);
-            File dir = new File(mDirname + "/" + "tested");
-            File[] files = dir.listFiles();
-            for(File file : files){
-            	if(file.getName().contains(mutantname)){
-            		testedFilename = file.getName();
-            	}
+            if(request.getHeader(MUTANT_HEADER_NAME) == null){
+            	in = new BufferedInputStream(
+                        new FileInputStream(mDirname + "/" + filename));
+            }else{
+            	String mutantname = request.getHeader(MUTANT_HEADER_NAME);
+                
+                String testedFilename = "";
+                
+                File jsFile = new File(mDirname + "/" + filename);
+                File dir = new File(mDirname + "/" + "tested");
+                File[] files = dir.listFiles();
+                for(File file : files){
+                	if(file.getName().contains(mutantname)){
+                		testedFilename = file.getName();
+                	}
+                }
+                in = new BufferedInputStream(
+                        new FileInputStream(mDirname + "/" + "tested" + "/" +testedFilename));
             }
             
-            System.out.println("testedFilename:"+testedFilename);;
-            
-            //record/appフォルダのjsファイルの読み込み
-            BufferedInputStream in = new BufferedInputStream(
-                    new FileInputStream(mDirname + "/" + "tested" + "/" +testedFilename));
-            
-            //出力用の領域
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[1024 * 8];
             int len = 0;
             
-            //jsファイルの中身を書き込む
             while ((len = in.read(buf)) != -1) {
                 out.write(buf, 0, len);
             }
             in.close();
             
-            //応答の内容を書き換え
             response.setContent(out.toByteArray());
 
         }
