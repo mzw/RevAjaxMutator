@@ -8,13 +8,15 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jp.mzw.ajaxmutator.JUnitExecutor;
-import jp.mzw.ajaxmutator.JUnitTestPerMethodRunner;
+import jp.mzw.ajaxmutator.JUnitTestEachMethodRunner;
 import jp.mzw.ajaxmutator.JUnitTestRunner;
 import jp.mzw.ajaxmutator.JUnitTheoryRunner;
 import jp.mzw.ajaxmutator.MutationTestConductor;
@@ -111,11 +113,7 @@ public class Main {
 		}
 
 		Result result = (new JUnitCore()).run(runner);
-		System.out.println(String.format("%d tests, %d fail", result.getRunCount(), result.getFailureCount()));
-		for (Failure f : result.getFailures()) {
-			System.out.println(f.getDescription());
-			System.out.println(" exception: " + f.getException());
-		}
+		outputTestResult(result);
 	}
 
 	private static boolean isTestMethod(Method method) {
@@ -127,31 +125,48 @@ public class Main {
 		return false;
 	}
 
-	public static void each_method_test(String[] args) throws ClassNotFoundException, InitializationError {
+	private static String getJSCoverFilePath(String configFileName) {
+		Properties propaties = new Properties();
+		try {
+			propaties
+					.load(AppConfigBase.class.getClassLoader().getResourceAsStream(new File(configFileName).getName()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return propaties.getProperty("jscover_report_dir");
+	}
+
+	private static void outputTestResult(Result result){
+		System.out.println(String.format("%d tests, %d fail", result.getRunCount(), result.getFailureCount()));
+		for (Failure f : result.getFailures()) {
+			System.out.println(f.getDescription());
+			System.out.println(" exception: " + f.getException());
+		}
+	}
+	
+	public static void each_method_test(String[] args)
+			throws ClassNotFoundException, InitializationError, IOException, InterruptedException {
 		String className = args[0];
+		String configFileName = args[1];
+
 		Class<?> testClass = Class.forName(className);
 
-		ArrayList<Runner> runners = new ArrayList<Runner>();
-		RunWith runWith = testClass.getAnnotation(RunWith.class);
-		if (runWith == null) {
-			for (Method method : testClass.getMethods()) {
-				if (isTestMethod(method)) {
-					runners.add(new JUnitTestPerMethodRunner(testClass, true, method));
-				}
-			}
-		}
-		else if (Theories.class.equals(runWith.value())) {
-			runners.add(new JUnitTheoryRunner(testClass, true));
-		} else {
-			runners.add(new BlockJUnit4ClassRunner(Class.forName(className)));
-		}
+		String jscoverFolderName = getJSCoverFilePath(configFileName);
 
-		for (Runner runner : runners) {
-			Result result = (new JUnitCore()).run(runner);
-			System.out.println(String.format("%d tests, %d fail", result.getRunCount(), result.getFailureCount()));
-			for (Failure f : result.getFailures()) {
-				System.out.println(f.getDescription());
-				System.out.println(" exception: " + f.getException());
+		for (Method method : testClass.getMethods()) {
+			if (isTestMethod(method)){
+				Result result = (new JUnitCore()).run(new JUnitTestEachMethodRunner(testClass, true, method));
+				outputTestResult(result);
+				Thread.sleep(3000); // wait for outputting JSCover file
+				File folder = new File(jscoverFolderName + File.separator + method.getName());
+				if (!folder.exists())
+					folder.mkdir();
+				File jscoverFolder = new File(jscoverFolderName);
+				for (File file : jscoverFolder.listFiles()) {
+					if (file.getName().contains("jscoverage") || file.getName().contains("original-src")) {
+						file.renameTo(new File(folder.getPath() + File.separator + file.getName()));
+					}
+				}
 			}
 		}
 	}
