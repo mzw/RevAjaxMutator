@@ -125,25 +125,14 @@ public class Main {
 		return false;
 	}
 
-	private static String getJSCoverFilePath(String configFileName) {
-		Properties propaties = new Properties();
-		try {
-			propaties
-					.load(AppConfigBase.class.getClassLoader().getResourceAsStream(new File(configFileName).getName()));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return propaties.getProperty("jscover_report_dir");
-	}
-
-	private static void outputTestResult(Result result){
+	private static void outputTestResult(Result result) {
 		System.out.println(String.format("%d tests, %d fail", result.getRunCount(), result.getFailureCount()));
 		for (Failure f : result.getFailures()) {
 			System.out.println(f.getDescription());
 			System.out.println(" exception: " + f.getException());
 		}
 	}
-	
+
 	public static void each_method_test(String[] args)
 			throws ClassNotFoundException, InitializationError, IOException, InterruptedException {
 		String className = args[0];
@@ -151,10 +140,10 @@ public class Main {
 
 		Class<?> testClass = Class.forName(className);
 
-		String jscoverFolderName = getJSCoverFilePath(configFileName);
+		String jscoverFolderName = getPropertyValue(configFileName, "jscover_report_dir");
 
 		for (Method method : testClass.getMethods()) {
-			if (isTestMethod(method)){
+			if (isTestMethod(method)) {
 				Result result = (new JUnitCore()).run(new JUnitTestEachMethodRunner(testClass, true, method));
 				outputTestResult(result);
 				Thread.sleep(3000); // wait for outputting JSCover file
@@ -210,20 +199,36 @@ public class Main {
 
 		List<TestExecutor> executors = createJUnitExecuterList(testClassName, mutantNames);
 
-		conductor.mutationAnalysisUsingExistingMutations(executors);
+		HashMap<String, File> failureCoverageFiles = new HashMap<String, File>();
+
+		File failureCoverageFile = new File(getPropertyValue(configFileName, "failure_cov_file"));
+
+		failureCoverageFiles.put("", failureCoverageFile);
+
+		Class<?> testClass = Class.forName(testClassName);
+
+		for (Method method : testClass.getMethods()) {
+			if (isTestMethod(method)) {
+				File file = new File(failureCoverageFile.getParentFile().getPath() + File.separator + method.getName() + File.separator
+						+ failureCoverageFile.getName());
+				failureCoverageFiles.put(method.getName(), file);
+			}
+		}
+
+		conductor.mutationAnalysisUsingExistingMutations(executors, failureCoverageFiles);
 	}
 
 	public static void createfile(String[] args) {
 		String configFileName = args[0];
 
-		String testFilePath = getTestFilePath(configFileName);
+		String testFilePath = getPropertyValue(configFileName, "path_to_test_case_file");
 
 		List<String> mutantNames = getMutantNames(configFileName);
 
 		createMutantTestFile(new File(testFilePath), mutantNames);
 	}
 
-	private static String getTestFilePath(String configFileName) {
+	private static String getPropertyValue(String configFileName, String propertyName) {
 
 		Properties propaties = new Properties();
 		try {
@@ -232,7 +237,7 @@ public class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return propaties.getProperty("path_to_test_case_file");
+		return propaties.getProperty(propertyName);
 	}
 
 	private static List<String> getMutantNames(String configFileName) {
