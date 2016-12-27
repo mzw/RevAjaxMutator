@@ -16,6 +16,7 @@ import jp.mzw.ajaxmutator.mutatable.genprog.Statement;
 import jp.mzw.ajaxmutator.detector.genprog.StatementDetector;
 import jp.mzw.ajaxmutator.generator.Mutation;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
+import jp.mzw.ajaxmutator.generator.MutationFileInformation.State;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
 import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
@@ -202,7 +203,7 @@ public class MutationTestConductor {
 
 		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
 			System.out.println("------- " + entry.getKey() + " -------");
-			for (int i = 1; i <entry.getValue().length ; i++) {
+			for (int i = 1; i < entry.getValue().length; i++) {
 				System.out.println(i + ":" + entry.getValue()[i]);
 			}
 		}
@@ -216,7 +217,7 @@ public class MutationTestConductor {
 		// }
 
 		checkIfSetuped();
-		// applyMutationAnalysis(testExecutors, new Stopwatch().start());
+		applyMutationAnalysis(testExecutors, new Stopwatch().start());
 	}
 
 	public void tryToKillSpecificMutant(String mutationFileName, TestExecutor testExecutor) {
@@ -483,6 +484,20 @@ public class MutationTestConductor {
 		return numberOfAppliedMutation;
 	}
 
+	private boolean isCoveredbyTests(MutationFileInformation info) {
+		int startLine = info.getStartLine();
+		int endLine = info.getEndLine();
+		for (int line = startLine; line <= endLine; line++) {
+			boolean[] testsCoverage = coverageInfos.get("");
+			if (testsCoverage[line] == true) {
+				return true;
+			}
+		}
+		System.out.println("--" + info.getFileName() + "--");
+		System.out.println("SKIPP");
+		return false;
+	}
+
 	private int applyMutationAnalysis(List<TestExecutor> testExecutors) {
 
 		int numberOfAppliedMutation = 0;
@@ -508,11 +523,14 @@ public class MutationTestConductor {
 
 			for (MutationFileInformation mutationFileInformation : mutationListManager
 					.getMutationFileInformationList(description)) {
+
 				// execution can be canceled from outside.
 				if (!conducting) {
 					break;
 				}
-				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)) {
+
+				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)
+						|| !isCoveredbyTests(mutationFileInformation)) {
 					continue;
 				}
 				numberOfAppliedMutation++;
