@@ -203,14 +203,12 @@ public class Main {
 
 		File failureCoverageFile = new File(getPropertyValue(configFileName, "failure_cov_file"));
 
-		failureCoverageFiles.put("", failureCoverageFile);
-
 		Class<?> testClass = Class.forName(testClassName);
 
 		for (Method method : testClass.getMethods()) {
 			if (isTestMethod(method)) {
-				File file = new File(failureCoverageFile.getParentFile().getPath() + File.separator + method.getName() + File.separator
-						+ failureCoverageFile.getName());
+				File file = new File(failureCoverageFile.getParentFile().getPath() + File.separator + method.getName()
+						+ File.separator + failureCoverageFile.getName());
 				failureCoverageFiles.put(method.getName(), file);
 			}
 		}

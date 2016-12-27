@@ -1,5 +1,8 @@
 package jp.mzw.ajaxmutator;
 
+import java.util.HashMap;
+import java.util.List;
+
 /**
  * Interface that indicate implementing classes can execute tests and return
  * results in String.
@@ -19,4 +22,6 @@ public interface TestExecutor {
 	public String getMessageOnLastExecution();
 
 	public String getTargetClassName();
+	
+	public void setOrderdMethodNames(List<String> orderdMethodName);
 }

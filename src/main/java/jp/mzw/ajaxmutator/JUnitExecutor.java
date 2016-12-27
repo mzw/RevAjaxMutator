@@ -13,8 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 
 /**
@@ -28,6 +32,7 @@ public class JUnitExecutor implements TestExecutor {
 	private final boolean shouldRunAllTest;
 	private final Class<?>[] targetClasses;
 	private Map<String, Boolean> testResults;
+	private List<String> orderdMethodNames = null;
 	private String executionMessage;
 
 	public JUnitExecutor(Class<?>... targetClasses) {
@@ -48,22 +53,38 @@ public class JUnitExecutor implements TestExecutor {
 		return results;
 	}
 
-	private Result runSingleTest(Class<?> testClass) {
-		Runner runner;
-		try {
-			RunWith runWith = testClass.getAnnotation(RunWith.class);
-			if (runWith == null) {
-				runner = new JUnitTestRunner(testClass, shouldRunAllTest);
-			} else if (Theories.class.equals(runWith.value())) {
-				runner = new JUnitTheoryRunner(testClass, shouldRunAllTest);
-			} else {
-				runner = new JUnitTestRunner(testClass, shouldRunAllTest);
+	private Result runSingleTest(Class<?> testClass){
+		if (orderdMethodNames == null) {
+			Runner runner;
+			try {
+				RunWith runWith = testClass.getAnnotation(RunWith.class);
+				if (runWith == null) {
+					runner = new JUnitTestRunner(testClass, shouldRunAllTest);
+				} else if (Theories.class.equals(runWith.value())) {
+					runner = new JUnitTheoryRunner(testClass, shouldRunAllTest);
+				} else {
+					runner = new JUnitTestRunner(testClass, shouldRunAllTest);
+				}
+			} catch (InitializationError error) {
+				throw new IllegalStateException(error);
 			}
-		} catch (InitializationError error) {
-			throw new IllegalStateException(error);
+			Result result = (new JUnitCore()).run(runner);
+			return result;
+		} else {
+			Runner runner;
+			try {
+				runner = new OrderdJUnitTestRunner(testClass, shouldRunAllTest, orderdMethodNames);
+			} catch (InitializationError error) {
+				throw new IllegalStateException(error);
+			}
+			Result result = (new JUnitCore()).run(runner);
+			return result;
 		}
-		Result result = (new JUnitCore()).run(runner);
-		return result;
+	}
+	
+	@Override
+	public void setOrderdMethodNames(List<String> orderdMethodNames) {
+		this.orderdMethodNames = orderdMethodNames;
 	}
 
 	@Override

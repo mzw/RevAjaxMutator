@@ -27,10 +27,10 @@ import java.util.List;
  * test execution when any test fails.
  */
 public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
-	private final boolean shouldRunAllTest;
-	private boolean skipNextExecution = false;
-	private RunNotifierFailureReporter reporter;
-	private RunNotifier lastNotifier;
+	protected final boolean shouldRunAllTest;
+	protected boolean skipNextExecution = false;
+	protected RunNotifierFailureReporter reporter;
+	protected RunNotifier lastNotifier;
 
 	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest) throws InitializationError {
 		super(testClass);
@@ -123,7 +123,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		}
 	}
 
-	private boolean hasOneConstructor() {
+	protected boolean hasOneConstructor() {
 		return getTestClass().getJavaClass().getConstructors().length == 1;
 	}
 
@@ -144,7 +144,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 			errors.add(new Exception("No runnable methods"));
 	}
 
-	private void validateFields(List<Throwable> errors) {
+	protected void validateFields(List<Throwable> errors) {
 		RULE_VALIDATOR.validate(getTestClass(), errors);
 	}
 
@@ -293,14 +293,14 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		return afters.isEmpty() ? statement : new RunAfters(statement, afters, target);
 	}
 
-	private Statement withRules(FrameworkMethod method, Object target, Statement statement) {
+	protected Statement withRules(FrameworkMethod method, Object target, Statement statement) {
 		Statement result = statement;
 		result = withMethodRules(method, target, result);
 		result = withTestRules(method, target, result);
 		return result;
 	}
 
-	private Statement withMethodRules(FrameworkMethod method, Object target, Statement result) {
+	protected Statement withMethodRules(FrameworkMethod method, Object target, Statement result) {
 		List<TestRule> testRules = getTestRules(target);
 		for (org.junit.rules.MethodRule each : getMethodRules(target))
 			if (!testRules.contains(each))
@@ -308,7 +308,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		return result;
 	}
 
-	private List<org.junit.rules.MethodRule> getMethodRules(Object target) {
+	protected List<org.junit.rules.MethodRule> getMethodRules(Object target) {
 		return rules(target);
 	}
 
@@ -335,7 +335,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * @return a RunRules statement if any class-level {@link Rule}s are found,
 	 *         or the base statement
 	 */
-	private Statement withTestRules(FrameworkMethod method, Object target, Statement statement) {
+	protected Statement withTestRules(FrameworkMethod method, Object target, Statement statement) {
 		List<TestRule> testRules = getTestRules(target);
 		return testRules.isEmpty() ? statement : new RunRules(statement, testRules, describeChild(method));
 	}
@@ -350,18 +350,18 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		return getTestClass().getAnnotatedFieldValues(target, Rule.class, TestRule.class);
 	}
 
-	private Class<? extends Throwable> getExpectedException(Test annotation) {
+	protected Class<? extends Throwable> getExpectedException(Test annotation) {
 		if (annotation == null || annotation.expected() == None.class)
 			return null;
 		else
 			return annotation.expected();
 	}
 
-	private boolean expectsException(Test annotation) {
+	protected boolean expectsException(Test annotation) {
 		return getExpectedException(annotation) != null;
 	}
 
-	private long getTimeout(Test annotation) {
+	protected long getTimeout(Test annotation) {
 		if (annotation == null)
 			return 0;
 		return annotation.timeout();
@@ -371,7 +371,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * Wrapper of RunNotifier. Only task for this class is set flag on when test
 	 * fails.
 	 */
-	private class RunNotifierFailureReporter extends RunNotifier {
+	protected class RunNotifierFailureReporter extends RunNotifier {
 		private final RunNotifier notifier;
 
 		private RunNotifierFailureReporter(RunNotifier notifier) {

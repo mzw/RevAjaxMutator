@@ -39,6 +39,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -198,23 +199,7 @@ public class MutationTestConductor {
 		mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
 		mutationListManager.readExistingMutationListFile();
 		unkilledMutantsInfo = ArrayListMultimap.create();
-
 		coverageInfos = getCoverageInfos(failureCoverageFiles);
-
-		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
-			System.out.println("------- " + entry.getKey() + " -------");
-			for (int i = 1; i < entry.getValue().length; i++) {
-				System.out.println(i + ":" + entry.getValue()[i]);
-			}
-		}
-
-		// for (int i = 1; i < coverageInfo.length ; i++) {
-		// if(coverageInfo[i]){
-		// System.out.println(i + ":" + "true");
-		// }else{
-		// System.out.println(i + ":" + "false");
-		// }
-		// }
 
 		checkIfSetuped();
 		applyMutationAnalysis(testExecutors, new Stopwatch().start());
@@ -484,18 +469,68 @@ public class MutationTestConductor {
 		return numberOfAppliedMutation;
 	}
 
-	private boolean isCoveredbyTests(MutationFileInformation info) {
+	private boolean isCoveredMutationPointbyTest(MutationFileInformation info) {
+		int startLine = info.getStartLine();
+		int endLine = info.getEndLine();
+
+		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
+			boolean[] testsCoverage = entry.getValue();
+			for (int line = startLine; line <= endLine; line++) {
+				if (testsCoverage[line] == true) {
+					return true;
+				}
+			}
+		}
+		LOGGER.info(info.getFileName() + " is skipped");
+		return false;
+	}
+
+	private boolean isCoveredMutationPointbyTest(MutationFileInformation info, String MethodName) {
 		int startLine = info.getStartLine();
 		int endLine = info.getEndLine();
 		for (int line = startLine; line <= endLine; line++) {
-			boolean[] testsCoverage = coverageInfos.get("");
+			boolean[] testsCoverage = coverageInfos.get(MethodName);
 			if (testsCoverage[line] == true) {
 				return true;
 			}
 		}
-		System.out.println("--" + info.getFileName() + "--");
-		System.out.println("SKIPP");
 		return false;
+	}
+
+	private List<String> getOrderedMethodNames(MutationFileInformation info) {
+
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+
+		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
+			if (!isCoveredMutationPointbyTest(info, entry.getKey())) {
+				continue;
+			}
+			int coverCnt = 0;
+			for (int line = 1; line < info.getStartLine(); line++) {
+				if (entry.getValue()[line]) {
+					coverCnt++;
+				}
+			}
+			map.put(entry.getKey(), new Integer(coverCnt));
+		}
+
+		List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(map.entrySet());
+		Collections.sort(entries, new Comparator<Entry<String, Integer>>() {
+			@Override
+			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+				return o2.getValue().compareTo(o1.getValue());
+			}
+		});
+
+		ArrayList<String> orderedMethodNames = new ArrayList<String>();
+		int i = 1;
+		for (Entry<String, Integer> e : entries) {
+			orderedMethodNames.add(e.getKey());
+			LOGGER.info("<{}> : [{}]methodName = {} , coverage = {}", info.getFileName(), i, e.getKey(), e.getValue());
+			i++;
+		}
+
+		return orderedMethodNames;
 	}
 
 	private int applyMutationAnalysis(List<TestExecutor> testExecutors) {
@@ -528,9 +563,8 @@ public class MutationTestConductor {
 				if (!conducting) {
 					break;
 				}
-
 				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)
-						|| !isCoveredbyTests(mutationFileInformation)) {
+						|| !isCoveredMutationPointbyTest(mutationFileInformation)) {
 					continue;
 				}
 				numberOfAppliedMutation++;
@@ -540,9 +574,14 @@ public class MutationTestConductor {
 				}
 				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
 				Future<Boolean> future = null;
+				List<String> orderedMethodNames = getOrderedMethodNames(mutationFileInformation);
 				String mutantname = Util.getFileNameWithoutExtension(mutationFileInformation.getFileName());
-				future = executor.submit(new TestCallable(getTargetTestExecutor(testExecutors, mutantname),
-						mutationFileInformation, description, numberOfAppliedMutation, numberOfMaxMutants));
+
+				TestExecutor targetTestExecutor = getTargetTestExecutor(testExecutors, mutantname);
+				targetTestExecutor.setOrderdMethodNames(orderedMethodNames);
+
+				future = executor.submit(new TestCallable(targetTestExecutor, mutationFileInformation, description,
+						numberOfAppliedMutation, numberOfMaxMutants));
 				futureList.add(future);
 				try {
 					Thread.sleep(1000);

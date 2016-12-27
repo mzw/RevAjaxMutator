@@ -25,10 +25,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Basically same as {@link BlockJUnit4ClassRunner}, but this class can skip
- * test execution when any test fails.
- */
 public class JUnitTestEachMethodRunner extends ParentRunner<FrameworkMethod> {
 	private final boolean shouldRunAllTest;
 	private static Method testMethod;
