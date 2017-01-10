@@ -11,6 +11,7 @@ import difflib.DiffUtils;
 import difflib.Patch;
 import difflib.PatchFailedException;
 import groovy.transform.Synchronized;
+import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.mutatable.genprog.Statement;
 import jp.mzw.ajaxmutator.detector.genprog.StatementDetector;
@@ -21,6 +22,9 @@ import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
 import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
 import jp.mzw.ajaxmutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventCallbackRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventTargetRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventTypeRAMutator;
 import jp.mzw.ajaxmutator.util.Randomizer;
 import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.search.Coverage;
@@ -469,70 +473,6 @@ public class MutationTestConductor {
 		return numberOfAppliedMutation;
 	}
 
-	private boolean isCoveredMutationPointbyTest(MutationFileInformation info) {
-		int startLine = info.getStartLine();
-		int endLine = info.getEndLine();
-
-		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
-			boolean[] testsCoverage = entry.getValue();
-			for (int line = startLine; line <= endLine; line++) {
-				if (testsCoverage[line] == true) {
-					return true;
-				}
-			}
-		}
-		LOGGER.info(info.getFileName() + " is skipped");
-		return false;
-	}
-
-	private boolean isCoveredMutationPointbyTest(MutationFileInformation info, String MethodName) {
-		int startLine = info.getStartLine();
-		int endLine = info.getEndLine();
-		for (int line = startLine; line <= endLine; line++) {
-			boolean[] testsCoverage = coverageInfos.get(MethodName);
-			if (testsCoverage[line] == true) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private List<String> getOrderedMethodNames(MutationFileInformation info) {
-
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
-
-		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
-			if (!isCoveredMutationPointbyTest(info, entry.getKey())) {
-				continue;
-			}
-			int coverCnt = 0;
-			for (int line = 1; line < info.getStartLine(); line++) {
-				if (entry.getValue()[line]) {
-					coverCnt++;
-				}
-			}
-			map.put(entry.getKey(), new Integer(coverCnt));
-		}
-
-		List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(map.entrySet());
-		Collections.sort(entries, new Comparator<Entry<String, Integer>>() {
-			@Override
-			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-				return o2.getValue().compareTo(o1.getValue());
-			}
-		});
-
-		ArrayList<String> orderedMethodNames = new ArrayList<String>();
-		int i = 1;
-		for (Entry<String, Integer> e : entries) {
-			orderedMethodNames.add(e.getKey());
-			LOGGER.info("<{}> : [{}]methodName = {} , coverage = {}", info.getFileName(), i, e.getKey(), e.getValue());
-			i++;
-		}
-
-		return orderedMethodNames;
-	}
-
 	private int applyMutationAnalysis(List<TestExecutor> testExecutors) {
 
 		int numberOfAppliedMutation = 0;
@@ -553,6 +493,9 @@ public class MutationTestConductor {
 
 		List<Future<Boolean>> futureList = new ArrayList<Future<Boolean>>();
 
+		List<MutationFileInformation> skipList = getSkipList(mutationListManager.getMutationFileInformationList(),
+				EventTargetRAMutator.class);
+
 		for (String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
 
@@ -564,7 +507,8 @@ public class MutationTestConductor {
 					break;
 				}
 				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)
-						|| !isCoveredMutationPointbyTest(mutationFileInformation)) {
+						|| !isCoveredMutationPointbyTest(mutationFileInformation)
+						|| isSkipListMutation(skipList, mutationFileInformation)) {
 					continue;
 				}
 				numberOfAppliedMutation++;
@@ -619,6 +563,143 @@ public class MutationTestConductor {
 			conducting = false;
 		}
 		return numberOfAppliedMutation;
+	}
+
+	private boolean isCoveredMutationPointbyTest(MutationFileInformation info) {
+		int startLine = info.getStartLine();
+		int endLine = info.getEndLine();
+
+		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
+			boolean[] testsCoverage = entry.getValue();
+			for (int line = startLine; line <= endLine; line++) {
+				if (testsCoverage[line] == true) {
+					return true;
+				}
+			}
+		}
+		LOGGER.info(info.getFileName() + " is skipped by coverage");
+		return false;
+	}
+
+	private boolean isCoveredMutationPointbyTest(MutationFileInformation info, String MethodName) {
+		int startLine = info.getStartLine();
+		int endLine = info.getEndLine();
+		for (int line = startLine; line <= endLine; line++) {
+			boolean[] testsCoverage = coverageInfos.get(MethodName);
+			if (testsCoverage[line] == true) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private List<String> getOrderedMethodNames(MutationFileInformation info) {
+
+		HashMap<String, Integer> map = new HashMap<String, Integer>();
+
+		for (Map.Entry<String, boolean[]> entry : coverageInfos.entrySet()) {
+			if (!isCoveredMutationPointbyTest(info, entry.getKey())) {
+				continue;
+			}
+			int coverCnt = 0;
+			for (int line = 1; line < info.getStartLine(); line++) {
+				if (entry.getValue()[line]) {
+					coverCnt++;
+				}
+			}
+			map.put(entry.getKey(), new Integer(coverCnt));
+		}
+
+		List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(map.entrySet());
+		Collections.sort(entries, new Comparator<Entry<String, Integer>>() {
+			@Override
+			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
+				return o2.getValue().compareTo(o1.getValue());
+			}
+		});
+
+		ArrayList<String> orderedMethodNames = new ArrayList<String>();
+		int i = 1;
+		for (Entry<String, Integer> e : entries) {
+			orderedMethodNames.add(e.getKey());
+			LOGGER.info("<{}> : [{}]methodName = {} , coverage = {}", info.getFileName(), i, e.getKey(), e.getValue());
+			i++;
+		}
+
+		return orderedMethodNames;
+	}
+
+	private List<MutationFileInformation> getSkipList(List<MutationFileInformation> list, Class<?> priorMutaterClass) {
+
+		List<MutationFileInformation> eventAttachmentMutantList = new ArrayList<MutationFileInformation>();
+
+		for (MutationFileInformation mutationFileInformation : list) {
+			String mutatable = mutationFileInformation.getMutatable();
+			if (mutatable.equals(EventAttachment.class.getSimpleName())) {
+				eventAttachmentMutantList.add(mutationFileInformation);
+			}
+		}
+
+		Map<Integer, ArrayList<MutationFileInformation>> map = new HashMap<Integer, ArrayList<MutationFileInformation>>();
+		for (MutationFileInformation mutationFileInformation : eventAttachmentMutantList) {
+			Integer startLine = mutationFileInformation.getStartLine();
+			if (map.containsKey(startLine)) {
+				map.get(startLine).add(mutationFileInformation);
+			} else {
+				ArrayList<MutationFileInformation> ls = new ArrayList<MutationFileInformation>();
+				ls.add(mutationFileInformation);
+				map.put(startLine, ls);
+			}
+		}
+
+		ArrayList<MutationFileInformation> skipList = new ArrayList<MutationFileInformation>();
+
+		for (Map.Entry<Integer, ArrayList<MutationFileInformation>> entry : map.entrySet()) {
+			ArrayList<MutationFileInformation> mfList = entry.getValue();
+			if (1 < mfList.size()) {
+				String priorMutaterClassName = getFixerNameByClass(priorMutaterClass);
+				// 指定イベントミューテーションクラスが存在する
+				if (hasPriorMutaterClass(entry.getValue(), priorMutaterClassName)) {
+					for (MutationFileInformation mutationFileInformation : mfList) {
+						if (!mutationFileInformation.getFixer().equals(priorMutaterClassName)) {
+							skipList.add(mutationFileInformation);
+						}
+					}
+				} else { // 存在しない場合はランダムに絞るクラスを選択
+					for (int i = 0; i < mfList.size() - 1; i++) {
+						Random rnd = new Random();
+						int index = rnd.nextInt(mfList.size());
+						skipList.add(mfList.get(index));
+					}
+				}
+			}
+		}
+
+		return skipList;
+	}
+
+	private String getFixerNameByClass(Class<?> clazz) {
+		return clazz.getSimpleName().replace("Mutator", "Mutation");
+	}
+
+	private boolean hasPriorMutaterClass(List<MutationFileInformation> list, String priorMutaterClassName) {
+		for (MutationFileInformation mutationFileInformation : list) {
+			if (mutationFileInformation.getFixer().equals(priorMutaterClassName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isSkipListMutation(List<MutationFileInformation> skipList,
+			MutationFileInformation targetMutationFileInformation) {
+		for (MutationFileInformation fileInfo : skipList) {
+			if (fileInfo.getFileName().equals(targetMutationFileInformation.getFileName())) {
+				LOGGER.info(targetMutationFileInformation.getFileName() + " is skipped by do fewer");
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private TestExecutor getTargetTestExecutor(List<TestExecutor> executors, String mutantname) {
