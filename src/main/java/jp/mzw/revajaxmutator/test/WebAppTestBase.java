@@ -16,6 +16,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
@@ -25,11 +26,12 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.owasp.webscarab.model.StoreException;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
-public class WebAppTestBase {
+abstract public class WebAppTestBase {
 
 	protected static String URL;
 	protected static String ADMIN_URL;
@@ -179,6 +181,28 @@ public class WebAppTestBase {
 		}
     }
     
+	public void waitUntilShowWidgets() {
+		wait.until(new ExpectedCondition<Boolean>() {
+	        public Boolean apply(WebDriver wdriver) {
+	            return ((JavascriptExecutor) driver).executeScript(
+	                "return document.readyState"
+	            ).equals("complete");
+	        }
+	    });
+	}
+    
+    public static void afterTestClass(String filename) throws IOException {
+    	Properties config = getConfig(filename);
+		String proxy = config.getProperty("proxy") != null ? config.getProperty("proxy") : "not specified";
+		String jscover_report_dir = config.getProperty("jscover_report_dir") != null ? config.getProperty("jscover_report_dir") : null;
+		if(proxy.equals("jscover") && jscover_report_dir != null) {
+			File cov_result = new File(jscover_report_dir, "jscoverage.json");
+	        if (cov_result.exists()) cov_result.delete();
+	        ((JavascriptExecutor) driver).executeScript("jscoverage_report();");
+		}
+		driver.quit();
+    }
+    
     private static class AppConfig extends AppConfigBase {
     	private AppConfig(String config) throws IOException {
     		super(config);
@@ -189,7 +213,6 @@ public class WebAppTestBase {
     	JSCoverBase.interruptProxyServer(driver, TIMEOUT);
     	RevAjaxMutatorBase.interruptProxyServer();
     }
-    
 
     /*--------------------------------------------------
 		Utilities
