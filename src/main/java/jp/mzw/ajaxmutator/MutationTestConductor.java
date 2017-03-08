@@ -3,6 +3,7 @@ package jp.mzw.ajaxmutator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
@@ -15,7 +16,17 @@ import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
 import jp.mzw.ajaxmutator.generator.UnifiedDiffGenerator.DiffLine;
+import jp.mzw.ajaxmutator.mutator.DOMSelectionSelectNearbyMutator;
 import jp.mzw.ajaxmutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.AttributeModificationTargetRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.AttributeModificationValueRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventCallbackRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventTargetRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.EventTypeRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.RequestOnSuccessHandlerRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.RequestUrlRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventCallbackRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventDurationRAMutator;
 import jp.mzw.ajaxmutator.util.Randomizer;
 import jp.mzw.ajaxmutator.util.Util;
 
@@ -492,5 +503,21 @@ public class MutationTestConductor {
 		Preconditions.checkArgument(saveInformationInterval > 0,
 				"interval must be positive integer.");
 		this.saveInformationInterval = saveInformationInterval;
+	}
+	
+	public static ImmutableSet<Mutator<?>> defaultMutators(MutateVisitor visitor) {
+		ImmutableSet<Mutator<?>> mutators = ImmutableSet.<Mutator<?>> of(
+				new EventTargetRAMutator(visitor.getEventAttachments()),
+				new EventTypeRAMutator(visitor.getEventAttachments()),
+				new EventCallbackRAMutator(visitor.getEventAttachments()),
+				new TimerEventDurationRAMutator(visitor.getTimerEventAttachmentExpressions()),
+				new TimerEventCallbackRAMutator(visitor.getTimerEventAttachmentExpressions()),
+				new RequestUrlRAMutator(visitor.getRequests()),
+				new RequestOnSuccessHandlerRAMutator(visitor.getRequests()),
+				new DOMSelectionSelectNearbyMutator(),
+				new AttributeModificationTargetRAMutator(visitor.getAttributeModifications()),
+				new AttributeModificationValueRAMutator(visitor.getAttributeModifications())
+				);
+		return mutators;
 	}
 }
