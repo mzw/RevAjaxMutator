@@ -2,6 +2,8 @@ package jp.mzw.revajaxmutator.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,23 +39,20 @@ public class ConfigHelper {
 		ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("document",
-				RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("document", RepairSource.Type.DEFAULT));
 
 		// From Test Case
 		for (String attr : testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource(attr,
-						RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource(attr, RepairSource.Type.TESTCASE));
 			}
 		}
 		// From HTML
 		for (String attr : htmlParser.getAllElementIdentifier()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources
-						.add(new RepairSource(attr, RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(attr, RepairSource.Type.HTML));
 			}
 		}
 
@@ -68,20 +67,17 @@ public class ConfigHelper {
 		ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("$(document)",
-				RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("$(document)", RepairSource.Type.DEFAULT));
 		// From Test Case
 		for (String attr : testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource("$(" + attr + ")",
-						RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource("$(" + attr + ")", RepairSource.Type.TESTCASE));
 			}
 		}
 		// From HTML
 		for (String eventTarget : eventSet.getTargetSet()) {
-			repairSources.add(new RepairSource(eventTarget,
-					RepairSource.Type.HTML));
+			repairSources.add(new RepairSource(eventTarget, RepairSource.Type.HTML));
 		}
 		return repairSources;
 	}
@@ -96,8 +92,7 @@ public class ConfigHelper {
 		for (String eventType : eventSet.getTypeSet()) {
 			if (!duplicate.contains(eventType)) {
 				duplicate.add(eventType);
-				repairSources.add(new RepairSource(eventType,
-						RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(eventType, RepairSource.Type.HTML));
 			}
 		}
 		return repairSources;
@@ -114,16 +109,14 @@ public class ConfigHelper {
 		for (String eventCallback : eventSet.getCallbackSet()) {
 			if (!duplicate.contains(eventCallback)) {
 				duplicate.add(eventCallback);
-				repairSources.add(new RepairSource(eventCallback,
-						RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(eventCallback, RepairSource.Type.HTML));
 			}
 		}
 		// From JavaScript
 		for (String name : jsParser.getFunctionNames()) {
 			if (!duplicate.contains(name)) {
 				duplicate.add(name);
-				repairSources.add(new RepairSource(name,
-						RepairSource.Type.JavaScript));
+				repairSources.add(new RepairSource(name, RepairSource.Type.JavaScript));
 			}
 		}
 		return repairSources;
@@ -132,11 +125,9 @@ public class ConfigHelper {
 	public List<RepairSource> getRepairSourcesForTimerEventDuration() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		// default
-		String[] durations = new String[] { "0", "50", "100", "250", "500",
-				"750", "1000" };
+		String[] durations = new String[] { "0", "50", "100", "250", "500", "750", "1000" };
 		for (String duration : durations) {
-			repairSources.add(new RepairSource(duration,
-					RepairSource.Type.DEFAULT));
+			repairSources.add(new RepairSource(duration, RepairSource.Type.DEFAULT));
 		}
 		return repairSources;
 	}
@@ -145,19 +136,17 @@ public class ConfigHelper {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		ArrayList<String> duplicate = new ArrayList<>();
 		// From JavaScript
-		for(String value : jsParser.getAttributeValuesFromInfixExpression()) {
+		for (String value : jsParser.getAttributeValuesFromInfixExpression()) {
 			if (!duplicate.contains(value)) {
 				duplicate.add(value);
-				repairSources.add(new RepairSource(value,
-						RepairSource.Type.JavaScript));
+				repairSources.add(new RepairSource(value, RepairSource.Type.JavaScript));
 			}
 		}
 		// From HTML
 		for (String value : htmlParser.getAllAttributeValues()) {
 			if (!duplicate.contains(value)) {
 				duplicate.add(value);
-				repairSources.add(new RepairSource(value,
-						RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(value, RepairSource.Type.HTML));
 			}
 		}
 		return repairSources;
@@ -166,5 +155,16 @@ public class ConfigHelper {
 	public List<RepairSource> getRepairSourcesForAppendedDOM() {
 		List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		return repairSources;
+	}
+
+	public static File getRecordedJsFile(String filename) throws IOException, MalformedURLException, UnsupportedEncodingException {
+		AppConfig config = new AppConfig(filename);
+		return config.getRecordedJsFile();
+	}
+
+	public static class AppConfig extends AppConfigBase {
+		public AppConfig(String filename) throws IOException {
+			super(filename);
+		}
 	}
 }
