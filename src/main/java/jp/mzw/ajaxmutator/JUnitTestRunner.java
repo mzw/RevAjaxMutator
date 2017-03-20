@@ -19,6 +19,8 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.MultipleFailureException;
 import org.junit.runners.model.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -27,6 +29,8 @@ import java.util.List;
  * test execution when any test fails.
  */
 public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
+	private static final Logger LOGGER = LoggerFactory.getLogger(JUnitTestRunner.class);
+
 	protected final boolean shouldRunAllTest;
 	protected boolean skipNextExecution = false;
 	protected RunNotifierFailureReporter reporter;
@@ -39,6 +43,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 
 	@Override
 	protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
+
 		Description description = describeChild(method);
 		if (method.getAnnotation(Ignore.class) != null || skipNextExecution) {
 			notifier.fireTestIgnored(description);
@@ -53,6 +58,8 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 					reporter = new RunNotifierFailureReporter(notifier);
 				}
 			}
+			LOGGER.info("<Thread:{}> run test {} : {}", Thread.currentThread().getId(), getTestClass().getName(),
+					method.getName());
 			runLeaf(methodBlock(method), description, reporter);
 		}
 	}

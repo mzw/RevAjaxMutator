@@ -15,6 +15,7 @@ import jp.mzw.revajaxmutator.RewriterPlugin;
 import jp.mzw.revajaxmutator.config.AppConfigBase;
 
 import org.apache.commons.io.FileUtils;
+import org.codehaus.groovy.control.CompilationUnit.PrimaryClassNodeOperation;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

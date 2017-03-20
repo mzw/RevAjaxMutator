@@ -418,7 +418,7 @@ public class MutationTestConductor {
 		Util.copyFile(pathToBackupFile(), context.getJsPath());
 		LOGGER.info("finished! " + runningStopwatch.elapsedMillis() / 1000.0 + " sec.");
 	}
-
+	//original
 	private int applyMutationAnalysis(TestExecutor testExecutor) {
 		int numberOfAppliedMutation = 0;
 		int numberOfMaxMutants = mutationListManager.getNumberOfUnkilledMutants();
@@ -481,20 +481,15 @@ public class MutationTestConductor {
 		commandReceiver.start();
 		List<String> original = Util.readFromFile(pathToJsFile);
 		List<String> nameOfMutations = mutationListManager.getListOfMutationName();
-
-		// スレッド数無制限実行
-		// ExecutorService executor = Executors.newCachedThreadPool();
-
+		
 		// スレッド数指定実行
-		ExecutorService executor = Executors.newFixedThreadPool(3);
-
-		// 逐次実行
-		// ExecutorService executor = Executors.newSingleThreadExecutor();
+		ExecutorService executor = Executors.newFixedThreadPool(2);
 
 		List<Future<Boolean>> futureList = new ArrayList<Future<Boolean>>();
 
-		List<MutationFileInformation> skipList = getSkipList(mutationListManager.getMutationFileInformationList(),
-				EventTargetRAMutator.class);
+		// do-fewer
+		List<MutationFileInformation> skipList = getSkipListbyDoFewer(
+				mutationListManager.getMutationFileInformationList(), EventTargetRAMutator.class);
 
 		for (String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
@@ -508,7 +503,7 @@ public class MutationTestConductor {
 				}
 				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)
 						|| !isCoveredMutationPointbyTest(mutationFileInformation)
-						|| isSkipListMutation(skipList, mutationFileInformation)) {
+						|| isSkipListMutationOfDoFewer(skipList, mutationFileInformation)) {
 					continue;
 				}
 				numberOfAppliedMutation++;
@@ -564,7 +559,7 @@ public class MutationTestConductor {
 		}
 		return numberOfAppliedMutation;
 	}
-
+	
 	private boolean isCoveredMutationPointbyTest(MutationFileInformation info) {
 		int startLine = info.getStartLine();
 		int endLine = info.getEndLine();
@@ -592,7 +587,7 @@ public class MutationTestConductor {
 		}
 		return false;
 	}
-
+	
 	private List<String> getOrderedMethodNames(MutationFileInformation info) {
 
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
@@ -629,7 +624,9 @@ public class MutationTestConductor {
 		return orderedMethodNames;
 	}
 
-	private List<MutationFileInformation> getSkipList(List<MutationFileInformation> list, Class<?> priorMutaterClass) {
+	// do-fewer
+	private List<MutationFileInformation> getSkipListbyDoFewer(List<MutationFileInformation> list,
+			Class<?> priorMutaterClass) {
 
 		List<MutationFileInformation> eventAttachmentMutantList = new ArrayList<MutationFileInformation>();
 
@@ -691,7 +688,8 @@ public class MutationTestConductor {
 		return false;
 	}
 
-	private boolean isSkipListMutation(List<MutationFileInformation> skipList,
+	// do-fewer
+	private boolean isSkipListMutationOfDoFewer(List<MutationFileInformation> skipList,
 			MutationFileInformation targetMutationFileInformation) {
 		for (MutationFileInformation fileInfo : skipList) {
 			if (fileInfo.getFileName().equals(targetMutationFileInformation.getFileName())) {
