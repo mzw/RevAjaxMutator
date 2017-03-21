@@ -149,7 +149,12 @@ public class JavaScriptParser {
 				if (node instanceof FunctionCall) {
 					final FunctionCall functionCall = (FunctionCall) node;
 					// Get the name of the function
-					final Name name = ((PropertyGet) functionCall.getTarget()).getProperty();
+					Name name = null;
+					if (functionCall.getTarget() instanceof Name) {
+						name = (Name) functionCall.getTarget();
+					} else {
+						name = ((PropertyGet) functionCall.getTarget()).getProperty();
+					}
 					if (name == null) {
 						// it's an anonymous function
 						return true;
