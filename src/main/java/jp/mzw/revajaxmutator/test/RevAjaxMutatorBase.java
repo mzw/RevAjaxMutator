@@ -5,6 +5,7 @@ import java.util.List;
 
 import jp.mzw.revajaxmutator.FilterPlugin;
 
+import org.openqa.selenium.WebDriver;
 import org.owasp.webscarab.model.Preferences;
 import org.owasp.webscarab.model.StoreException;
 import org.owasp.webscarab.plugin.Framework;
@@ -12,21 +13,25 @@ import org.owasp.webscarab.plugin.proxy.Proxy;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RevAjaxMutatorBase {
-	private static Proxy mProxy;
+	protected static Proxy mProxy;
 	
-	public static void launchProxyServer(List<ProxyPlugin> plugins, String port) throws StoreException, InterruptedException {
+	public static void launchProxyServer(List<ProxyPlugin> plugins, String proxy) throws StoreException, InterruptedException {
         Framework framework = new Framework();
-        Preferences.setPreference("Proxy.listeners", "127.0.0.1:" + port);
+        
+        Preferences.setPreference("Proxy.listeners", proxy);
+        
         framework.setSession("FileSystem", new File(".conversation"), "");
         
         mProxy = new Proxy(framework);
+        
         for(ProxyPlugin plugin : plugins) {
         	mProxy.addPlugin(plugin);
         }
 		
-		mProxy.run();
+        mProxy.run();
     	Thread.sleep(300); // wait for launching proxy server
 	}
+	
 
     public static void relaunchProxyServerWith(FilterPlugin filter_plugin) throws InterruptedException, StoreException {
     	if(mProxy != null && mProxy.stop()) {
