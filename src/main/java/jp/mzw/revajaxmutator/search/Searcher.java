@@ -14,25 +14,26 @@ import org.slf4j.LoggerFactory;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
-import jp.mzw.revajaxmutator.config.AppConfigBase;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.test.result.Coverage;
 
 public class Searcher {
 	protected static Logger LOGGER = LoggerFactory.getLogger(Searcher.class);
 
-	AppConfigBase config;
+	AppConfig config;
 	MutationListManager manager;
 	Sorter.SortType sortType;
 
 	public Searcher(Class<?> clazz) throws InstantiationException,
 			IllegalAccessException, JSONException, IOException {
-		config = (AppConfigBase) clazz.newInstance();
+		config = (AppConfig) clazz.newInstance();
 		manager = getMutationListManager();
 		sortType = Sorter.SortType.REPAIR_SOURCE_DFS; // default
 	}
 
 	public Searcher(Class<?> clazz, String sort) throws InstantiationException,
 			IllegalAccessException, JSONException, IOException {
-		config = (AppConfigBase) clazz.newInstance();
+		config = (AppConfig) clazz.newInstance();
 		manager = getMutationListManager();
 		sortType = Sorter.getSortType(sort);
 	}
@@ -75,33 +76,37 @@ public class Searcher {
 	protected void setWeight(MutationListManager manager) throws JSONException,
 			IOException {
 		// Parse
-		File file = config.getFailureCoverageFile();
-		if(!file.exists()) return;
-		JSONArray failure = Coverage.getCoverageData(
-				Coverage.parse(file),
-				new URL(config.getUrl(), config.pathToJsFile()).getPath());
-		if(failure == null) return;
-		int line_num = failure.length();
-		double[] weight = new double[line_num];
-		int max = 0;
-		for (int i = 1; i < line_num; i++) {
-			int failure_cover_freq = Coverage.getCoverFreq(failure.get(i));
-			if (failure_cover_freq > max) {
-				max = failure_cover_freq;
+		List<File> files = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
+		for (File file : files) {
+			if(!file.exists()) {
+				continue;
 			}
-		}
-		for (int i = 1; i < line_num; i++) {
-			Object line = failure.get(i);
-			int freq = Coverage.getCoverFreq(line);
-			// put assumption that all weight should be under 9
-			weight[i] = (int) (9.0 * (1.0 - (double) freq / (double) max));
-		}
+			JSONArray failure = Coverage.getCoverageData(
+					Coverage.parse(file),
+					new URL(config.getUrl(), config.pathToJsFile()).getPath());
+			if(failure == null) return;
+			int line_num = failure.length();
+			double[] weight = new double[line_num];
+			int max = 0;
+			for (int i = 1; i < line_num; i++) {
+				int failure_cover_freq = Coverage.getCoverFreq(failure.get(i));
+				if (failure_cover_freq > max) {
+					max = failure_cover_freq;
+				}
+			}
+			for (int i = 1; i < line_num; i++) {
+				Object line = failure.get(i);
+				int freq = Coverage.getCoverFreq(line);
+				// put assumption that all weight should be under 9
+				weight[i] = (int) (9.0 * (1.0 - (double) freq / (double) max));
+			}
 
-		// Set
-		for (String name : manager.getListOfMutationName()) {
-			for (MutationFileInformation info : manager
-					.getMutationFileInformationList(name)) {
-				info.setWeight(weight[info.getStartLine()]);
+			// Set
+			for (String name : manager.getListOfMutationName()) {
+				for (MutationFileInformation info : manager
+						.getMutationFileInformationList(name)) {
+					info.setWeight(weight[info.getStartLine()]);
+				}
 			}
 		}
 	}

@@ -5,11 +5,10 @@ import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Properties;
 
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
-import jp.mzw.revajaxmutator.config.AppConfigBase;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
@@ -66,23 +65,6 @@ public class SearcherTest {
 		file.delete();
 		FileUtils.copyFile(backupFile, file);
 		backupFile.delete();
-	}
-
-	static class AppConfig extends AppConfigBase {
-		AppConfig() {
-			super(getConfig());
-		}
-	}
-
-	private static Properties getConfig() {
-		Properties config = new Properties();
-		config.put("ram_record_dir", "target/test-classes/record/quizzy/");
-		config.put("failure_cov_file",
-				"target/test-classes/jscover/quizzy/jscoverage.failure.json");
-		config.put("path_to_js_file", "quizzy/quizzy.js");
-		config.put("url",
-				"http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php");
-		return config;
 	}
 
 }

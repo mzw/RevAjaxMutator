@@ -1,0 +1,3 @@
+class,method,run,ignore,failure
+jp.mzw.revajaxmutator.test.quizzy.QuizzyTest,clickQuizLabel,1,0,1
+jp.mzw.revajaxmutator.test.quizzy.QuizzyTest,clickQuizButton,1,0,0

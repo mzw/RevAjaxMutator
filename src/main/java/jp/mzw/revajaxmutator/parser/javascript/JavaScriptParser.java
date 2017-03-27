@@ -118,7 +118,6 @@ public class JavaScriptParser {
 							for(String attr : attributes) {
 								if(attr.equals(_left_node.getProperty().toSource())) {
 									if(!ret.contains(value)) {
-										System.out.println(attr + ", " + value + ", " + node.toSource());
 										ret.add(value);
 										break;
 									}

@@ -94,14 +94,13 @@ $ make mutation testing
 $ make automated program repair
 ```
 
-## License
-[Apache 2.0 License](blob/master/LICENSE)
-
 ## Contributors
 - Kazuki Nishiura (AjaxMutator)
 - Kohsuke Yatoh (Proxy functionality)
 - Junto Nakaoka (Space-search functionality)
+- Shumpei Itho (Do-fewer, do-smarter, and do-faster approaches)
+- Filipe Guerreiro (OnelineAjaxFixMiner)
 - Many graduate students in computer science (Test case implementation)
 
-----
-(C) [Yuta Maezawa](http://mzw.jp) 2016
+## License
+[Apache 2.0 License](blob/master/LICENSE)

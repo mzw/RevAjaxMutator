@@ -19,8 +19,7 @@ public class MutationListManager {
 		this.reportOutputDir = reportOutputDir;
 	}
 
-	public void addMutationFileInformation(String title,
-			MutationFileInformation fileInformation) {
+	public void addMutationFileInformation(String title, MutationFileInformation fileInformation) {
 		if (!mutationFiles.containsKey(title)) {
 			mutationTitles.add(title);
 			mutationFiles.put(title, new ArrayList<MutationFileInformation>());
@@ -41,15 +40,23 @@ public class MutationListManager {
 	 *            {@link #getListOfMutationName()}.
 	 * @return List of mutation file which belong to given class.
 	 */
-	public List<MutationFileInformation> getMutationFileInformationList(
-			String name) {
+	public List<MutationFileInformation> getMutationFileInformationList(String name) {
 		return mutationFiles.get(name);
+	}
+
+	public List<MutationFileInformation> getMutationFileInformationList() {
+		List<MutationFileInformation> list = new ArrayList<MutationFileInformation>();
+		for (List<MutationFileInformation> fileInfoList : mutationFiles.values()) {
+			for (MutationFileInformation mutationfileinfomation : fileInfoList) {
+				list.add(mutationfileinfomation);
+			}
+		}
+		return list;
 	}
 
 	public int getNumberOfUnkilledMutants() {
 		int total = 0;
-		for (List<MutationFileInformation> fileInfoList : mutationFiles
-				.values()) {
+		for (List<MutationFileInformation> fileInfoList : mutationFiles.values()) {
 			for (MutationFileInformation fileInfo : fileInfoList) {
 				if (fileInfo.getState() == MutationFileInformation.State.NON_EQUIVALENT_LIVE) {
 					total++;
@@ -61,8 +68,7 @@ public class MutationListManager {
 
 	public int getNumberOfMaxMutants() {
 		int total = 0;
-		for (List<MutationFileInformation> fileInfoList : mutationFiles
-				.values()) {
+		for (List<MutationFileInformation> fileInfoList : mutationFiles.values()) {
 			for (MutationFileInformation fileInfo : fileInfoList) {
 				if (fileInfo.getState() != MutationFileInformation.State.EQUIVALENT) {
 					total++;
@@ -75,22 +81,14 @@ public class MutationListManager {
 	private String generateContentsOfMutationReport() {
 		StringBuilder builder = new StringBuilder();
 		for (String title : mutationTitles) {
-			builder.append(title).append(',')
-					.append(mutationFiles.get(title).size())
-					.append(System.lineSeparator());
+			builder.append(title).append(',').append(mutationFiles.get(title).size()).append(System.lineSeparator());
 			for (MutationFileInformation info : mutationFiles.get(title)) {
-				builder.append(info.getFileName()).append(',')
-						.append(info.getKilledStatusAsString()).append(',')
-						.append(info.getAbsolutePath()).append(',')
-						.append(info.getStartLine()).append(',')
-						.append(info.getEndLine()).append(',')
-						.append(info.getMutatable()).append(',')
-						.append(info.getFixer()).append(',')
-						.append(info.getRepairValue()).append(',')
-						.append(info.getRepairSource()).append(',')
-						.append(info.getNumOfPassedTest()).append(',')
-						.append(info.getNumOfFailedTest()).append(',')
-						.append(info.getTestResults().toString())
+				builder.append(info.getFileName()).append(',').append(info.getKilledStatusAsString()).append(',')
+						.append(info.getAbsolutePath()).append(',').append(info.getStartLine()).append(',')
+						.append(info.getEndLine()).append(',').append(info.getMutatable()).append(',')
+						.append(info.getFixer()).append(',').append(info.getRepairValue()).append(',')
+						.append(info.getRepairSource()).append(',').append(info.getNumOfPassedTest()).append(',')
+						.append(info.getNumOfFailedTest()).append(',').append(info.getTestResults().toString())
 						.append(System.lineSeparator());
 			}
 		}
@@ -98,8 +96,7 @@ public class MutationListManager {
 	}
 
 	public boolean generateMutationListFile() {
-		return Util.writeToFile(getMutationListFilePath(),
-				generateContentsOfMutationReport());
+		return Util.writeToFile(getMutationListFilePath(), generateContentsOfMutationReport());
 	}
 
 	public void readExistingMutationListFile() {
@@ -111,24 +108,19 @@ public class MutationListManager {
 			if (elms.length == 2) {
 				title = elms[0];
 				mutationTitles.add(title);
-				mutationFiles.put(title,
-						new ArrayList<MutationFileInformation>());
+				mutationFiles.put(title, new ArrayList<MutationFileInformation>());
 				continue;
 			}
 			// for repair
 			else if (elms.length == 12) {
-				mutationFiles.get(title).add(
-						new MutationFileInformation(elms[0], elms[2],
-								MutationFileInformation.State
-										.fromString(elms[1]), Integer
-										.parseInt(elms[3]), Integer
-										.parseInt(elms[4]), elms[5], elms[6],
-								elms[7], elms[8]));
+				mutationFiles.get(title)
+						.add(new MutationFileInformation(elms[0], elms[2],
+								MutationFileInformation.State.fromString(elms[1]), Integer.parseInt(elms[3]),
+								Integer.parseInt(elms[4]), elms[5], elms[6], elms[7], elms[8]));
 				continue;
 			}
 			mutationFiles.get(title).add(
-					new MutationFileInformation(elms[0], elms[2],
-							MutationFileInformation.State.fromString(elms[1])));
+					new MutationFileInformation(elms[0], elms[2], MutationFileInformation.State.fromString(elms[1])));
 		}
 	}
 
