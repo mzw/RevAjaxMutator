@@ -4,7 +4,7 @@
 
 	<groupId>jp.mzw.revajaxmutator</groupId>
 	<artifactId>RevAjaxMutator</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.2-ICSE18-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Proxy-based AjaxMutator</name>
 	<description>A tool for mutation testing and automated program repair of Ajax Web applications</description>
@@ -19,7 +19,7 @@
 	<repositories>
 		<repository>
 			<id>jp.mzw.mvn-repo</id>
-			<url>http://mvn-repo.mzw.jp</url>
+			<url>https://mvn-repo.mzw.jp</url>
 		</repository>
 	</repositories>
 

@@ -112,6 +112,8 @@ public class Test extends Command {
 				String testClassName = args[i];
 				Class<?> testClass = getClass(testClassName);
 
+				// TODO Remove or backup previous results
+				
 				for (Method method : testClass.getMethods()) {
 					if (isTestMethod(method)) {
 						// TODO run with Theory?
