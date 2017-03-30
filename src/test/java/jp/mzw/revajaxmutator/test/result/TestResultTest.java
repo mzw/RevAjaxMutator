@@ -16,7 +16,7 @@ public class TestResultTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
-		jscoverReportDir = new File("src/test/resources/jscover/quizzy");
+		jscoverReportDir = new File("src/test/resources/jscover-test/quizzy");
 	}
 
 	@Test

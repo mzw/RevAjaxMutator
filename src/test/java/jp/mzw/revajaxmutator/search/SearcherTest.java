@@ -75,7 +75,7 @@ public class SearcherTest {
 		
 		@Override
 		public File getRecordDir() {
-			return new File("src/test/resources/record/quizzy");
+			return new File("src/test/resources/record-test/quizzy");
 		}
 
 		@Override
