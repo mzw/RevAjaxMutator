@@ -4,6 +4,7 @@
 record/
 */workaround/
 ram.log
+logs/
 
 # WebScarab files
 /.conversation/

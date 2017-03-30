@@ -1,28 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<!DOCTYPE log4j:configuration PUBLIC "-//APACHE//DTD LOG4J 1.2//EN" "http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/xml/doc-files/log4j.dtd">
 
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/"
-	debug="false">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
-	<appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-		<param name="Target" value="System.out" />
-		<param name="Threshold" value="DEBUG" />
-
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%-5p [%c{1}] %m%n" />
-		</layout>
-	</appender>
-
-	<appender name="File" class="org.apache.log4j.FileAppender">
-		<param name="File" value="ram.log" />
+	<appender name="RAM_FILE_APPENDER" class="org.apache.log4j.FileAppender">
+		<param name="File" value="logs/ram.log" />
 		<param name="Append" value="true" />
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%m%n" />
+			<param name="ConversionPattern" value="%d %5p %c{1} - %m%n" />
 		</layout>
 	</appender>
-
-	<root>
-		<appender-ref ref="File" />
-	</root>
+    
+    <appender name="PROXY_FILE_APPENDER" class="org.apache.log4j.FileAppender">
+        <param name="File" value="logs/proxy.log" />
+        <param name="Append" value="true" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %5p %c{1} - %m%n" />
+        </layout>
+    </appender>
+    
+    <category name="org.apache">
+        <level value="DEBUG" />
+        <appender-ref ref="PROXY_FILE_APPENDER" />
+    </category>
+    
+    <category name="jp.mzw">
+        <level value="DEBUG" />
+        <appender-ref ref="RAM_FILE_APPENDER" />
+    </category>
 
 </log4j:configuration>

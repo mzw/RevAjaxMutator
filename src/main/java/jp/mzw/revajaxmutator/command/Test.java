@@ -117,7 +117,6 @@ public class Test extends Command {
 						// TODO run with Theory?
 						Result result = (new JUnitCore()).run(new EachJUnitTestRunner(testClass, true, method));
 						showTestResult(result);
-
 						results.add(new TestResult(testClass.getName(), method.getName(), result));
 
 						Thread.sleep(500); // wait for outputting JSCover file
@@ -153,6 +152,9 @@ public class Test extends Command {
 		for (Failure f : result.getFailures()) {
 			System.out.println(f.getDescription());
 			System.out.println(" exception: " + f.getException());
+			LOG.warn(f.getDescription().toString());
+			LOG.warn(f.getException().toString());
+			LOG.warn(f.getTrace());
 		}
 	}
 
