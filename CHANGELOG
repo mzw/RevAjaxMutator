@@ -1,11 +1,14 @@
 0.0.2
 for ICSE'18 submission
+-- [A] CLI
 -- [A] Program repair
+-- [F] WebAppTestBase
 -- [F] Proxy
 
 0.0.1
 for CodeZine article
 -- [A] Mutation analysis
+-- [A] WebAppTestBase
 -- [A] Proxy
 
 Key
