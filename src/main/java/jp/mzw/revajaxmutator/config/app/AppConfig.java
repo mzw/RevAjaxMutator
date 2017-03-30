@@ -70,7 +70,7 @@ public abstract class AppConfig implements IAppConfig {
 			case PATH_TO_JS_FILE:
 				return "js/foo.js";
 			case PATH_TO_HTML_FILE:
-				return "index.php";
+				return "index.html";
 			case PATH_TO_TESTCASE_FILE:
 				return "src/test/java/package/MyTest.java";
 			}
@@ -97,6 +97,9 @@ public abstract class AppConfig implements IAppConfig {
 		return new File(param);
 	}
 
+	/**
+	 * 
+	 */
 	public File getJscoverReportDir() {
 		String param = getParam(Param.JSCOVER_REPORT_DIR);
 		return new File(param);
@@ -130,7 +133,16 @@ public abstract class AppConfig implements IAppConfig {
 	public File getRecordedJsFile() throws MalformedURLException, UnsupportedEncodingException {
 		URL url = new URL(getUrl(), pathToJsFile());
 		String filename = URLEncoder.encode(url.toString(), "utf-8");
-		return new File(getRecordDir(), filename);
+		File file = new File(getRecordDir(), filename);
+		if (!file.exists() && getRecordDir().exists()) {
+			for (File candidate : getRecordDir().listFiles()) {
+				if (candidate.getName().startsWith(filename)) {
+					file = candidate;
+					break;
+				}
+			}
+		}
+		return file;
 	}
 
 	/**
