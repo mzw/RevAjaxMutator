@@ -85,9 +85,8 @@ public class MutationAnalysis extends Command {
 				}
 
 				new JUnitCore().run(runner);
-
-				ProxyServer.interrupt();
 			}
+			ProxyServer.interrupt();
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InitializationError | StoreException | InterruptedException | IOException e) {
 			LOG.error(e.getMessage());
 			ProxyServer.interrupt();
