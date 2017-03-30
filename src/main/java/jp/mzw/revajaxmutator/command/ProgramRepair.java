@@ -71,11 +71,15 @@ public class ProgramRepair extends Command {
 	 * 
 	 * @param config
 	 * @throws IOException
+	 * @throws JSONException 
+	 * @throws IllegalAccessException 
+	 * @throws InstantiationException 
 	 */
-	public void generate(AppConfig config) throws IOException {
+	public void generate(AppConfig config) throws IOException, InstantiationException, IllegalAccessException, JSONException {
 		MutateConfiguration mutateConfig = config.getProgramRepairConfig();
 		MutationTestConductor conductor = mutateConfig.mutationTestConductor();
 		conductor.generateMutations(mutateConfig.mutators());
+		search(config.getClass());
 	}
 
 	/**
@@ -104,7 +108,6 @@ public class ProgramRepair extends Command {
 				testClasses.add(testClass);
 			}
 
-			search(config.getClass());
 			validate(config, testClasses.toArray(new Class<?>[testClasses.size()]));
 			
 			ProxyServer.interrupt();

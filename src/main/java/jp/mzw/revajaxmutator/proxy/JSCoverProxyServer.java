@@ -28,7 +28,6 @@ public class JSCoverProxyServer {
 							"--report-dir=" + dir,
 							"--no-instrument-reg=.*jquery.*",
 							"--no-instrument-reg=.*bootstrap.*",
-							"--log=SEVERE",
 					});
 				}
 			});
