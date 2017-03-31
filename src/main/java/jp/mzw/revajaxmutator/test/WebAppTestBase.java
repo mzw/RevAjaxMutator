@@ -27,11 +27,14 @@ import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.gson.JsonObject;
 
 abstract public class WebAppTestBase {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
 
 	/** Possess configuration related to local environment */
 	protected static LocalEnv localenv;
@@ -157,8 +160,6 @@ abstract public class WebAppTestBase {
 			cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, localenv.getPhantomjsBin());
 
 			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
-			
-			System.setProperty("no-proxy", "");
 
 			PhantomJSDriver driver = new PhantomJSDriver(cap);
 			WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
