@@ -7,6 +7,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,17 +134,26 @@ public abstract class AppConfig implements IAppConfig {
 	 */
 	public File getRecordedJsFile() throws MalformedURLException, UnsupportedEncodingException {
 		URL url = new URL(getUrl(), pathToJsFile());
-		String filename = URLEncoder.encode(url.toString(), "utf-8");
-		File file = new File(getRecordDir(), filename);
-		if (!file.exists() && getRecordDir().exists()) {
-			for (File candidate : getRecordDir().listFiles()) {
-				if (candidate.getName().startsWith(filename)) {
-					file = candidate;
-					break;
-				}
+
+		String[] splits = url.toString().split("<regex>|</regex>");
+		StringBuilder regex = new StringBuilder();
+		for (int i = 0; i < splits.length; i++) {
+			if (i % 2 == 0) {
+				regex.append(URLEncoder.encode(splits[i], "utf-8"));
+			} else {
+				regex.append(splits[i]);
 			}
 		}
-		return file;
+
+		Pattern pattern = Pattern.compile(regex.toString());
+		for (File file : getRecordDir().listFiles()) {
+			Matcher matcher = pattern.matcher(file.getName());
+			if (matcher.find()) {
+				return file;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -161,8 +172,26 @@ public abstract class AppConfig implements IAppConfig {
 	 */
 	public File getRecordedHtmlFile() throws MalformedURLException, UnsupportedEncodingException {
 		URL url = new URL(getUrl(), pathToHtmlFile());
-		String filename = URLEncoder.encode(url.toString(), "utf-8");
-		return new File(getRecordDir(), filename);
+
+		String[] splits = url.toString().split("<regex>|</regex>");
+		StringBuilder regex = new StringBuilder();
+		for (int i = 0; i < splits.length; i++) {
+			if (i % 2 == 0) {
+				regex.append(URLEncoder.encode(splits[i], "utf-8"));
+			} else {
+				regex.append(splits[i]);
+			}
+		}
+
+		Pattern pattern = Pattern.compile(regex.toString());
+		for (File file : getRecordDir().listFiles()) {
+			Matcher matcher = pattern.matcher(file.getName());
+			if (matcher.find()) {
+				return file;
+			}
+		}
+
+		return null;
 	}
 
 	/**
