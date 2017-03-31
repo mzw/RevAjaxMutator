@@ -29,6 +29,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.google.common.base.Function;
+import com.google.gson.JsonObject;
 
 abstract public class WebAppTestBase {
 
@@ -101,16 +102,29 @@ abstract public class WebAppTestBase {
 	 */
 	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
 		if (localenv.getFirefoxBin() != null) {
+			DesiredCapabilities cap = new DesiredCapabilities();
 
-			com.google.gson.JsonObject json = new com.google.gson.JsonObject();
+			JsonObject json = new JsonObject();
 			json.addProperty("proxyType", "MANUAL");
 			json.addProperty("httpProxy", localenv.getProxyIp());
 			json.addProperty("httpProxyPort", localenv.getProxyPort());
 			json.addProperty("sslProxy", localenv.getProxyIp());
 			json.addProperty("sslProxyPort", localenv.getProxyPort());
-
-			DesiredCapabilities cap = new DesiredCapabilities();
 			cap.setCapability(CapabilityType.PROXY, json);
+
+			JsonObject prefs = new JsonObject();
+			prefs.addProperty("network.proxy.type", 1);
+			prefs.addProperty("network.proxy.http", localenv.getProxyIp());
+			prefs.addProperty("network.proxy.http_port", localenv.getProxyPort());
+			prefs.addProperty("network.proxy.ssl", localenv.getProxyIp());
+			prefs.addProperty("network.proxy.ssl_port", localenv.getProxyPort());
+			prefs.addProperty("network.proxy.share_proxy_settings", Boolean.TRUE);
+			prefs.addProperty("network.proxy.no_proxies_on", "");
+
+			JsonObject options = new JsonObject();
+			options.add("prefs", prefs);
+			options.addProperty("binary", localenv.getFirefoxBin());
+			cap.setCapability("moz:firefoxOptions", options);
 
 			@SuppressWarnings("deprecation")
 			GeckoDriverService service = new GeckoDriverService.Builder(new FirefoxBinary(new File(localenv.getFirefoxBin())))
@@ -143,6 +157,8 @@ abstract public class WebAppTestBase {
 			cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, localenv.getPhantomjsBin());
 
 			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+			
+			System.setProperty("no-proxy", "");
 
 			PhantomJSDriver driver = new PhantomJSDriver(cap);
 			WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
