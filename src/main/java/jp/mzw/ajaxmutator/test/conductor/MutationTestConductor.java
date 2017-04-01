@@ -789,7 +789,7 @@ public class MutationTestConductor {
 		@Override
 		public void run() {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-			LOGGER.info("You can stop execution any time by entering 'q'");
+			System.out.println("You can stop execution any time by entering 'q'");
 			while (true) {
 				try {
 					while (conducting && !reader.ready()) {
