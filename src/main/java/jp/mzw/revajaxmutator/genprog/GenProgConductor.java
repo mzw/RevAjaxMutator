@@ -27,7 +27,6 @@ import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.test.result.Coverage;
-import jp.mzw.revajaxmutator.test.result.TestResult;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;

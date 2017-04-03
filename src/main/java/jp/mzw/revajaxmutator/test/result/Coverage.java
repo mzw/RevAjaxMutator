@@ -135,4 +135,26 @@ public class Coverage {
 		fr.close();
 		return new JSONObject(builder.toString());
 	}
+	
+	public static boolean isCovered(final Map<String, boolean[]> results, int startLineNum, int endLineNum) {
+		for (Map.Entry<String, boolean[]> entry : results.entrySet()) {
+			boolean[] testsCoverage = entry.getValue();
+			for (int line = startLineNum; line <= endLineNum; line++) {
+				if (testsCoverage[line] == true) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public static boolean isCovered(final Map<String, boolean[]> results, int startLineNum, int endLineNum, String methodName) {
+		boolean[] coveredByMethod = results.get(methodName);
+		for (int line = startLineNum; line <= endLineNum; line++) {
+			if (coveredByMethod[line]) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

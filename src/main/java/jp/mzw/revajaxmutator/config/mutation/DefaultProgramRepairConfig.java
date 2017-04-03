@@ -85,6 +85,7 @@ public class DefaultProgramRepairConfig extends MutateConfigurationBase {
 
 		conductor = new MutationTestConductor();
 		conductor.setup(config.getRecordedJsFile().getPath(), "", visitor);
+		conductor.setSaveInformationInterval(1);
 
 		ConfigHelper configHelper = new ConfigHelper()
 				.parseHtml(config.getRecordedHtmlFile())

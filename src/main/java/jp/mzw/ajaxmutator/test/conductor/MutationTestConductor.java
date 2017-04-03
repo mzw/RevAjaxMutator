@@ -10,7 +10,6 @@ import com.google.common.collect.Multimap;
 import difflib.DiffUtils;
 import difflib.Patch;
 import difflib.PatchFailedException;
-import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.Context;
 import jp.mzw.ajaxmutator.MutateVisitor;
@@ -35,7 +34,6 @@ import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Randomizer;
 import jp.mzw.ajaxmutator.util.Util;
-import jp.mzw.revajaxmutator.test.result.Coverage;
 
 import org.junit.runner.Result;
 import org.mozilla.javascript.ast.AstRoot;
@@ -47,22 +45,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -73,6 +61,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class MutationTestConductor {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(MutationTestConductor.class);
+
+	/* --------------------------------------------------
+	 * Fields
+	 -------------------------------------------------- */
 
 	protected MutationFileWriter mutationFileWriter;
 	protected MutationListManager mutationListManager;
@@ -86,8 +78,7 @@ public class MutationTestConductor {
 	protected boolean dryRun;
 	protected MutateVisitor visitor;
 	protected String pathToJsFile;
-
-	protected Map<String, boolean[]> coverageInfo;
+	protected Map<Mutator<?>, Integer> numOfMutation;
 
 	/**
 	 * Setting information required for mutation testing. This method MUST be
@@ -123,14 +114,61 @@ public class MutationTestConductor {
 		this.visitor = visitor;
 		return setup;
 	}
-	
+
+	/**
+	 * Need to set up before mutation analysis. If not, throw {@code IllegalStateException}.
+	 */
+	protected void checkIfSetuped() {
+		if (!setup) {
+			throw new IllegalStateException("You 'must' call setup method before you use.");
+		}
+	}
+
+	/* --------------------------------------------------
+	 * Getters and Setters
+	 -------------------------------------------------- */
+
+	/**
+	 * Get path to target JavaScript file
+	 * 
+	 * @return path to target JavaScript file
+	 */
 	protected String getPathToJsFile() {
 		return this.pathToJsFile;
 	}
-	
+
+	/**
+	 * 
+	 * 
+	 * @return
+	 */
+	protected String pathToBackupFile() {
+		return context.getJsPath() + ".backup";
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
 	protected MutateVisitor getMutateVisitor() {
 		return this.visitor;
 	}
+
+	/**
+	 * Specify the integer N that represents interval of saving mutation
+	 * information; mutation file updated every N execution. Default value is
+	 * Integer.MAX_VALUE.
+	 * 
+	 * @param saveInformationInterval represents interval of saving mutation information
+	 */
+	public void setSaveInformationInterval(int saveInformationInterval) {
+		Preconditions.checkArgument(saveInformationInterval > 0, "interval must be positive integer.");
+		this.saveInformationInterval = saveInformationInterval;
+	}
+
+	/* --------------------------------------------------
+	 * Functionalities of Mutation Analysis
+	 -------------------------------------------------- */
 
 	/**
 	 * Check how many mutants are generated and so on.
@@ -167,6 +205,11 @@ public class MutationTestConductor {
 		applyMutationAnalysis(testExecutor, stopwatch);
 	}
 
+	/**
+	 * 
+	 * 
+	 * @param testExecutor
+	 */
 	public void mutationAnalysisUsingExistingMutations(TestExecutor testExecutor) {
 		mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
 		mutationListManager.readExistingMutationListFile();
@@ -176,68 +219,16 @@ public class MutationTestConductor {
 		applyMutationAnalysis(testExecutor, Stopwatch.createStarted());
 	}
 
-	public void mutationAnalysisUsingExistingMutations(List<TestExecutor> testExecutors, HashMap<String, File> failureCoverageFiles) {
-		mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
-		mutationListManager.readExistingMutationListFile();
-		unkilledMutantsInfo = ArrayListMultimap.create();
-		coverageInfo = Coverage.getCoverageInfo(failureCoverageFiles, pathToJsFile);
-
-		checkIfSetuped();
-		applyMutationAnalysis(testExecutors, Stopwatch.createStarted());
-	}
-
-	public void tryToKillSpecificMutant(String mutationFileName, TestExecutor testExecutor) {
-		mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
-		mutationListManager.readExistingMutationListFile();
-		checkIfSetuped();
-
-		for (String description : mutationListManager.getListOfMutationName()) {
-			for (MutationFileInformation mutationFileInformation : mutationListManager.getMutationFileInformationList(description)) {
-				if (mutationFileInformation.getFileName().equals(mutationFileName)) {
-					List<String> original = Util.readFromFile(pathToJsFile);
-					if (!applyMutationFile(original, mutationFileInformation)) {
-						return;
-					}
-					if (testExecutor.execute()) { // This mutants cannot be killed
-						LOGGER.info("mutant {} is not be killed", description);
-					} else {
-						mutationFileInformation.setState(MutationFileInformation.State.KILLED);
-						LOGGER.info("mutant {} is killed", description);
-					}
-					String message = testExecutor.getMessageOnLastExecution();
-					if (message != null) {
-						LOGGER.info(message);
-					}
-
-					mutationListManager.generateMutationListFile();
-
-					LOGGER.info("restoring backup file...");
-					Util.copyFile(pathToBackupFile(), context.getJsPath());
-					return;
-				}
-			}
-		}
-		LOGGER.error("No mutant found for name " + mutationFileName);
-	}
-
-	public List<Result> testSpecificMutation(MutationFileInformation mutation, JUnitExecutor executor) {
-		checkIfSetuped();
-
-		List<String> original = Util.readFromFile(pathToJsFile);
-		if (!applyMutationFile(original, mutation)) {
-			return null; // fail to mutation
-		}
-
-		List<Result> testRestuls = executor.run();
-
-		Util.copyFile(pathToBackupFile(), context.getJsPath());
-
-		return testRestuls;
-	}
-
-	private Map<Mutator<?>, Integer> numOfMutation;
-
-	private Map<Mutator<?>, Integer> generateMutationFiles(MutateVisitor visitor, Set<Mutator<?>> mutators) {
+	/**
+	 * Generate mutations
+	 * 
+	 * Note: register new mutations here.
+	 * 
+	 * @param visitor provides detection results of mutable syntax elements
+	 * @param mutators provides how to mutate mutable syntax elements
+	 * @return map containing mutator as key and the number of its mutations as value
+	 */
+	protected Map<Mutator<?>, Integer> generateMutationFiles(MutateVisitor visitor, Set<Mutator<?>> mutators) {
 		numOfMutation = new HashMap<Mutator<?>, Integer>();
 
 		// Events
@@ -274,7 +265,12 @@ public class MutationTestConductor {
 		return numOfMutation;
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	/**
+	 * Generate mutations
+	 * 
+	 * @param mutatables represent locations where mutators mutate
+	 * @param mutators represent how to mutate mutable syntax elements
+	 */
 	private void generateMutationFiles(Set<? extends Mutatable> mutatables, Set<Mutator<?>> mutators) {
 		if (mutatables.size() == 0) {
 			LOGGER.info("mutable: 0");
@@ -293,11 +289,13 @@ public class MutationTestConductor {
 				LOGGER.info("--not applicabable");
 			}
 		}
-		for (Mutator mutator : applicableMutator) {
+		for (@SuppressWarnings("rawtypes")
+		Mutator mutator : applicableMutator) {
 			LOGGER.info("---mutator: {}", mutator.toString());
 			numOfMutation.put(mutator, 0);
 			LOGGER.info("using {}", mutator.mutationName());
 			for (Mutatable mutatable : mutatables) {
+				@SuppressWarnings("unchecked")
 				List<Mutation> mutations = mutator.generateMutationList(mutatable);
 				if (mutations == null) {
 					continue;
@@ -330,10 +328,16 @@ public class MutationTestConductor {
 		}
 	}
 
-	private void applyMutationAnalysis(TestExecutor testExecutor, Stopwatch runningStopwatch) {
+	/**
+	 * Run test cases on each mutant in addition to measure the elapsed time
+	 * 
+	 * @param testExecutor
+	 * @param runningStopwatch
+	 */
+	protected void applyMutationAnalysis(TestExecutor testExecutor, Stopwatch runningStopwatch) {
 		conducting = true;
 		addShutdownHookToRestoreBackup();
-		// テスト実行
+
 		int numberOfAppliedMutation = applyMutationAnalysis(testExecutor);
 
 		runningStopwatch.stop();
@@ -346,23 +350,10 @@ public class MutationTestConductor {
 		LOGGER.info("finished! " + runningStopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0 + " sec.");
 	}
 
-	private void applyMutationAnalysis(List<TestExecutor> testExecutors, Stopwatch runningStopwatch) {
-		conducting = true;
-		addShutdownHookToRestoreBackup();
-		int numberOfAppliedMutation = applyMutationAnalysis(testExecutors);
-
-		runningStopwatch.stop();
-		LOGGER.info("Updating mutation list file...");
-		mutationListManager.generateMutationListFile();
-
-		logExecutionDetail(numberOfAppliedMutation);
-		LOGGER.info("restoring backup file...");
-		Util.copyFile(pathToBackupFile(), context.getJsPath());
-		LOGGER.info("finished! " + runningStopwatch.elapsed(TimeUnit.MILLISECONDS) / 1000.0 + " sec.");
-	}
-
-	// original
-	private int applyMutationAnalysis(TestExecutor testExecutor) {
+	/**
+	 * Run test cases on each mutant
+	 */
+	protected int applyMutationAnalysis(TestExecutor testExecutor) {
 		int numberOfAppliedMutation = 0;
 		int numberOfMaxMutants = mutationListManager.getNumberOfUnkilledMutants();
 		Thread commandReceiver = new Thread(new CommandReceiver());
@@ -413,293 +404,16 @@ public class MutationTestConductor {
 		return numberOfAppliedMutation;
 	}
 
-	private int applyMutationAnalysis(List<TestExecutor> testExecutors) {
-
-		int numberOfAppliedMutation = 0;
-		int numberOfMaxMutants = mutationListManager.getNumberOfUnkilledMutants();
-		Thread commandReceiver = new Thread(new CommandReceiver());
-		commandReceiver.start();
-		List<String> original = Util.readFromFile(pathToJsFile);
-		List<String> nameOfMutations = mutationListManager.getListOfMutationName();
-
-		// スレッド数指定実行
-		ExecutorService executor = Executors.newFixedThreadPool(2);
-
-		List<Future<Boolean>> futureList = new ArrayList<Future<Boolean>>();
-
-		// do-fewer
-		List<MutationFileInformation> skipList = getSkipListbyDoFewer(mutationListManager.getMutationFileInformationList(), EventTargetRAMutator.class);
-
-		for (String description : nameOfMutations) {
-			LOGGER.info("Start applying {}", description);
-
-			for (MutationFileInformation mutationFileInformation : mutationListManager.getMutationFileInformationList(description)) {
-
-				// execution can be canceled from outside.
-				if (!conducting) {
-					break;
-				}
-				if (mutationFileInformation.canBeSkipped() || !createMutationFile(original, mutationFileInformation)
-						|| !isCoveredMutationPointbyTest(mutationFileInformation) || isSkipListMutationOfDoFewer(skipList, mutationFileInformation)) {
-					continue;
-				}
-				numberOfAppliedMutation++;
-				if (numberOfAppliedMutation >= saveInformationInterval & (numberOfAppliedMutation % saveInformationInterval == 0)) {
-					mutationListManager.generateMutationListFile();
-				}
-				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
-				Future<Boolean> future = null;
-				List<String> orderedMethodNames = getOrderedMethodNames(mutationFileInformation);
-				String mutantname = Util.getFileNameWithoutExtension(mutationFileInformation.getFileName());
-
-				TestExecutor targetTestExecutor = getTargetTestExecutor(testExecutors, mutantname);
-				targetTestExecutor.setOrderdMethodNames(orderedMethodNames);
-
-				future = executor
-						.submit(new TestCallable(targetTestExecutor, mutationFileInformation, description, numberOfAppliedMutation, numberOfMaxMutants));
-				futureList.add(future);
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-
-			// execution can be canceled from outside.
-			if (!conducting) {
-				break;
-			}
-		}
-		for (Future<Boolean> future : futureList) {
-			try {
-				future.get();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} catch (ExecutionException e) {
-				e.printStackTrace();
-			}
-		}
-
-		for (String description : nameOfMutations) {
-			for (MutationFileInformation mutationFileInformation : mutationListManager.getMutationFileInformationList(description)) {
-				LOGGER.info(mutationFileInformation.getState().toString());
-			}
-		}
-
-		executor.shutdown();
-
-		if (conducting) {
-			commandReceiver.interrupt();
-			conducting = false;
-		}
-		return numberOfAppliedMutation;
-	}
-
-	private boolean isCoveredMutationPointbyTest(MutationFileInformation info) {
-		int startLine = info.getStartLine();
-		int endLine = info.getEndLine();
-
-		for (Map.Entry<String, boolean[]> entry : coverageInfo.entrySet()) {
-			boolean[] testsCoverage = entry.getValue();
-			for (int line = startLine; line <= endLine; line++) {
-				if (testsCoverage[line] == true) {
-					return true;
-				}
-			}
-		}
-		LOGGER.info(info.getFileName() + " is skipped by coverage");
-		return false;
-	}
-
-	private boolean isCoveredMutationPointbyTest(MutationFileInformation info, String MethodName) {
-		int startLine = info.getStartLine();
-		int endLine = info.getEndLine();
-		for (int line = startLine; line <= endLine; line++) {
-			boolean[] testsCoverage = coverageInfo.get(MethodName);
-			if (testsCoverage[line] == true) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private List<String> getOrderedMethodNames(MutationFileInformation info) {
-
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
-
-		for (Map.Entry<String, boolean[]> entry : coverageInfo.entrySet()) {
-			if (!isCoveredMutationPointbyTest(info, entry.getKey())) {
-				continue;
-			}
-			int coverCnt = 0;
-			for (int line = 1; line < info.getStartLine(); line++) {
-				if (entry.getValue()[line]) {
-					coverCnt++;
-				}
-			}
-			map.put(entry.getKey(), new Integer(coverCnt));
-		}
-
-		List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(map.entrySet());
-		Collections.sort(entries, new Comparator<Entry<String, Integer>>() {
-			@Override
-			public int compare(Entry<String, Integer> o1, Entry<String, Integer> o2) {
-				return o2.getValue().compareTo(o1.getValue());
-			}
-		});
-
-		ArrayList<String> orderedMethodNames = new ArrayList<String>();
-		int i = 1;
-		for (Entry<String, Integer> e : entries) {
-			orderedMethodNames.add(e.getKey());
-			LOGGER.info("<{}> : [{}]methodName = {} , coverage = {}", info.getFileName(), i, e.getKey(), e.getValue());
-			i++;
-		}
-
-		return orderedMethodNames;
-	}
-
-	// do-fewer
-	private List<MutationFileInformation> getSkipListbyDoFewer(List<MutationFileInformation> list, Class<?> priorMutaterClass) {
-
-		List<MutationFileInformation> eventAttachmentMutantList = new ArrayList<MutationFileInformation>();
-
-		for (MutationFileInformation mutationFileInformation : list) {
-			String mutatable = mutationFileInformation.getMutatable();
-			if (mutatable.equals(EventAttachment.class.getSimpleName())) {
-				eventAttachmentMutantList.add(mutationFileInformation);
-			}
-		}
-
-		Map<Integer, ArrayList<MutationFileInformation>> map = new HashMap<Integer, ArrayList<MutationFileInformation>>();
-		for (MutationFileInformation mutationFileInformation : eventAttachmentMutantList) {
-			Integer startLine = mutationFileInformation.getStartLine();
-			if (map.containsKey(startLine)) {
-				map.get(startLine).add(mutationFileInformation);
-			} else {
-				ArrayList<MutationFileInformation> ls = new ArrayList<MutationFileInformation>();
-				ls.add(mutationFileInformation);
-				map.put(startLine, ls);
-			}
-		}
-
-		ArrayList<MutationFileInformation> skipList = new ArrayList<MutationFileInformation>();
-
-		for (Map.Entry<Integer, ArrayList<MutationFileInformation>> entry : map.entrySet()) {
-			ArrayList<MutationFileInformation> mfList = entry.getValue();
-			if (1 < mfList.size()) {
-				String priorMutaterClassName = getFixerNameByClass(priorMutaterClass);
-				// 指定イベントミューテーションクラスが存在する
-				if (hasPriorMutaterClass(entry.getValue(), priorMutaterClassName)) {
-					for (MutationFileInformation mutationFileInformation : mfList) {
-						if (!mutationFileInformation.getFixer().equals(priorMutaterClassName)) {
-							skipList.add(mutationFileInformation);
-						}
-					}
-				} else { // 存在しない場合はランダムに絞るクラスを選択
-					for (int i = 0; i < mfList.size() - 1; i++) {
-						Random rnd = new Random();
-						int index = rnd.nextInt(mfList.size());
-						skipList.add(mfList.get(index));
-					}
-				}
-			}
-		}
-
-		return skipList;
-	}
-
-	private String getFixerNameByClass(Class<?> clazz) {
-		return clazz.getSimpleName().replace("Mutator", "Mutation");
-	}
-
-	private boolean hasPriorMutaterClass(List<MutationFileInformation> list, String priorMutaterClassName) {
-		for (MutationFileInformation mutationFileInformation : list) {
-			if (mutationFileInformation.getFixer().equals(priorMutaterClassName)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	// do-fewer
-	private boolean isSkipListMutationOfDoFewer(List<MutationFileInformation> skipList, MutationFileInformation targetMutationFileInformation) {
-		for (MutationFileInformation fileInfo : skipList) {
-			if (fileInfo.getFileName().equals(targetMutationFileInformation.getFileName())) {
-				LOGGER.info(targetMutationFileInformation.getFileName() + " is skipped by do fewer");
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private TestExecutor getTargetTestExecutor(List<TestExecutor> executors, String mutantname) {
-		for (TestExecutor executor : executors) {
-			if (executor.getTargetClassName().contains(mutantname)) {
-				return executor;
-			}
-		}
-		return null;
-	}
-
-	public class TestCallable implements Callable<Boolean> {
-		private TestExecutor testExecutor;
-		private MutationFileInformation mutationFileInformation;
-		private String description;
-		private int numberOfAppliedMutation;
-		private int numberOfMaxMutants;
-
-		public TestCallable(TestExecutor testExecutor, MutationFileInformation mutationFileInformation, String description, int numberOfAppliedMutation,
-				int numberOfMaxMutants) {
-			this.testExecutor = testExecutor;
-			this.mutationFileInformation = mutationFileInformation;
-			this.description = description;
-			this.numberOfAppliedMutation = numberOfAppliedMutation;
-			this.numberOfMaxMutants = numberOfMaxMutants;
-		}
-
-		@Override
-		public Boolean call() throws Exception {
-
-			boolean testSuccess;
-
-			if (testExecutor.execute()) { // This mutant cannot be killed
-				synchronized (unkilledMutantsInfo) {
-					unkilledMutantsInfo.put(description, mutationFileInformation.toString());
-				}
-				synchronized (LOGGER) {
-					LOGGER.info("mutant {} is not be killed", description);
-				}
-				testSuccess = false;
-			} else {
-				synchronized (mutationFileInformation) {
-					mutationFileInformation.setState(MutationFileInformation.State.KILLED);
-				}
-				testSuccess = true;
-			}
-
-			String message = testExecutor.getMessageOnLastExecution();
-
-			if (message != null) {
-				LOGGER.info(message);
-			}
-			logProgress(numberOfAppliedMutation, numberOfMaxMutants);
-			return testSuccess;
-		}
-
-	}
-
-	private synchronized void logProgress(int finished, int total) {
-		LOGGER.info("{} in {} finished: {} %", finished, total, Math.floor(finished * 1000.0 / total) / 10);
-	}
-
 	/**
+	 * 
+	 * @param original
+	 * @param fileInfo
 	 * @return if successfully file is wrote.
 	 */
-	@SuppressWarnings("unused")
-	private boolean applyMutationFile(List<String> original, MutationFileInformation fileInfo) {
+	protected boolean applyMutationFile(List<String> original, MutationFileInformation fileInfo) {
 		Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
 		try {
+			@SuppressWarnings("unused")
 			List<?> mutated = patch.<String> applyTo(original);
 			Util.writeToFile(pathToJsFile, Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
 		} catch (PatchFailedException e) {
@@ -710,50 +424,21 @@ public class MutationTestConductor {
 	}
 
 	/**
-	 * @return if successfully file is wrote.
+	 * Log progress while running mutation analysis
+	 * 
+	 * @param finished represents the number of mutants examined by test cases
+	 * @param total represents the total number of generated mutants
 	 */
-	@SuppressWarnings("unused")
-	private boolean createMutationFile(List<String> original, MutationFileInformation fileInfo) {
-
-		Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
-		try {
-
-			List<?> mutated = patch.<String> applyTo(original);
-
-			String[] pathHierarchyOfJsFile = pathToJsFile.split("/", 0);
-
-			String newPathToJsFile = pathHierarchyOfJsFile[0];
-			if (pathHierarchyOfJsFile.length != 0) {
-				for (int i = 1; i < pathHierarchyOfJsFile.length - 1; i++) {
-					newPathToJsFile = newPathToJsFile + "/" + pathHierarchyOfJsFile[i];
-				}
-			}
-
-			File testedDir = new File(newPathToJsFile + "/tested");
-
-			if (!testedDir.exists()) {
-				testedDir.mkdir();
-			}
-
-			newPathToJsFile = testedDir.getPath() + "/" + Util.getFileNameWithoutExtension(fileInfo.getFileName()) + "-"
-					+ pathHierarchyOfJsFile[pathHierarchyOfJsFile.length - 1];
-
-			Util.writeToFile(newPathToJsFile, Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
-
-		} catch (PatchFailedException e) {
-			LOGGER.error("Applying mutation file '{}' failed.", fileInfo.getFileName(), e);
-			return false;
-		}
-		return true;
+	protected synchronized void logProgress(int finished, int total) {
+		LOGGER.info("{} in {} finished: {} %", finished, total, Math.floor(finished * 1000.0 / total) / 10);
 	}
 
-	protected void checkIfSetuped() {
-		if (!setup) {
-			throw new IllegalStateException("You 'must' call setup method before you use.");
-		}
-	}
-
-	private void logExecutionDetail(int numberOfAppliedMutation) {
+	/**
+	 * Log results after completing mutation analysis
+	 * 
+	 * @param numberOfAppliedMutation
+	 */
+	protected void logExecutionDetail(int numberOfAppliedMutation) {
 		LOGGER.info("---------------------------------------------");
 		StringBuilder detailedInfo = new StringBuilder();
 		int numberOfUnkilledMutatns = 0;
@@ -774,7 +459,14 @@ public class MutationTestConductor {
 		LOGGER.info("Mutation score is: {} %", score);
 	}
 
-	private void addShutdownHookToRestoreBackup() {
+	/* --------------------------------------------------
+	 * Related Threads
+	 -------------------------------------------------- */
+
+	/**
+	 * Restore original JavaScript file after completing mutation analysis
+	 */
+	protected void addShutdownHookToRestoreBackup() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -785,7 +477,16 @@ public class MutationTestConductor {
 		});
 	}
 
-	private class CommandReceiver implements Runnable {
+	/**
+	 * When a user enters 'q' at console while running mutation analysis,
+	 * {@code CommandReceiver} interrupts AjaxMutator to quit mutation analysis.
+	 * 
+	 * TODO: Limited time (in addition to current user interaction manner)
+	 * 
+	 * @author Kazuki Nishiura
+	 *
+	 */
+	protected class CommandReceiver implements Runnable {
 		@Override
 		public void run() {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -817,20 +518,16 @@ public class MutationTestConductor {
 		}
 	}
 
-	private String pathToBackupFile() {
-		return context.getJsPath() + ".backup";
-	}
+	/* --------------------------------------------------
+	 * Provide Defaults
+	 -------------------------------------------------- */
 
 	/**
-	 * Specify the integer N that represents interval of saving mutation
-	 * information; mutation file updated every N execution. Default value is
-	 * Integer.MAX_VALUE.
+	 * Provides default set of mutators
+	 * 
+	 * @param visitor contains mutable elements
+	 * @return default set of mutators
 	 */
-	public void setSaveInformationInterval(int saveInformationInterval) {
-		Preconditions.checkArgument(saveInformationInterval > 0, "interval must be positive integer.");
-		this.saveInformationInterval = saveInformationInterval;
-	}
-
 	public static ImmutableSet<Mutator<?>> defaultMutators(MutateVisitor visitor) {
 		ImmutableSet<Mutator<?>> mutators = ImmutableSet.<Mutator<?>> of(new EventTargetRAMutator(visitor.getEventAttachments()),
 				new EventTypeRAMutator(visitor.getEventAttachments()), new EventCallbackRAMutator(visitor.getEventAttachments()),
@@ -840,5 +537,23 @@ public class MutationTestConductor {
 				new AttributeModificationTargetRAMutator(visitor.getAttributeModifications()),
 				new AttributeModificationValueRAMutator(visitor.getAttributeModifications()));
 		return mutators;
+	}
+	
+	/**
+	 * TODO: Separate this method into other class because this method is implemented for GenProg
+	 * 
+	 * @param mutation
+	 * @param executor
+	 * @return
+	 */
+	public List<Result> testSpecificMutation(MutationFileInformation mutation, JUnitExecutor executor) {
+		checkIfSetuped();
+		List<String> original = Util.readFromFile(pathToJsFile);
+		if (!applyMutationFile(original, mutation)) {
+			return null; // fail to mutation
+		}
+		List<Result> testRestuls = executor.run();
+		Util.copyFile(pathToBackupFile(), context.getJsPath());
+		return testRestuls;
 	}
 }

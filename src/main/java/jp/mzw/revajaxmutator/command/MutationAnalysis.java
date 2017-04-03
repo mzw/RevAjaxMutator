@@ -16,17 +16,23 @@ import org.owasp.webscarab.model.StoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+
+import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
-import jp.mzw.ajaxmutator.test.conductor.MutationTestConductorConcurrently;
+import jp.mzw.ajaxmutator.test.conductor.RichMutationTestConductor;
 import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
+import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.test.runner.JUnitTestRunner;
 import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
+import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
 import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.proxy.RecorderPlugin;
 import jp.mzw.revajaxmutator.proxy.RewriterPlugin;
+import jp.mzw.revajaxmutator.test.result.Coverage;
 
 public class MutationAnalysis extends Command {
 	protected static Logger LOG = LoggerFactory.getLogger(MutationAnalysis.class);
@@ -227,20 +233,30 @@ public class MutationAnalysis extends Command {
 	 * @throws IOException 
 	 */
 	public void concurrently(AppConfig config, Class<?>... testClasses) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
-		LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+//		LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 		
-		MutationTestConductor conductor = config.getMutationAnalysisConfig().mutationTestConductor();
-		MutationTestConductorConcurrently cconductor = MutationTestConductorConcurrently.setup(conductor);
-
-		JUnitExecutor executor = new JUnitExecutor(false, testClasses);
-		cconductor.mutationAnalysisUsingExistingMutations(localenv.getThreadNum(), executor);
+//		MutationTestConductor _conductor = config.getMutationAnalysisConfig().mutationTestConductor();
+//		RichMutationTestConductor conductor = RichMutationTestConductor.setup(_conductor);
+//		
+//		List<File> failureCoverageFiles = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
+//		Coverage.getCoverageInfo(failureCoverageFiles, config.pathToJsFile());
+//		conductor.setCoverageResults();
+//		
+//		conductor.setThreadNum(localenv.getThreadNum());
+//
+//		List<TestExecutor> executors = Lists.newArrayList();
+//		for (Class<?> testClass : testClasses) {
+//			for (MutationFileInformation mutant : conductor.getMutants()) {
+//				executors.add(new JUnitExecutor(false, Class.forName(newTestClassName)));
+//			}
+//		}
+//				
+//		conductor.mutationAnalysisUsingExistingMutations(executors);
 	}
 	
 
 	
 	
-
-//	List<TestExecutor> executors = createJUnitExecuterList(testClassName, mutantNames);
 //
 //	HashMap<String, File> failureCoverageFiles = new HashMap<String, File>();
 //
@@ -311,22 +327,14 @@ public class MutationAnalysis extends Command {
 //	}
 //
 //	private static List<TestExecutor> createJUnitExecuterList(String testClassName, List<String> mutantNames) throws ClassNotFoundException {
-//
 //		List<TestExecutor> executors = new ArrayList<TestExecutor>();
-//
 //		String[] splitedTestClassName = testClassName.split("\\.");
-//
 //		for (String mutantname : mutantNames) {
-//
 //			String[] name = splitedTestClassName.clone();
-//
 //			name[name.length - 1] = mutantname + name[name.length - 1];
-//
 //			String newTestClassName = Util.join(name, ".");
-//
 //			executors.add(new JUnitExecutor(false, Class.forName(newTestClassName)));
 //		}
-//
 //		return executors;
 //	}
 //

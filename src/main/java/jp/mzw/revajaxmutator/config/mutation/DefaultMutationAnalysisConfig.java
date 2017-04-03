@@ -78,6 +78,7 @@ public class DefaultMutationAnalysisConfig extends MutateConfigurationBase {
 
 		conductor = new MutationTestConductor();
 		conductor.setup(config.getRecordedJsFile().getPath(), "", visitor);
+		conductor.setSaveInformationInterval(1);
 
 		mutators = ImmutableSet
 				.<Mutator<?>> of(
