@@ -22,14 +22,9 @@ public class Proxy extends Command {
 	public String getUsageContent() {
 		StringBuilder builder = new StringBuilder();
 
-		builder.append("Command: ").append("proxy -record").append("\n");
-		builder.append("For: ").append("Lanuch proxy server recording http messages").append("\n");
-
-		builder.append("Command: ").append("proxy -rewrite").append("\n");
-		builder.append("For: ").append("Lanuch proxy server rewriting http messages").append("\n");
-		
-		builder.append("Command: ").append("proxy -filter").append("\n");
-		builder.append("For: ").append("Lanuch proxy server filtering http messages").append("\n");
+		builder.append(Command.getCommandDescription("proxy -record", "Lanuch proxy server recording http messages"));
+		builder.append(Command.getCommandDescription("proxy -rewrite", "Lanuch proxy server rewriting http messages"));
+		builder.append(Command.getCommandDescription("proxy -filter", "Lanuch proxy server filtering http messages"));
 
 		return builder.toString();
 	}

@@ -37,11 +37,8 @@ public class Test extends Command {
 	public String getUsageContent() {
 		StringBuilder builder = new StringBuilder();
 
-		builder.append("Command: ").append("test ${TestClassName}").append("\n");
-		builder.append("For: ").append("Run test cases").append("\n");
-
-		builder.append("Command: ").append("test-each ${ConfigClassName} ${TestClassName}").append("\n");
-		builder.append("For: ").append("Run each test case").append("\n");
+		builder.append(Command.getCommandDescription("test ${TestClassName}", "Run test cases"));
+		builder.append(Command.getCommandDescription("test-each ${ConfigClassName} ${TestClassName}", "Run each test case"));
 
 		return builder.toString();
 	}
@@ -113,7 +110,7 @@ public class Test extends Command {
 				Class<?> testClass = getClass(testClassName);
 
 				// TODO Remove or backup previous results
-				
+
 				for (Method method : testClass.getMethods()) {
 					if (isTestMethod(method)) {
 						// TODO run with Theory?

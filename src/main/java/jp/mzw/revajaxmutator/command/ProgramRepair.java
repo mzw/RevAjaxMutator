@@ -31,11 +31,8 @@ public class ProgramRepair extends Command {
 	public String getUsageContent() {
 		StringBuilder builder = new StringBuilder();
 
-		builder.append("Command: ").append("generate ${ConfigClassName}").append("\n");
-		builder.append("For: ").append("Generate patches as fix candidates").append("\n");
-
-		builder.append("Command: ").append("validate ${ConfigClassName} ${TestClassName}...").append("\n");
-		builder.append("For: ").append("Validate patched programs").append("\n");
+		builder.append(Command.getCommandDescription("generate ${ConfigClassName}", "Generate patches as fix candidates"));
+		builder.append(Command.getCommandDescription("validate ${ConfigClassName} ${TestClassName}...", "Validate patched programs"));
 
 		return builder.toString();
 	}
@@ -65,7 +62,7 @@ public class ProgramRepair extends Command {
 			LOG.error(e.getMessage());
 		}
 	}
-	
+
 	/**
 	 * Generate patches as fix candidates
 	 * 
@@ -91,7 +88,7 @@ public class ProgramRepair extends Command {
 
 		try {
 			LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
-			
+
 			String configClassName = args[0];
 			Class<?> configClass = getClass(configClassName);
 			AppConfig config = (AppConfig) configClass.newInstance();
@@ -109,15 +106,15 @@ public class ProgramRepair extends Command {
 			}
 
 			validate(config, testClasses.toArray(new Class<?>[testClasses.size()]));
-			
+
 			ProxyServer.interrupt();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | StoreException | InterruptedException | IOException e) {
 			LOG.error(e.getMessage());
 			ProxyServer.interrupt();
 		}
-		
+
 	}
-	
+
 	/**
 	 * Validate patched programs
 	 * 
@@ -138,7 +135,7 @@ public class ProgramRepair extends Command {
 			showUsage();
 			return;
 		}
-		
+
 		try {
 			Class<?> clazz = getClass(args[0]);
 			search(clazz);

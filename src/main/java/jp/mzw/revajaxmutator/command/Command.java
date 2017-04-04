@@ -83,6 +83,7 @@ abstract public class Command implements ICommand {
 		StringBuilder builder = new StringBuilder();
 		builder.append("$ java -cp ${ClassPath} jp.mzw.revajaxmutator.CLI <command> [arguments...]").append("\n");
 		builder.append("\n");
+		builder.append("Commands:").append("\n");
 		return builder.toString();
 	}
 
@@ -128,5 +129,12 @@ abstract public class Command implements ICommand {
 		}
 		int i = className.lastIndexOf('.');
 		return Class.forName(className.substring(0, i) + '$' + className.substring(i + 1));
+	}
+	
+	protected static String getCommandDescription(String command, String description) {
+		StringBuilder builder = new StringBuilder();
+		builder.append("    ").append(command).append("\n");
+		builder.append("                  ").append(description).append("\n");
+		return builder.toString();
 	}
 }
