@@ -56,6 +56,10 @@ abstract public class Command implements ICommand {
 		}
 
 		// Others
+		if ("record".equals(cmd)) {
+			new MutationAnalysis().record(args);
+			System.exit(0);
+		}
 		if ("proxy".equals(cmd)) {
 			new Proxy().launch(args);
 			System.exit(0);
