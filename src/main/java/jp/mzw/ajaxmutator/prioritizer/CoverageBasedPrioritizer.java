@@ -1,5 +1,6 @@
 package jp.mzw.ajaxmutator.prioritizer;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -17,13 +18,24 @@ import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.test.result.Coverage;
 
+/**
+ * TODO
+ * 
+ * @author Yuta Maezawa
+ *
+ */
 public class CoverageBasedPrioritizer extends Prioritizer {
 	protected static Logger LOGGER = LoggerFactory.getLogger(CoverageBasedPrioritizer.class);
 
-	protected Map<String, boolean[]> coverage;
-	
-	public CoverageBasedPrioritizer(Map<String, boolean[]> coverage) {
-		this.coverage = coverage;
+	protected Map<File, boolean[]> coverages;
+
+	public CoverageBasedPrioritizer() {
+	}
+
+	@Override
+	public Prioritizer setParameters(Object... params) {
+		this.coverages = (Map<File, boolean[]>) params[0];
+		return this;
 	}
 
 	/**
@@ -34,9 +46,9 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 	public List<String> getOrderedMethodNames(MutationFileInformation mutant) {
 		// Create
 		Map<String, Integer> map = Maps.newHashMap();
-		for (Map.Entry<String, boolean[]> entry : coverage.entrySet()) {
-			String methodName = entry.getKey();
-			if (!Coverage.isCovered(coverage, mutant.getStartLine(), mutant.getEndLine(), methodName)) {
+		for (Map.Entry<File, boolean[]> entry : coverages.entrySet()) {
+			String methodName = Coverage.getTestMethodName(entry.getKey());
+			if (!Coverage.isCovered(coverages, mutant.getStartLine(), mutant.getEndLine(), methodName)) {
 				continue;
 			}
 			int count = 0;
@@ -47,7 +59,7 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 			}
 			map.put(methodName, new Integer(count));
 		}
-		
+
 		// Sort
 		List<Entry<String, Integer>> entries = Lists.newArrayList(map.entrySet());
 		Collections.sort(entries, new Comparator<Entry<String, Integer>>() {
@@ -79,11 +91,11 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 	}
 
 	@Override
-	public TestExecutor getTestExecutor(MutationFileInformation mutant, List<TestExecutor> testExecutors) {
+	public TestExecutor getTestExecutor(MutationFileInformation mutant, List<TestExecutor> executors) {
 		List<String> orderedMethodNames = getOrderedMethodNames(mutant);
 		String mutantname = Util.getFileNameWithoutExtension(mutant.getFileName());
-		TestExecutor targetTestExecutor = getTargetTestExecutor(testExecutors, mutantname);
-		targetTestExecutor.setOrderdMethodNames(orderedMethodNames);
-		return targetTestExecutor;
+		TestExecutor executor = getTargetTestExecutor(executors, mutantname);
+		executor.setOrderedMethodNames(orderedMethodNames);
+		return executor;
 	}
 }

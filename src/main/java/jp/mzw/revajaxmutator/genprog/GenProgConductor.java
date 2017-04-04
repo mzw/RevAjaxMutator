@@ -440,7 +440,7 @@ public class GenProgConductor {
 				String decoded_url = URLDecoder.decode(encoded_url, "utf-8");
 				URL url = new URL(decoded_url);
 				String url_path_to_js_file = URLDecoder.decode(url.getPath(), "utf-8");
-				JSONArray failure = Coverage.getCoverageData(failure_coverage_json, url_path_to_js_file);
+				JSONArray failure = Coverage.getCoverageResults(failure_coverage_json, url_path_to_js_file);
 				
 				List<String> jsfile = FileUtils.readLines(config.getRecordedJsFile());
 

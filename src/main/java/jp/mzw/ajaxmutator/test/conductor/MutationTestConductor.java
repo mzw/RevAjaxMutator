@@ -78,6 +78,7 @@ public class MutationTestConductor {
 	protected boolean dryRun;
 	protected MutateVisitor visitor;
 	protected String pathToJsFile;
+	protected String targetURL;
 	protected Map<Mutator<?>, Integer> numOfMutation;
 
 	/**
@@ -96,6 +97,7 @@ public class MutationTestConductor {
 		mutationFileWriter = new MutationFileWriter(jsFile);
 		Util.copyFile(pathToJSFile, pathToBackupFile());
 
+		this.targetURL = targetURL;
 		parser = ParserWithBrowser.getParser();
 		try {
 			FileReader fileReader = new FileReader(jsFile);

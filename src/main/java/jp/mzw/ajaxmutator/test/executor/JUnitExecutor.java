@@ -32,7 +32,7 @@ public class JUnitExecutor implements TestExecutor {
 	private final boolean shouldRunAllTest;
 	private final Class<?>[] targetClasses;
 	private Map<String, Boolean> testResults;
-	private List<String> orderdMethodNames = null;
+	private List<String> orderedMethodNames = null;
 	private String executionMessage;
 
 	public JUnitExecutor(Class<?>... targetClasses) {
@@ -54,7 +54,7 @@ public class JUnitExecutor implements TestExecutor {
 	}
 
 	private Result runSingleTest(Class<?> testClass){
-		if (orderdMethodNames == null) {
+		if (orderedMethodNames == null) {
 			Runner runner;
 			try {
 				RunWith runWith = testClass.getAnnotation(RunWith.class);
@@ -73,7 +73,7 @@ public class JUnitExecutor implements TestExecutor {
 		} else {
 			Runner runner;
 			try {
-				runner = new OrderedJUnitTestRunner(testClass, shouldRunAllTest, orderdMethodNames);
+				runner = new OrderedJUnitTestRunner(testClass, shouldRunAllTest, orderedMethodNames);
 			} catch (InitializationError error) {
 				throw new IllegalStateException(error);
 			}
@@ -83,8 +83,8 @@ public class JUnitExecutor implements TestExecutor {
 	}
 	
 	@Override
-	public void setOrderdMethodNames(List<String> orderdMethodNames) {
-		this.orderdMethodNames = orderdMethodNames;
+	public void setOrderedMethodNames(List<String> orderedMethodNames) {
+		this.orderedMethodNames = orderedMethodNames;
 	}
 
 	@Override

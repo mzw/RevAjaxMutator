@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.experimental.theories.Theories;
 import org.junit.runner.JUnitCore;
@@ -18,14 +19,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
-import jp.mzw.ajaxmutator.generator.MutationFileInformation;
+import jp.mzw.ajaxmutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.prioritizer.Prioritizer;
+import jp.mzw.ajaxmutator.sampling.Sampling;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.ajaxmutator.test.conductor.RichMutationTestConductor;
 import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.test.runner.JUnitTestRunner;
 import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
-import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
@@ -223,7 +225,7 @@ public class MutationAnalysis extends Command {
 	}
 
 	/**
-	 * TODO Run test cases on mutants concurrently
+	 * TODO Run test cases on mutants in a multiple-threads manner
 	 * 
 	 * @param config
 	 * @param testClasses
@@ -233,34 +235,32 @@ public class MutationAnalysis extends Command {
 	 * @throws IOException 
 	 */
 	public void concurrently(AppConfig config, Class<?>... testClasses) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
-//		LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+		LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+		MutateConfiguration mutateConfig = config.getMutationAnalysisConfig();
 		
-//		MutationTestConductor _conductor = config.getMutationAnalysisConfig().mutationTestConductor();
-//		RichMutationTestConductor conductor = RichMutationTestConductor.setup(_conductor);
-//		
-//		List<File> failureCoverageFiles = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
-//		Coverage.getCoverageInfo(failureCoverageFiles, config.pathToJsFile());
-//		conductor.setCoverageResults();
-//		
-//		conductor.setThreadNum(localenv.getThreadNum());
-//
-//		List<TestExecutor> executors = Lists.newArrayList();
-//		for (Class<?> testClass : testClasses) {
-//			for (MutationFileInformation mutant : conductor.getMutants()) {
-//				executors.add(new JUnitExecutor(false, Class.forName(newTestClassName)));
-//			}
-//		}
-//				
-//		conductor.mutationAnalysisUsingExistingMutations(executors);
+		List<File> coverageFiles = Coverage.getCoverageResults(config.getJscoverReportDir());
+		Map<File, boolean[]> coverages = Coverage.getTargetCoverageResults(coverageFiles, config.getRecordedJsFile());
+		
+		List<File> failureCoverageFiles = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
+		Map<File, boolean[]> failureCoverages = Coverage.getTargetCoverageResults(failureCoverageFiles, config.getRecordedJsFile());
+		
+		RichMutationTestConductor conductor = new RichMutationTestConductor();
+		conductor.setup(config.getMutationAnalysisConfig().mutationTestConductor(), coverages);
+		conductor.setThreadNum(localenv.getThreadNum());
+		
+		conductor.setSamplingStrategy(Sampling.getSampling(Sampling.Strategy.EventHandler));
+		conductor.setPrioritizeStrategy(Prioritizer.getPrioritizer(Prioritizer.Strategy.Coverage).setParameters(failureCoverages));
+		
+		// TODO
+		List<TestExecutor> executors = Lists.newArrayList();
+		for (Mutator<?> mutator : mutateConfig.mutators()) {
+			executors.add(new JUnitExecutor(false, testClasses));
+		}
+				
+		conductor.mutationAnalysisUsingExistingMutations(executors);
 	}
 	
 
-	
-	
-//
-//	HashMap<String, File> failureCoverageFiles = new HashMap<String, File>();
-//
-//	File failureCoverageFile = new File(getPropertyValue(configFileName, "failure_cov_file"));
 //
 //	for (Method method : testClass.getMethods()) {
 //		if (isTestMethod(method)) {

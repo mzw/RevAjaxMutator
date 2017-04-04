@@ -81,7 +81,7 @@ public class Searcher {
 			if(!file.exists()) {
 				continue;
 			}
-			JSONArray failure = Coverage.getCoverageData(
+			JSONArray failure = Coverage.getCoverageResults(
 					Coverage.parse(file),
 					new URL(config.getUrl(), config.pathToJsFile()).getPath());
 			if(failure == null) return;

@@ -2,7 +2,6 @@ package jp.mzw.ajaxmutator.test.conductor;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -17,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ArrayListMultimap;
 
+import jp.mzw.ajaxmutator.MutateVisitor;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
 import jp.mzw.ajaxmutator.prioritizer.Prioritizer;
@@ -25,39 +25,63 @@ import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.test.result.Coverage;
 
+/**
+ * RichMutationTestConductor extends {@link MutationTestConductor} at the following functionalities.
+ * 
+ * <ol>
+ * <li>
+ * Coverage-based computational cost reduction:
+ * If given test cases do not cover mutated locations of mutants,
+ * RichMutationTestConductor is designed to skip the mutants to run the test cases on.
+ * </li>
+ * <li>
+ * Concurrent execution:
+ * Run test cases on each mutant in a multiple-threads manner.
+ * </li>
+ * <li>(Optional) Mutation sampling:
+ * </li>
+ * </ol>
+ * 
+ * @author Yuta Maezawa
+ * @since 0.0.2
+ */
 public class RichMutationTestConductor extends MutationTestConductor {
 	protected static Logger LOGGER = LoggerFactory.getLogger(RichMutationTestConductor.class);
 
-	/* --------------------------------------------------
-	 * Fields
-	 -------------------------------------------------- */
-
-	protected Map<String, boolean[]> coverage;
-
-	protected Sampling sampling;
-
+	/** Contains coverage results of target JavaScript code */
+	protected Map<File, boolean[]> coverages;
+	
+	/** The number of threads to concurrently run test cases on each mutant (default: the number of available processors). */
 	protected int numOfThreads = Runtime.getRuntime().availableProcessors();
 
+	protected Sampling sampling;
 	protected Prioritizer prioritizer;
 
-	/* --------------------------------------------------
-	 * Set up
-	 -------------------------------------------------- */
-
 	/**
-	 * Utility function to instantiate {@code MutationTestConductorConcurrently} 
+	 * Set up RichMutationTestConductor directly
 	 * 
-	 * @param conductor 
-	 * @return instance
+	 * @param pathToJSFile
+	 * @param targetURL
+	 * @param visitor
+	 * @param coverages
 	 */
-	public static RichMutationTestConductor setup(MutationTestConductor conductor) {
-		RichMutationTestConductor ret = new RichMutationTestConductor();
-		ret.setup(conductor.getPathToJsFile(), "", conductor.getMutateVisitor());
-		return ret;
+	public void setup(final String pathToJSFile, final String targetURL, final MutateVisitor visitor, final Map<File, boolean[]> coverages) {
+		super.setup(pathToJSFile, targetURL, visitor);
+		if (coverages != null) {
+			this.coverages = coverages;
+		} else {
+			LOGGER.warn("Coverage results are null");
+		}
 	}
 
-	public void setCoverageResults(HashMap<String, File> coverages) {
-		this.coverage = Coverage.getCoverageInfo(coverages, this.pathToJsFile);
+	/**
+	 * Set up RichMutationTestConductor with MutationTestConductor
+	 * 
+	 * @param conductor
+	 * @param coverages
+	 */
+	public void setup(final MutationTestConductor conductor, final Map<File, boolean[]> coverages) {
+		setup(conductor.pathToJsFile, conductor.targetURL, conductor.visitor, coverages);
 	}
 
 	public void setSamplingStrategy(Sampling sampling) {
@@ -150,7 +174,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 					continue;
 				}
 				// When test cases do not cover mutated locations of mutants, skip to run the test cases on the mutants
-				if (!Coverage.isCovered(coverage, mutant.getStartLine(), mutant.getEndLine())) {
+				if (!Coverage.isCovered(coverages, mutant.getStartLine(), mutant.getEndLine())) {
 					LOGGER.info(mutant.getFileName() + " is skipped by coverage");
 					continue;
 				}

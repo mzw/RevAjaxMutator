@@ -22,5 +22,5 @@ public interface TestExecutor {
 
 	public String getTargetClassName();
 	
-	public void setOrderdMethodNames(List<String> orderdMethodName);
+	public void setOrderedMethodNames(List<String> orderdMethodName);
 }

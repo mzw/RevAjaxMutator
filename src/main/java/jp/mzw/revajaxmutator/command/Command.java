@@ -81,7 +81,7 @@ abstract public class Command implements ICommand {
 	 */
 	protected static String getUsageHeader() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("$ java -cp ${ClassPath} jp.mzw.revajaxmutator.CLI").append("\n");
+		builder.append("$ java -cp ${ClassPath} jp.mzw.revajaxmutator.CLI <command> [arguments...]").append("\n");
 		builder.append("\n");
 		return builder.toString();
 	}

@@ -6,26 +6,55 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/**
+ * Provides utility functionalities for parsing coverage results reported by JSCover
+ * 
+ * @author Yuta Maezawa
+ *
+ */
 public class Coverage {
 	protected static Logger LOGGER = LoggerFactory.getLogger(Coverage.class);
 
+	/**
+	 * Get coverage results of all test cases
+	 * 
+	 * @param jscoverReportdir Where JSCover reports coverage results
+	 * @return List of files containing coverage results of all test cases
+	 * @throws IOException Causes when parsing test results
+	 */
+	public static List<File> getCoverageResults(File jscoverReportdir) throws IOException {
+		List<File> ret = Lists.newArrayList();
+		List<TestResult> results = TestResult.parseTestResults(jscoverReportdir);
+		for (TestResult result : results) {
+			File dir = new File(jscoverReportdir, result.getClassName() + "#" + result.getMethodName());
+			File file = new File(dir, "jscoverage.json");
+			ret.add(file);
+		}
+		return ret;
+	}
+
+	/**
+	 * Get coverage results of failing test cases
+	 * 
+	 * @param jscoverReportdir Where JSCover reports coverage results
+	 * @return List of files containing coverage results of failing test cases
+	 * @throws IOException Causes when parsing test results
+	 */
 	public static List<File> getFailureCoverageResults(File jscoverReportdir) throws IOException {
-		List<File> ret = new ArrayList<>();
+		List<File> ret = Lists.newArrayList();
 		List<TestResult> results = TestResult.parseTestResults(jscoverReportdir);
 		for (TestResult result : results) {
 			if (0 < result.getFailureCount()) {
@@ -36,91 +65,14 @@ public class Coverage {
 		}
 		return ret;
 	}
-
-	public static Map<String, boolean[]> getCoverageInfo(HashMap<String, File> files, String pathToJsFile) throws JSONException {
-		Map<String, boolean[]> ret = Maps.newHashMap();
-		for (Map.Entry<String, File> entry : files.entrySet()) {
-			boolean[] coverageInfo;
-			try {
-				JSONObject failure_coverage_json = Coverage.parse(entry.getValue());
-
-				String encoded_url = (new File(pathToJsFile)).getName();
-				String decoded_url = URLDecoder.decode(encoded_url, "utf-8");
-
-				URL url = new URL(decoded_url);
-				String url_path_to_js_file = URLDecoder.decode(url.getPath(), "utf-8");
-
-				JSONArray failure = Coverage.getCoverageData(failure_coverage_json, url_path_to_js_file);
-
-				List<String> jsfile = FileUtils.readLines(new File(pathToJsFile));
-
-				int line_num = failure.length();
-
-				coverageInfo = new boolean[jsfile.size() + 1];
-				for (int i = 1; i < line_num; i++) {
-					Object failure_line = failure.get(i);
-					int failure_cover_freq = Coverage.getCoverFreq(failure_line);
-					if (0 < failure_cover_freq) {
-						coverageInfo[i] = true; // covered
-					} else {
-						coverageInfo[i] = false; // no covered
-					}
-				}
-			} catch (IOException e) {
-				coverageInfo = new boolean[0];
-				System.out.println("can't find Folder : " + entry.getKey());
-			}
-			ret.put(entry.getKey(), coverageInfo);
-		}
-		return ret;
-	}
-
-	/**
-	 * 
-	 * @param line
-	 * @return
-	 */
-	public static int getCoverFreq(Object line) {
-		if (line instanceof Integer) {
-			return (Integer) line;
-		} else {
-			return 0;
-		}
-	}
 	
 	/**
+	 * Parse coverage results
 	 * 
-	 * 
-	 * @param coverage
-	 * @param path_to_js_file
-	 * @return
-	 * @throws JSONException
-	 */
-	public static JSONArray getCoverageData(JSONObject coverage, String path_to_js_file) throws JSONException {
-		for (@SuppressWarnings("unchecked")
-		Iterator<Object> i = coverage.keys(); i.hasNext();) {
-			String filename = i.next().toString();
-			if (filename.equals(path_to_js_file)) {
-				JSONObject _coverage = coverage.getJSONObject(filename);
-				for (@SuppressWarnings("unchecked")
-				Iterator<Object> j = _coverage.keys(); j.hasNext();) {
-					Object type = j.next();
-					if ("lineData".equals(type.toString())) {
-						return _coverage.getJSONArray(type.toString());
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * 
-	 * 
-	 * @param file
-	 * @return
-	 * @throws IOException
-	 * @throws JSONException
+	 * @param file Contains coverage results
+	 * @return Coverage results
+	 * @throws IOException Causes if given file does not exist
+	 * @throws JSONException Causes if given file is broken
 	 */
 	public static JSONObject parse(File file) throws IOException, JSONException {
 		FileReader fr = new FileReader(file);
@@ -135,9 +87,96 @@ public class Coverage {
 		fr.close();
 		return new JSONObject(builder.toString());
 	}
+
+	/**
+	 * Get coverage results of target JavaScript file
+	 * 
+	 * @param files Contains coverage results
+	 * @param recordedJsFile Represents target JavaScript file
+	 * @return Map whose keys are coverage-report files and values contain coverage results of target JavaScript file
+	 * @throws JSONException
+	 * @throws IOException
+	 */
+	public static Map<File, boolean[]> getTargetCoverageResults(List<File> files, File recordedJsFile) throws JSONException, IOException {
+		Map<File, boolean[]> ret = Maps.newHashMap();
+		for (File file : files) {
+			JSONObject json = Coverage.parse(file);
+			
+			String encoded_url = recordedJsFile.getName();
+			String decoded_url = URLDecoder.decode(encoded_url, "utf-8");
+			URL url = new URL(decoded_url);
+			String path_to_js_file = URLDecoder.decode(url.getPath(), "utf-8");
+			
+			JSONArray array = Coverage.getCoverageResults(json, path_to_js_file);
+			if (array == null) {
+				return ret;
+			}
+			
+			boolean[] coverages = new boolean[array.length()];
+			for (int i = 0; i < array.length(); i++) {
+				Object line = array.get(i);
+				int freq = Coverage.getCoverFreq(line);
+				if (0 < freq) {
+					coverages[i] = true; // covered
+				} else {
+					coverages[i] = false; // not covered
+				}
+			}
+
+			ret.put(file, coverages);
+		}
+		return ret;
+	}
+
+	/**
+	 * Get coverage frequency at given line.
+	 * Positive integer represent that the line is covered, otherwise not covered.
+	 * 
+	 * @param line Contains coverage frequency of line
+	 * @return Coverage frequency
+	 */
+	public static int getCoverFreq(Object line) {
+		if (line instanceof Integer) {
+			return (Integer) line;
+		} else {
+			return 0;
+		}
+	}
 	
-	public static boolean isCovered(final Map<String, boolean[]> results, int startLineNum, int endLineNum) {
-		for (Map.Entry<String, boolean[]> entry : results.entrySet()) {
+	/**
+	 * Get coverage results of target JavaScript file
+	 * 
+	 * @param coverage
+	 * @param path_to_js_file
+	 * @return
+	 * @throws JSONException
+	 */
+	public static JSONArray getCoverageResults(JSONObject coverage, String path_to_js_file) throws JSONException {
+		for (@SuppressWarnings("unchecked") Iterator<Object> i = coverage.keys(); i.hasNext();) {
+			String filename = i.next().toString();
+			if (filename.equals(path_to_js_file)) {
+				JSONObject _coverage = coverage.getJSONObject(filename);
+				for (@SuppressWarnings("unchecked") Iterator<Object> j = _coverage.keys(); j.hasNext();) {
+					Object type = j.next();
+					if ("lineData".equals(type.toString())) {
+						return _coverage.getJSONArray(type.toString());
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Determine whether coverage results represents 'covered' between given start and end line numbers.
+	 * 
+	 * @param results Contains coverage results
+	 * @param startLineNum
+	 * @param endLineNum
+	 * @return true if covered, otherwise false
+	 */
+	public static boolean isCovered(final Map<File, boolean[]> results, int startLineNum, int endLineNum) {
+		for (Map.Entry<File, boolean[]> entry : results.entrySet()) {
 			boolean[] testsCoverage = entry.getValue();
 			for (int line = startLineNum; line <= endLineNum; line++) {
 				if (testsCoverage[line] == true) {
@@ -148,13 +187,43 @@ public class Coverage {
 		return false;
 	}
 
-	public static boolean isCovered(final Map<String, boolean[]> results, int startLineNum, int endLineNum, String methodName) {
-		boolean[] coveredByMethod = results.get(methodName);
-		for (int line = startLineNum; line <= endLineNum; line++) {
-			if (coveredByMethod[line]) {
-				return true;
+	/**
+	 * Precondition: 
+	 * 
+	 * Determine whether coverage results represents 'covered' between given start and end line numbers.
+	 * 
+	 * @param results
+	 * @param startLineNum
+	 * @param endLineNum
+	 * @param methodName
+	 * @return
+	 */
+	public static boolean isCovered(final Map<File, boolean[]> results, int startLineNum, int endLineNum, String methodName) {
+		for (File file : results.keySet()) {
+			String name = Coverage.getTestMethodName(file);
+			if (name.equals(methodName)) {
+				boolean[] coverages = results.get(file);
+				for (int line = startLineNum; line <= endLineNum; line++) {
+					if (coverages[line]) {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Note: We currently design RevAjaxMutator to put files containing coverage results at the following paths.
+	 * 
+	 * {@code path/to/jscover/app/test-class#method/jscoverage.json}
+	 * 
+	 * Get {@code test-class#method} from the path above.
+	 * 
+	 * @param file
+	 * @return
+	 */
+	public static String getTestMethodName(File file) {
+		return new File(file.getParent()).getName();
 	}
 }
