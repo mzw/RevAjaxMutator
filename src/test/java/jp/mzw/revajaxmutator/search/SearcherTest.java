@@ -72,11 +72,6 @@ public class SearcherTest {
 		protected AppTestConfig() throws IOException {
 			super("app-test.properties");
 		}
-		
-		@Override
-		public File getRecordDir() {
-			return new File("src/test/resources/record-test/quizzy");
-		}
 
 		@Override
 		public MutateConfiguration getMutationAnalysisConfig() throws InstantiationException, IllegalAccessException, IOException {
