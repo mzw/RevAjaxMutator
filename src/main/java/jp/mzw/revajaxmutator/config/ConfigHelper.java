@@ -3,7 +3,9 @@ package jp.mzw.revajaxmutator.config;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import jp.mzw.revajaxmutator.parser.RepairSource;
 import jp.mzw.revajaxmutator.parser.html.EventSet;
@@ -33,27 +35,24 @@ public class ConfigHelper {
 	}
 
 	public List<RepairSource> getRepairSourcesForDomSelectionAttributeFixer() {
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		ArrayList<String> duplicate = new ArrayList<>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("document",
-				RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("document", RepairSource.Type.DEFAULT));
 
 		// From Test Case
-		for (String attr : testCaseParser.getAttributeValues()) {
+		for (final String attr : this.testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource(attr,
-						RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource(attr, RepairSource.Type.TESTCASE));
 			}
 		}
 		// From HTML
-		for (String attr : htmlParser.getAllElementIdentifier()) {
+		for (final String attr : this.htmlParser.getAllElementIdentifier()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources
-						.add(new RepairSource(attr, RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(attr, RepairSource.Type.HTML));
 			}
 		}
 
@@ -61,110 +60,113 @@ public class ConfigHelper {
 	}
 
 	public List<RepairSource> getRepairSourcesForEventTarget() {
-		if (eventSet == null) {
-			eventSet = htmlParser.getAllEventSet();
+		if (this.eventSet == null) {
+			this.eventSet = this.htmlParser.getAllEventSet();
 		}
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		ArrayList<String> duplicate = new ArrayList<>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("$(document)",
-				RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("$(document)", RepairSource.Type.DEFAULT));
 		// From Test Case
-		for (String attr : testCaseParser.getAttributeValues()) {
+		for (final String attr : this.testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource("$(" + attr + ")",
-						RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource("$(" + attr + ")", RepairSource.Type.TESTCASE));
 			}
 		}
 		// From HTML
-		for (String eventTarget : eventSet.getTargetSet()) {
-			repairSources.add(new RepairSource(eventTarget,
-					RepairSource.Type.HTML));
+		for (final String eventTarget : this.eventSet.getTargetSet()) {
+			repairSources.add(new RepairSource(eventTarget, RepairSource.Type.HTML));
 		}
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForEventType() {
-		if (eventSet == null) {
-			eventSet = htmlParser.getAllEventSet();
+		if (this.eventSet == null) {
+			this.eventSet = this.htmlParser.getAllEventSet();
 		}
+
 		// From HTML
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		ArrayList<String> duplicate = new ArrayList<>();
-		for (String eventType : eventSet.getTypeSet()) {
-			if (!duplicate.contains(eventType)) {
-				duplicate.add(eventType);
-				repairSources.add(new RepairSource(eventType,
-						RepairSource.Type.HTML));
-			}
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final Set<String> htmlSet = new HashSet<>();
+		for (final String eventType : this.eventSet.getTypeSet()) {
+			htmlSet.add(eventType);
 		}
+
+		for (final String eventType : htmlSet) {
+			repairSources.add(new RepairSource(eventType, RepairSource.Type.HTML));
+		}
+
+		// From JavaScript
+		final Set<String> jsSet = new HashSet<>();
+		jsSet.addAll(this.jsParser.getEventTypes());
+		// Add only new .js event types
+		jsSet.removeAll(htmlSet);
+
+		for (final String eventType : jsSet) {
+			repairSources.add(new RepairSource("\'" + eventType + "\'", RepairSource.Type.JavaScript));
+		}
+
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForEventCallback() {
-		if (eventSet == null) {
-			eventSet = htmlParser.getAllEventSet();
+		if (this.eventSet == null) {
+			this.eventSet = this.htmlParser.getAllEventSet();
 		}
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		ArrayList<String> duplicate = new ArrayList<>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final ArrayList<String> duplicate = new ArrayList<>();
 
 		// From HTML
-		for (String eventCallback : eventSet.getCallbackSet()) {
+		for (final String eventCallback : this.eventSet.getCallbackSet()) {
 			if (!duplicate.contains(eventCallback)) {
 				duplicate.add(eventCallback);
-				repairSources.add(new RepairSource(eventCallback,
-						RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(eventCallback, RepairSource.Type.HTML));
 			}
 		}
 		// From JavaScript
-		for (String name : jsParser.getFunctionNames()) {
+		for (final String name : this.jsParser.getFunctionNames()) {
 			if (!duplicate.contains(name)) {
 				duplicate.add(name);
-				repairSources.add(new RepairSource(name,
-						RepairSource.Type.JavaScript));
+				repairSources.add(new RepairSource(name, RepairSource.Type.JavaScript));
 			}
 		}
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForTimerEventDuration() {
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		// default
-		String[] durations = new String[] { "0", "50", "100", "250", "500",
-				"750", "1000" };
-		for (String duration : durations) {
-			repairSources.add(new RepairSource(duration,
-					RepairSource.Type.DEFAULT));
+		final String[] durations = new String[] { "0", "50", "100", "250", "500", "750", "1000" };
+		for (final String duration : durations) {
+			repairSources.add(new RepairSource(duration, RepairSource.Type.DEFAULT));
 		}
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForAttributeValues() {
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
-		ArrayList<String> duplicate = new ArrayList<>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final ArrayList<String> duplicate = new ArrayList<>();
 		// From JavaScript
-		for(String value : jsParser.getAttributeValuesFromInfixExpression()) {
+		for (final String value : this.jsParser.getAttributeValuesFromInfixExpression()) {
 			if (!duplicate.contains(value)) {
 				duplicate.add(value);
-				repairSources.add(new RepairSource(value,
-						RepairSource.Type.JavaScript));
+				repairSources.add(new RepairSource(value, RepairSource.Type.JavaScript));
 			}
 		}
 		// From HTML
-		for (String value : htmlParser.getAllAttributeValues()) {
+		for (final String value : this.htmlParser.getAllAttributeValues()) {
 			if (!duplicate.contains(value)) {
 				duplicate.add(value);
-				repairSources.add(new RepairSource(value,
-						RepairSource.Type.HTML));
+				repairSources.add(new RepairSource(value, RepairSource.Type.HTML));
 			}
 		}
 		return repairSources;
 	}
 
 	public List<RepairSource> getRepairSourcesForAppendedDOM() {
-		List<RepairSource> repairSources = new ArrayList<RepairSource>();
+		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		return repairSources;
 	}
 }
