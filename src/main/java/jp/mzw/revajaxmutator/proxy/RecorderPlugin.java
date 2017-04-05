@@ -31,10 +31,18 @@ public class RecorderPlugin extends ProxyPlugin {
 	private void recordResponseContent(Request request, Response response) {
 		try {
 			File dir = new File(mDirname);
+			String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
+			// file name too long
+			int length = filename.length();
+			while (128 < length) {
+				String subdirname = filename.substring(0, 127);
+				dir = new File(dir, subdirname);
+				filename = filename.substring(127);
+				length = filename.length();
+			}
 			if (!dir.exists()) {
 				dir.mkdirs();
 			}
-			String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
 			File file = new File(dir, filename);
 			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(file));
 			out.write(response.getContent());

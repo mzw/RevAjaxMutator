@@ -147,9 +147,24 @@ public abstract class AppConfig implements IAppConfig {
 
 		Pattern pattern = Pattern.compile(regex.toString());
 		for (File file : getRecordDir().listFiles()) {
-			Matcher matcher = pattern.matcher(file.getName());
-			if (matcher.find()) {
-				return file;
+			if (file.isFile()) {
+				Matcher matcher = pattern.matcher(file.getName());
+				if (matcher.find()) {
+					return file;
+				}
+			} else if (file.isDirectory()) {
+				String name = file.getName();
+				while (0 < file.listFiles().length) {
+					file = file.listFiles()[0];
+					name += file.getName();
+					if (file.isFile()) {
+						break;
+					}
+				}
+				Matcher matcher = pattern.matcher(name);
+				if (matcher.find()) {
+					return file;
+				}
 			}
 		}
 
@@ -185,9 +200,24 @@ public abstract class AppConfig implements IAppConfig {
 
 		Pattern pattern = Pattern.compile(regex.toString());
 		for (File file : getRecordDir().listFiles()) {
-			Matcher matcher = pattern.matcher(file.getName());
-			if (matcher.find()) {
-				return file;
+			if (file.isFile()) {
+				Matcher matcher = pattern.matcher(file.getName());
+				if (matcher.find()) {
+					return file;
+				}
+			} else if (file.isDirectory()) {
+				String name = file.getName();
+				while (0 < file.listFiles().length) {
+					file = file.listFiles()[0];
+					name += file.getName();
+					if (file.isFile()) {
+						break;
+					}
+				}
+				Matcher matcher = pattern.matcher(name);
+				if (matcher.find()) {
+					return file;
+				}
 			}
 		}
 
