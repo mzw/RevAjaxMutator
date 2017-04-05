@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
@@ -54,9 +56,13 @@ public class RewriterPlugin extends ProxyPlugin {
 			String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
 
 			boolean matched = false;
+			String regex = null;
 			for (String _filename : mRewriteFiles) {
-				if (filename.equals(_filename)) {
+				Pattern pattern = Pattern.compile(_filename);
+				Matcher matcher = pattern.matcher(filename);
+				if (matcher.find()) {
 					matched = true;
+					regex = _filename;
 					break;
 				}
 			}
@@ -64,9 +70,35 @@ public class RewriterPlugin extends ProxyPlugin {
 				return;
 			}
 
-			BufferedInputStream in;
+			BufferedInputStream in = null;
 			if (request.getHeader(MUTANT_HEADER_NAME) == null) {
-				in = new BufferedInputStream(new FileInputStream(mDirname + "/" + filename));
+				Pattern pattern = Pattern.compile(regex);
+				for (File file : new File(mDirname).listFiles()) {
+					if (file.isFile()) {
+						Matcher matcher = pattern.matcher(file.getName());
+						if (matcher.find()) {
+							in = new BufferedInputStream(new FileInputStream(file));
+							break;
+						}
+					} else if (file.isDirectory()) {
+						String name = file.getName();
+						while (0 < file.listFiles().length) {
+							file = file.listFiles()[0];
+							name += file.getName();
+							if (file.isFile()) {
+								break;
+							}
+						}
+						Matcher matcher = pattern.matcher(name);
+						if (matcher.find()) {
+							in = new BufferedInputStream(new FileInputStream(file));
+							break;
+						}
+					}
+				}
+				if (in == null) {
+					return;
+				}
 			} else {
 				String mutantname = request.getHeader(MUTANT_HEADER_NAME);
 

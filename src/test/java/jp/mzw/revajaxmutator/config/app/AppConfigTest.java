@@ -61,6 +61,12 @@ public class AppConfigTest {
 		String actual = config.pathToHtmlFile();
 		Assert.assertArrayEquals("path/to/app-test.php?query=string&id=<regex>[a-zA-Z0-9]*</regex>&foo=bar".toCharArray(), actual.toCharArray());
 	}
+	
+	@Test
+	public void testGetRecordedFileName() throws MalformedURLException, UnsupportedEncodingException {
+		String actual = AppConfig.getRecordedFileName(config.getUrl(), config.pathToHtmlFile());
+		Assert.assertArrayEquals("http%3A%2F%2Fwww.example.org%3A8080%2Fpath%2Fto%2Fpath%2Fto%2Fapp-test.php%3Fquery%3Dstring%26id%3D[a-zA-Z0-9]*%26foo%3Dbar".toCharArray(), actual.toCharArray());
+	}
 
 	@Test
 	public void testGetRecordedHtmlFile() throws MalformedURLException, UnsupportedEncodingException {

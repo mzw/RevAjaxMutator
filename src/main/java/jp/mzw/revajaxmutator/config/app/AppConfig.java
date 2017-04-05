@@ -173,6 +173,29 @@ public abstract class AppConfig implements IAppConfig {
 		LOGGER.warn("Not found target JavaScript file: {}", url.toString());
 		return null;
 	}
+	
+	/**
+	 * Get recorded filename
+	 * 
+	 * @param baseUrl
+	 * @param pathToFile
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws UnsupportedEncodingException
+	 */
+	public static String getRecordedFileName(URL baseUrl, String pathToFile) throws MalformedURLException, UnsupportedEncodingException {
+		URL url = new URL(baseUrl, pathToFile);
+		String[] splits = url.toString().split("<regex>|</regex>");
+		StringBuilder regex = new StringBuilder();
+		for (int i = 0; i < splits.length; i++) {
+			if (i % 2 == 0) {
+				regex.append(URLEncoder.encode(splits[i], "utf-8"));
+			} else {
+				regex.append(splits[i]);
+			}
+		}
+		return regex.toString();
+	}
 
 	/**
 	 * 

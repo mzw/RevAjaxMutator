@@ -153,7 +153,8 @@ public class MutationAnalysis extends Command {
 
 			File recordDir = config.getRecordDir();
 			RewriterPlugin plugin = new RewriterPlugin(recordDir.getAbsolutePath());
-			plugin.setRewriteFile(config.getRecordedJsFile().getName());
+			String recordedFilename = AppConfig.getRecordedFileName(config.getUrl(), config.pathToJsFile());
+			plugin.setRewriteFile(recordedFilename);
 			ProxyServer.launch(Arrays.asList(plugin), localenv.getProxyAddress());
 
 			List<Class<?>> testClasses = new ArrayList<>();
