@@ -7,8 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-
 import jp.mzw.revajaxmutator.parser.RepairSource;
 import jp.mzw.revajaxmutator.parser.html.EventSet;
 import jp.mzw.revajaxmutator.parser.html.HTMLParser;
@@ -102,25 +100,10 @@ public class ConfigHelper {
 
 		// From JavaScript
 		final Set<String> jsSet = new HashSet<>();
-		for (final String name : this.jsParser.getEventTypes()) {
-			// add similar events to the list of repair sources
-			if (keyboardPressETKeywords.contains(name)) {
-				for (final String eventType : keyboardPressETKeywords) {
-					jsSet.add(eventType);
-				}
-			} else if (mouseClickETKeywords.contains(name)) {
-				for (final String eventType : mouseClickETKeywords) {
-					jsSet.add(eventType);
-				}
-			} else if (editETKeywords.contains(name)) {
-				for (final String eventType : editETKeywords) {
-					jsSet.add(eventType);
-				}
-			}
-		}
-
-		// Add new .js event types
+		jsSet.addAll(this.jsParser.getEventTypes());
+		// Add only new .js event types
 		jsSet.removeAll(htmlSet);
+
 		for (final String eventType : jsSet) {
 			repairSources.add(new RepairSource("\'" + eventType + "\'", RepairSource.Type.JavaScript));
 		}
@@ -186,11 +169,4 @@ public class ConfigHelper {
 		final List<RepairSource> repairSources = new ArrayList<RepairSource>();
 		return repairSources;
 	}
-
-	private static final Set<String> keyboardPressETKeywords = ImmutableSet.of("textinput", "keyup", "keypress",
-			"keydown");
-	private static final Set<String> mouseClickETKeywords = ImmutableSet.of("click", "contextmenu", "dblclick",
-			"mousedown", "mouseup", "mouseenter", "mouseleave", "mouseover", "mousewheel", "wheel");
-	private static final Set<String> editETKeywords = ImmutableSet.of("change", "copy", "cut", "paste", "reset",
-			"select", "textinput");
 }

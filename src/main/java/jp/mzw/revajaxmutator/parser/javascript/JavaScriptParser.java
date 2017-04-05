@@ -135,11 +135,6 @@ public class JavaScriptParser {
 
 	private static final Set<String> eventHandlerKeywords = ImmutableSet.of("addEventListener", "on", "off", "bind",
 			"unbind", "delegate", "undelegate", "error", "live", "load", "unload", "one", "trigger");
-	// list taken from http://www.quirksmode.org/dom/events/
-	private static final Set<String> eventTypeKeywords = ImmutableSet.of("blue", "change", "click", "dblclick",
-			"contextmenu", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "mousedown",
-			"mouseenter", "mouseleave", "mouseremove", "mouseout", "mouseover", "mouseup", "mousewheel", "copy", "cut",
-			"paste", "resize", "scroll", "select", "submit", "unload");
 
 	public List<String> getEventTypes() {
 		final ArrayList<String> ret = new ArrayList<>();
@@ -161,13 +156,11 @@ public class JavaScriptParser {
 					}
 
 					// Check if it is an event handler
-					if (eventHandlerKeywords.contains(name.getIdentifier())) {
+					if (eventHandlerKeywords.equals(name.getIdentifier())) {
 						for (final AstNode a : functionCall.getArguments()) {
 							if (a instanceof StringLiteral) {
-								final String argText = ((StringLiteral) a).getValue().toLowerCase();
-								if (eventTypeKeywords.contains(argText)) {
-									ret.add(argText);
-								}
+								final String eventType = ((StringLiteral) a).getValue().toLowerCase();
+								ret.add(eventType);
 							}
 						}
 					}
