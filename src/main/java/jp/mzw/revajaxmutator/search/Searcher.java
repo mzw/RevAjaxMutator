@@ -24,15 +24,13 @@ public class Searcher {
 	MutationListManager manager;
 	Sorter.SortType sortType;
 
-	public Searcher(Class<?> clazz) throws InstantiationException,
-			IllegalAccessException, JSONException, IOException {
+	public Searcher(Class<?> clazz) throws InstantiationException, IllegalAccessException, JSONException, IOException {
 		config = (AppConfig) clazz.newInstance();
 		manager = getMutationListManager();
 		sortType = Sorter.SortType.REPAIR_SOURCE_DFS; // default
 	}
 
-	public Searcher(Class<?> clazz, String sort) throws InstantiationException,
-			IllegalAccessException, JSONException, IOException {
+	public Searcher(Class<?> clazz, String sort) throws InstantiationException, IllegalAccessException, JSONException, IOException {
 		config = (AppConfig) clazz.newInstance();
 		manager = getMutationListManager();
 		sortType = Sorter.getSortType(sort);
@@ -54,18 +52,14 @@ public class Searcher {
 		_manager.generateMutationListFile();
 	}
 
-	public MutationListManager getMutationListManager() throws JSONException,
-			IOException {
-		File mutantDir = new File(config.getRecordDir(),
-				MutationFileWriter.DEFAULT_FOLDER_NAME);
-		File mutationListFile = new File(mutantDir,
-				MutationListManager.MUTATION_LIST_FILE_NAME);
+	public MutationListManager getMutationListManager() throws JSONException, IOException {
+		File mutantDir = new File(config.getRecordedJsFile().getParent(), MutationFileWriter.DEFAULT_FOLDER_NAME);
+		File mutationListFile = new File(mutantDir, MutationListManager.MUTATION_LIST_FILE_NAME);
 		if (!mutationListFile.exists()) {
 			LOGGER.error("Cannot find {}", mutationListFile.getAbsolutePath());
 			return null;
 		}
-		MutationListManager manager = new MutationListManager(
-				mutantDir.getAbsolutePath());
+		MutationListManager manager = new MutationListManager(mutantDir.getAbsolutePath());
 		manager.readExistingMutationListFile();
 
 		setWeight(manager);
@@ -73,18 +67,16 @@ public class Searcher {
 		return manager;
 	}
 
-	protected void setWeight(MutationListManager manager) throws JSONException,
-			IOException {
+	protected void setWeight(MutationListManager manager) throws JSONException, IOException {
 		// Parse
 		List<File> files = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
 		for (File file : files) {
-			if(!file.exists()) {
+			if (!file.exists()) {
 				continue;
 			}
-			JSONArray failure = Coverage.getCoverageResults(
-					Coverage.parse(file),
-					new URL(config.getUrl(), config.pathToJsFile()).getPath());
-			if(failure == null) return;
+			JSONArray failure = Coverage.getCoverageResults(Coverage.parse(file), new URL(config.getUrl(), config.pathToJsFile()).getPath());
+			if (failure == null)
+				return;
 			int line_num = failure.length();
 			double[] weight = new double[line_num];
 			int max = 0;
@@ -103,8 +95,7 @@ public class Searcher {
 
 			// Set
 			for (String name : manager.getListOfMutationName()) {
-				for (MutationFileInformation info : manager
-						.getMutationFileInformationList(name)) {
+				for (MutationFileInformation info : manager.getMutationFileInformationList(name)) {
 					info.setWeight(weight[info.getStartLine()]);
 				}
 			}

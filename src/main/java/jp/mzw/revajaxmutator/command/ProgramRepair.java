@@ -59,7 +59,7 @@ public class ProgramRepair extends Command {
 
 			generate(config);
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IOException e) {
-			LOG.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 
@@ -109,7 +109,7 @@ public class ProgramRepair extends Command {
 
 			ProxyServer.interrupt();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | StoreException | InterruptedException | IOException e) {
-			LOG.error(e.getMessage());
+			e.printStackTrace();
 			ProxyServer.interrupt();
 		}
 
@@ -140,7 +140,7 @@ public class ProgramRepair extends Command {
 			Class<?> clazz = getClass(args[0]);
 			search(clazz);
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | JSONException | IOException e) {
-			LOG.error(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 

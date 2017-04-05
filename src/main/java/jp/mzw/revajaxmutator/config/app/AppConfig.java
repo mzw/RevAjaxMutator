@@ -150,6 +150,7 @@ public abstract class AppConfig implements IAppConfig {
 			if (file.isFile()) {
 				Matcher matcher = pattern.matcher(file.getName());
 				if (matcher.find()) {
+					LOGGER.info("Found target JavaScript file: {}", file.getPath());
 					return file;
 				}
 			} else if (file.isDirectory()) {
@@ -163,11 +164,13 @@ public abstract class AppConfig implements IAppConfig {
 				}
 				Matcher matcher = pattern.matcher(name);
 				if (matcher.find()) {
+					LOGGER.info("Found target JavaScript file: {}", file.getPath());
 					return file;
 				}
 			}
 		}
 
+		LOGGER.warn("Not found target JavaScript file: {}", url.toString());
 		return null;
 	}
 
@@ -203,6 +206,7 @@ public abstract class AppConfig implements IAppConfig {
 			if (file.isFile()) {
 				Matcher matcher = pattern.matcher(file.getName());
 				if (matcher.find()) {
+					LOGGER.info("Found target HTML file: {}", file.getPath());
 					return file;
 				}
 			} else if (file.isDirectory()) {
@@ -216,11 +220,13 @@ public abstract class AppConfig implements IAppConfig {
 				}
 				Matcher matcher = pattern.matcher(name);
 				if (matcher.find()) {
+					LOGGER.info("Found target HTML file: {}", file.getPath());
 					return file;
 				}
 			}
 		}
 
+		LOGGER.warn("Not found target HTML file: {}", url.toString());
 		return null;
 	}
 
