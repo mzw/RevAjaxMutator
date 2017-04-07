@@ -14,27 +14,24 @@ import java.util.Collection;
 /**
  * @author Junto Nakaoka
  */
-public class RequestMethodRAFixer
-        extends AbstractReplacingAmongFixer<Request> {
-    public RequestMethodRAFixer(Collection<Request> mutationTargets) {
+public class RequestMethodRAFixer extends AbstractReplacingAmongFixer<Request> {
+	
+    public RequestMethodRAFixer(final Collection<Request> mutationTargets) {
         super(Request.class, mutationTargets, new ArrayList<RepairSource>());
     }
 
     @Override
-    protected AstNode getFocusedNode(Request node) {
+    protected AstNode getFocusedNode(final Request node) {
         return node.getRequestMethodNode();
     }
 
     @Override
-    protected String formatAccordingTo(AstNode mutatingNode, AstNode mutatedNode) {
-        if (mutatedNode instanceof StringLiteral
-                && !(mutatingNode instanceof StringLiteral)) {
+    protected String formatAccordingTo(final AstNode mutatingNode, final AstNode mutatedNode) {
+        if (mutatedNode instanceof StringLiteral && !(mutatingNode instanceof StringLiteral)) {
             // mutated: $.ajax(.., 'POST', ...)
             // mutating: $.get(...)
             return '"' + mutatingNode.toSource().toUpperCase() + '"';
-        } else if (mutatingNode instanceof StringLiteral
-            && JQueryRequestDetector.AJAX_SHORTCUT_METHODS.contains(
-                mutatedNode.toSource().trim())) {
+        } else if (mutatingNode instanceof StringLiteral && JQueryRequestDetector.AJAX_SHORTCUT_METHODS.contains(mutatedNode.toSource().trim())) {
             // mutated: $.get(...)
             // mutating: $.ajax(.., 'POST', ...)
             return ((StringLiteral) mutatingNode).getValue();
@@ -42,8 +39,19 @@ public class RequestMethodRAFixer
         return super.formatAccordingTo(mutatingNode, mutatedNode);
     }
 
+    /**
+     * {@inheritDoc}
+     * 
+     * @param focusedNode AstNode currently focused
+     * @return get if focusedNode is post, vice versa.
+     */
     @Override
-    public AstNode getDefaultReplacingNode() {
-        return StringToAst.parseAsStringLiteral("'get'");
+    public AstNode getDefaultReplacingNode(final AstNode focusedNode) {
+    	if (focusedNode.toSource().contains("get")) {
+    		return StringToAst.parseAsStringLiteral("'post'");
+    	} else if (focusedNode.toSource().contains("post")) {
+    		return StringToAst.parseAsStringLiteral("'get'");
+    	}
+    	return super.getDefaultReplacingNode(focusedNode);
     }
 }

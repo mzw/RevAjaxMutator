@@ -75,41 +75,39 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends
 				break;
 			}
 		}
-		if (getDefaultReplacingNode() != null
-				&& getDefaultReplacingNode().toSource() != focusedNode
-						.toSource()) {
-			mutationList.add(new Mutation(focusedNode, formatAccordingTo(
-					getDefaultReplacingNode(), focusedNode), new RepairValue(
-					getDefaultReplacingNode())));
+		
+		// create mutation by replacing original node with default
+		if (getDefaultReplacingNode(focusedNode) != null) {
+			if (getDefaultReplacingNode(focusedNode).toSource() != focusedNode.toSource()) {
+				mutationList.add(new Mutation(focusedNode, formatAccordingTo(
+						getDefaultReplacingNode(focusedNode), focusedNode), new RepairValue(
+						getDefaultReplacingNode(focusedNode))));
+			}
 		}
 
-		if (mutationList.size() > 0)
+		if (mutationList.size() > 0) {
 			return mutationList;
-		else
+		} else {
 			return null;
+		}
 	}
 
 	private boolean include(AstNode mayParent, AstNode mayChild) {
 		if (mayParent == null || mayChild == null) {
 			return false;
 		}
-		boolean parentStartsBeforeChild = mayParent.getAbsolutePosition() < mayChild
-				.getAbsolutePosition();
-		boolean parentEndsAfterChild = (mayParent.getAbsolutePosition() + mayParent
-				.getLength()) > (mayChild.getAbsolutePosition() + mayChild
-				.getLength());
+		boolean parentStartsBeforeChild = mayParent.getAbsolutePosition() < mayChild.getAbsolutePosition();
+		boolean parentEndsAfterChild = (mayParent.getAbsolutePosition() + mayParent.getLength()) > (mayChild.getAbsolutePosition() + mayChild.getLength());
 		return parentStartsBeforeChild && parentEndsAfterChild;
 	}
 
 	/**
-	 * This method is called to format String representation to be suitable for
-	 * mutation. For instance, if you try to request method in
-	 * <code>$.ajax(url, 'GET', callback);</code>, request method should be
-	 * string whereas our subclass try to get mutation candidate from
-	 * <code>$.post(url, callback);</code> where request method is a function
-	 * name. This method should be override to reformat the given AstNode to a
-	 * proper representation for mutation. Default implementation returns
-	 * mutatingNode#toSource().
+	 * This method is called to format String representation to be suitable for mutation.
+	 * For instance, if you try to request method in <code>$.ajax(url, 'GET', callback);</code>,
+	 * request method should be string whereas our subclass try to get mutation candidate
+	 * from <code>$.post(url, callback);</code> where request method is a function name.
+	 * This method should be override to reformat the given AstNode to a proper representation for mutation.
+	 * Default implementation returns mutatingNode#toSource().
 	 *
 	 * @param mutatingNode
 	 *            AstNode that will be used to replace existing node.
@@ -122,14 +120,13 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends
 	}
 
 	/**
-	 * Subclass can override this method to specify what should be used when no
-	 * replacing candidate found. Default implementation returns null, i.e., no
-	 * replacement occur.
+	 * Subclass can override this method to specify what should be used when no replacing candidate found.
+	 * Default implementation returns null, i.e., no replacement occur.
 	 *
-	 * @return node that is used for replacement if no other replacing candidate
-	 *         found.
+	 * @param focusedNode AstNode currently focused
+	 * @return node that is used for replacement if no other replacing candidate found.
 	 */
-	public AstNode getDefaultReplacingNode() {
+	public AstNode getDefaultReplacingNode(AstNode focusedNode) {
 		return null;
 	}
 }

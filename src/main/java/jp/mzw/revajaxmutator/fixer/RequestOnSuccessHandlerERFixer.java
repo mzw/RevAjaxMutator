@@ -15,25 +15,23 @@ import org.mozilla.javascript.ast.AstNode;
  * @author Junto Nakaoka
  *
  */
-public class RequestOnSuccessHandlerERFixer extends
-		AbstractReplacingAmongFixer<Request> {
+public class RequestOnSuccessHandlerERFixer extends AbstractReplacingAmongFixer<Request> {
 
-	public RequestOnSuccessHandlerERFixer(Collection<Request> mutationTargets,
-			List<RepairSource> repairSources) {
+	public RequestOnSuccessHandlerERFixer(final Collection<Request> mutationTargets, final List<RepairSource> repairSources) {
 		super(Request.class, mutationTargets, repairSources);
 	}
 
-	public RequestOnSuccessHandlerERFixer(Collection<Request> mutationTargets) {
+	public RequestOnSuccessHandlerERFixer(final Collection<Request> mutationTargets) {
 		super(Request.class, mutationTargets, new ArrayList<RepairSource>());
 	}
 
 	@Override
-	protected AstNode getFocusedNode(Request node) {
+	protected AstNode getFocusedNode(final Request node) {
 		return node.getSuccessHanlder();
 	}
 
 	@Override
-	public AstNode getDefaultReplacingNode() {
+	public AstNode getDefaultReplacingNode(final AstNode focusedNode) {
 		return StringToAst.parseAsFunctionNode("function() {}");
 	}
 }

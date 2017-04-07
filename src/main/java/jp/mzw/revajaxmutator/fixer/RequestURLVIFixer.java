@@ -17,22 +17,22 @@ import org.mozilla.javascript.ast.AstNode;
  */
 public class RequestURLVIFixer extends AbstractReplacingAmongFixer<Request> {
 
-	public RequestURLVIFixer(Collection<Request> mutationTargets,
+	public RequestURLVIFixer(final Collection<Request> mutationTargets,
 			List<RepairSource> repairSources) {
 		super(Request.class, mutationTargets, repairSources);
 	}
 
-	public RequestURLVIFixer(Collection<Request> mutationTargets) {
+	public RequestURLVIFixer(final Collection<Request> mutationTargets) {
 		super(Request.class, mutationTargets, new ArrayList<RepairSource>());
 	}
 
 	@Override
-	protected AstNode getFocusedNode(Request node) {
+	protected AstNode getFocusedNode(final Request node) {
 		return node.getUrl();
 	}
 
 	@Override
-	public AstNode getDefaultReplacingNode() {
+	public AstNode getDefaultReplacingNode(final AstNode focusedNode) {
 		return StringToAst.parseAsStringLiteral("'http://google.com'");
 	}
 }
