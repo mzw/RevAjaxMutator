@@ -7,7 +7,7 @@ import jp.mzw.ajaxmutator.mutatable.DOMNormalization;
  * Replace DOM Normalization to No-op
  */
 public class DOMNormalizationToNoOpFixer  extends ReplacingToNoOpFixer<DOMNormalization> {
-    public DOMNormalizationToNoOpFixer() {
+	public DOMNormalizationToNoOpFixer() {
         super(DOMNormalization.class);
     }
 }

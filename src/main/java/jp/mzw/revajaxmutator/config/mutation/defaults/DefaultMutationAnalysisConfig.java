@@ -1,4 +1,4 @@
-package jp.mzw.revajaxmutator.config.mutation;
+package jp.mzw.revajaxmutator.config.mutation.defaults;
 
 import java.io.IOException;
 
@@ -40,6 +40,7 @@ import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventCallbackRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventDurationRAMutator;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.config.mutation.MutateConfigurationBase;
 
 public class DefaultMutationAnalysisConfig extends MutateConfigurationBase {
 

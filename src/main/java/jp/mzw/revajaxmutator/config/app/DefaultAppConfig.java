@@ -2,9 +2,9 @@ package jp.mzw.revajaxmutator.config.app;
 
 import java.io.IOException;
 
-import jp.mzw.revajaxmutator.config.mutation.DefaultMutationAnalysisConfig;
-import jp.mzw.revajaxmutator.config.mutation.DefaultProgramRepairConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
+import jp.mzw.revajaxmutator.config.mutation.defaults.DefaultMutationAnalysisConfig;
+import jp.mzw.revajaxmutator.config.mutation.defaults.DefaultProgramRepairConfig;
 
 public class DefaultAppConfig extends AppConfig {
 

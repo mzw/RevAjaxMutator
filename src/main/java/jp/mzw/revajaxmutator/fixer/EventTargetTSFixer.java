@@ -1,13 +1,13 @@
 package jp.mzw.revajaxmutator.fixer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import jp.mzw.revajaxmutator.parser.RepairSource;
 
 import org.mozilla.javascript.ast.AstNode;
+
+import com.google.common.collect.Sets;
 
 /**
  * 
@@ -16,20 +16,16 @@ import org.mozilla.javascript.ast.AstNode;
  */
 public class EventTargetTSFixer extends AbstractReplacingAmongFixer<EventAttachment> {
 
-    public EventTargetTSFixer(
-			Collection<EventAttachment> mutationTargets,
-			List<RepairSource> repairSources) {
+	public EventTargetTSFixer(Collection<EventAttachment> mutationTargets, Collection<? extends RepairSource> repairSources) {
 		super(EventAttachment.class, mutationTargets, repairSources);
 	}
-    
-    public EventTargetTSFixer(
-			Collection<EventAttachment> mutationTargets) {
-		super(EventAttachment.class, mutationTargets, new ArrayList<RepairSource>());
+
+	public EventTargetTSFixer(Collection<EventAttachment> mutationTargets) {
+		super(EventAttachment.class, mutationTargets, Sets.newHashSet());
 	}
-    
 
 	@Override
-    protected AstNode getFocusedNode(EventAttachment node) {
-        return node.getTarget();
-    }
+	protected AstNode getFocusedNode(EventAttachment node) {
+		return node.getTarget();
+	}
 }

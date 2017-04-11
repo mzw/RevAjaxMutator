@@ -1,6 +1,5 @@
 package jp.mzw.revajaxmutator.fixer;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -15,20 +14,22 @@ import jp.mzw.revajaxmutator.parser.RepairValue;
 
 import org.mozilla.javascript.ast.AstNode;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 /**
  * @author Junto Nakaoka
  *
  */
-public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends
-		AbstractMutator<T> {
+public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends AbstractMutator<T> {
 
-	private List<AstNode> candidates;
-	private List<RepairSource> repairSources;
+	private Collection<AstNode> candidates;
+	private Collection<? extends RepairSource> repairSources;
 
-	public AbstractReplacingAmongFixer(Class<? extends T> applicableClass,
-			Collection<T> mutationTargets, List<RepairSource> repairSources) {
+	public AbstractReplacingAmongFixer(Class<? extends T> applicableClass, Collection<T> mutationTargets, Collection<? extends RepairSource> repairSources) {
 		super(applicableClass);
-		candidates = new ArrayList<AstNode>(mutationTargets.size());
+		candidates = Sets.newHashSetWithExpectedSize(mutationTargets.size());
 		for (T attachment : mutationTargets) {
 			candidates.add(getFocusedNode(attachment));
 		}
@@ -48,40 +49,34 @@ public abstract class AbstractReplacingAmongFixer<T extends Mutatable> extends
 		Set<AstNode> improperNodes = new HashSet<AstNode>();
 		AstNode focusedNode = getFocusedNode(originalNode);
 		improperNodes.add(focusedNode);
-		List<Mutation> mutationList = new ArrayList<Mutation>();
+		List<Mutation> mutationList = Lists.newArrayList();
 
 		// create mutation with replacing original node with parseResult
 		if (repairSources.size() > 0) {
 			for (RepairSource repairSource : repairSources) {
-				mutationList.add(new Mutation(focusedNode, repairSource
-						.getValue(), new RepairValue(repairSource)));
+				mutationList.add(new Mutation(focusedNode, repairSource.getValue(), new RepairValue(repairSource)));
 			}
 		}
 
 		// create mutation with replacing among AST nodes in the same file
 		while (improperNodes.size() < candidates.size()) {
-			AstNode candidate = candidates.get(Randomizer.getInt(candidates
-					.size()));
-			if (isEqual(getFocusedNode(originalNode), candidate)
-					|| include(originalNode.getAstNode(), candidate)
+			AstNode candidate = Iterables.get(candidates, Randomizer.getInt(candidates.size()));
+			if (isEqual(getFocusedNode(originalNode), candidate) || include(originalNode.getAstNode(), candidate)
 					|| include(candidate, originalNode.getAstNode())) {
 				improperNodes.add(candidate);
 			} else {
-				mutationList.add(new Mutation(focusedNode, formatAccordingTo(
-						candidate, focusedNode), new RepairValue(candidate)));
-                if (focusedNode.toSource().contains("http"))
-                    mutationList.add(new Mutation(focusedNode, focusedNode
-                    		.toSource().replace("http", "https"), new RepairValue(candidate)));
+				mutationList.add(new Mutation(focusedNode, formatAccordingTo(candidate, focusedNode), new RepairValue(candidate)));
+				if (focusedNode.toSource().contains("http"))
+					mutationList.add(new Mutation(focusedNode, focusedNode.toSource().replace("http", "https"), new RepairValue(candidate)));
 				break;
 			}
 		}
-		
+
 		// create mutation by replacing original node with default
 		if (getDefaultReplacingNode(focusedNode) != null) {
 			if (getDefaultReplacingNode(focusedNode).toSource() != focusedNode.toSource()) {
-				mutationList.add(new Mutation(focusedNode, formatAccordingTo(
-						getDefaultReplacingNode(focusedNode), focusedNode), new RepairValue(
-						getDefaultReplacingNode(focusedNode))));
+				mutationList.add(new Mutation(focusedNode, formatAccordingTo(getDefaultReplacingNode(focusedNode), focusedNode),
+						new RepairValue(getDefaultReplacingNode(focusedNode))));
 			}
 		}
 

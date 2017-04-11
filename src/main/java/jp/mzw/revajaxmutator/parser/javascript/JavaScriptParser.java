@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -23,14 +21,25 @@ import org.mozilla.javascript.ast.NodeVisitor;
 import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.tools.shell.Global;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class JavaScriptParser {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(JavaScriptParser.class);
 
+	/** Root of abstract syntax tree obtained by parsing given JavaScript file */
 	private final AstRoot ast;
 
-	public JavaScriptParser(File file) throws IOException {
+	/**
+	 * Parse given JavaScript file
+	 * 
+	 * @param file
+	 * @throws IOException causes when given file does not exist
+	 */
+	public JavaScriptParser(final File file) throws IOException {
 		final String src = FileUtils.readFileToString(file);
 		final InputStream is = JavaScriptParser.class.getClassLoader().getResourceAsStream("env.rhino.1.2.js");
 
@@ -49,12 +58,23 @@ public class JavaScriptParser {
 		this.ast = parser.parse(src, "", 1);
 	}
 
+	/**
+	 * Get AST root
+	 * 
+	 * @return AST root
+	 */
 	public AstRoot getAstRoot() {
 		return this.ast;
 	}
 
-	public List<String> getFunctionNames() {
-		final ArrayList<String> ret = new ArrayList<>();
+	/**
+	 * Get name set of functions implemented in given JavaScript file
+	 * 
+	 * 
+	 * @return set of function names
+	 */
+	public Set<String> getFunctionNames() {
+		final Set<String> ret = Sets.newHashSet();
 		this.ast.visitAll(new NodeVisitor() {
 			@Override
 			public boolean visit(AstNode node) {
@@ -71,30 +91,36 @@ public class JavaScriptParser {
 		return ret;
 	}
 
-	// Same as those implemented in
-	// jp.mzw.ajaxmutator.detector.dom.AttributeAssignmentDetector
-	private final Set<String> globalAttributes = ImmutableSet.of("accessKey", "class", "dir", "id", "lang", "style",
-			"tabindex", "title", "contenteditable", "contextmenu", "draggable", "dropzone", "hidden", "spellcheck");
-	private final Set<String> attributes = ImmutableSet.of("abbr", "accept-charset", "accept", "action", "align",
-			"alink", "alt", "archive", "axis", "background", "bgcolor", "border", "cellpadding", "cellspacing", "char",
-			"charoff", "charset", "checked", "cite", "classid", "clear", "code", "codebase", "codetype", "color",
-			"cols", "colspan", "compact", "content", "coords", "data", "datetime", "declare", "defer", "disabled",
-			"enctype", "face", "for", "frame", "frameborder", "headers", "height", "href", "hreflang", "hspace",
-			"http-equiv", "id", "ismap", "label", "language", "link", "longdesc", "marginheight", "marginwidth",
-			"maxlength", "media", "method", "multiple", "name", "nohref", "noresize", "noshade", "nowrap", "object",
-			"profile", "prompt", "readonly", "rel", "rev", "rows", "rowspan", "rules", "scheme", "scope", "scrolling",
-			"selected", "shape", "size", "span", "src", "standby", "start", "summary", "target", "text", "type",
-			"usemap", "valign", "value", "valuetype", "version", "vlink", "vspace", "width");
+	/**
+	 * Same as those implemented in
+	 * 
+	 * @see jp.mzw.ajaxmutator.detector.dom.AttributeAssignmentDetector
+	 */
+	private final Set<String> globalAttributes = ImmutableSet.of("accessKey", "class", "dir", "id", "lang", "style", "tabindex", "title", "contenteditable",
+			"contextmenu", "draggable", "dropzone", "hidden", "spellcheck");
+
+	/**
+	 * Same as those implemented in
+	 * 
+	 * {@see jp.mzw.ajaxmutator.detector.dom.AttributeAssignmentDetector}
+	 */
+	private final Set<String> attributes = ImmutableSet.of("abbr", "accept-charset", "accept", "action", "align", "alink", "alt", "archive", "axis",
+			"background", "bgcolor", "border", "cellpadding", "cellspacing", "char", "charoff", "charset", "checked", "cite", "classid", "clear", "code",
+			"codebase", "codetype", "color", "cols", "colspan", "compact", "content", "coords", "data", "datetime", "declare", "defer", "disabled", "enctype",
+			"face", "for", "frame", "frameborder", "headers", "height", "href", "hreflang", "hspace", "http-equiv", "id", "ismap", "label", "language", "link",
+			"longdesc", "marginheight", "marginwidth", "maxlength", "media", "method", "multiple", "name", "nohref", "noresize", "noshade", "nowrap", "object",
+			"profile", "prompt", "readonly", "rel", "rev", "rows", "rowspan", "rules", "scheme", "scope", "scrolling", "selected", "shape", "size", "span",
+			"src", "standby", "start", "summary", "target", "text", "type", "usemap", "valign", "value", "valuetype", "version", "vlink", "vspace", "width");
 
 	/**
 	 * Detect specific attribute values from infix expressions because
-	 * {@link jp.mzw.ajaxmutator.detector.dom.AttributeAssignmentDetector} works
+	 * {@see jp.mzw.ajaxmutator.detector.dom.AttributeAssignmentDetector} works
 	 * for only Assignment
 	 *
 	 * @return
 	 */
-	public List<String> getAttributeValuesFromInfixExpression() {
-		final ArrayList<String> ret = new ArrayList<>();
+	public Set<String> getAttributeValuesFromInfixExpression() {
+		final Set<String> ret = Sets.newHashSet();
 		this.ast.visitAll(new NodeVisitor() {
 			@Override
 			public boolean visit(AstNode node) {
@@ -116,7 +142,6 @@ public class JavaScriptParser {
 							for (final String attr : JavaScriptParser.this.attributes) {
 								if (attr.equals(_left_node.getProperty().toSource())) {
 									if (!ret.contains(value)) {
-										System.out.println(attr + ", " + value + ", " + node.toSource());
 										ret.add(value);
 										break;
 									}
@@ -133,43 +158,70 @@ public class JavaScriptParser {
 		return ret;
 	}
 
-	private static final Set<String> eventHandlerKeywords = ImmutableSet.of("addEventListener", "on", "off", "bind",
-			"unbind", "delegate", "undelegate", "error", "live", "load", "unload", "one", "trigger");
-	// list taken from http://www.quirksmode.org/dom/events/
-	private static final Set<String> eventTypeKeywords = ImmutableSet.of("blue", "change", "click", "dblclick",
-			"contextmenu", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "mousedown",
-			"mouseenter", "mouseleave", "mouseremove", "mouseout", "mouseover", "mouseup", "mousewheel", "copy", "cut",
-			"paste", "resize", "scroll", "select", "submit", "unload");
+	/**
+	 * Native: {@code addEventListener} and {@code attachEvent}
+	 * jQuery: {@link <a href="http://api.jquery.com/category/events/event-handler-attachment/">link</a>}
+	 */
+	private static final Set<String> eventHandlerKeywords = ImmutableSet.of("addEventListener", "attachEvent", "on", "off", "bind", "unbind", "delegate",
+			"undelegate", "error", "live", "load", "unload", "one", "trigger");
 
-	public List<String> getEventTypes() {
-		final ArrayList<String> ret = new ArrayList<>();
+	/** List taken from {@link <a href="http://www.quirksmode.org/dom/events/">link</a>} */
+	private static final Set<String> eventTypeKeywords = ImmutableSet.of("blue", "change", "click", "dblclick", "contextmenu", "focus", "focusin", "focusout",
+			"hover", "keydown", "keypress", "keyup", "mousedown", "mouseenter", "mouseleave", "mouseremove", "mouseout", "mouseover", "mouseup", "mousewheel",
+			"copy", "cut", "paste", "resize", "scroll", "select", "submit", "unload");
+
+	/**
+	 * Get set of event types implemented in given JavaScript file
+	 * 
+	 * @return
+	 */
+	public Set<String> getEventTypes() {
+		final Set<String> ret = Sets.newHashSet();
 		this.ast.visitAll(new NodeVisitor() {
 			@Override
 			public boolean visit(AstNode node) {
 				if (node instanceof FunctionCall) {
 					final FunctionCall functionCall = (FunctionCall) node;
 					// Get the name of the function
-					final Name name = ((PropertyGet) functionCall.getTarget()).getProperty();
+					final Name name = getFunctionCallName(functionCall);
 					if (name == null) {
 						// it's an anonymous function
 						return true;
 					}
-
 					// Check if it is an event handler
 					if (eventHandlerKeywords.contains(name.getIdentifier())) {
-						for (final AstNode a : functionCall.getArguments()) {
-							if (a instanceof StringLiteral) {
-								final String argText = ((StringLiteral) a).getValue().toLowerCase();
+						for (final AstNode argument : functionCall.getArguments()) {
+							if (argument instanceof StringLiteral) {
+								final String argText = ((StringLiteral) argument).getValue().toLowerCase();
 								if (eventTypeKeywords.contains(argText)) {
 									ret.add(argText);
 								}
 							}
 						}
 					}
+					if (eventTypeKeywords.contains(name.getIdentifier())) {
+						ret.add(name.getIdentifier());
+					}
 				}
 				return true;
 			}
 		});
 		return ret;
+	}
+
+	/**
+	 * Get name of function call
+	 * 
+	 * @param functionCall
+	 * @return
+	 */
+	private static Name getFunctionCallName(FunctionCall functionCall) {
+		if (functionCall.getTarget() instanceof Name) {
+			return (Name) functionCall.getTarget();
+		} else if (functionCall.getTarget() instanceof PropertyGet) {
+			return ((PropertyGet) functionCall.getTarget()).getProperty();
+		}
+		LOGGER.warn("Unknown type: {}", functionCall.getTarget().getClass().getName());
+		return null;
 	}
 }

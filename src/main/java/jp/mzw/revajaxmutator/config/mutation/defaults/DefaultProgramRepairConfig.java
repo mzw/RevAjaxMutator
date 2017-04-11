@@ -1,4 +1,4 @@
-package jp.mzw.revajaxmutator.config.mutation;
+package jp.mzw.revajaxmutator.config.mutation.defaults;
 
 import java.io.IOException;
 
@@ -29,6 +29,8 @@ import jp.mzw.ajaxmutator.detector.jquery.JQueryRequestDetector;
 import jp.mzw.ajaxmutator.mutator.Mutator;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.config.mutation.ConfigHelper;
+import jp.mzw.revajaxmutator.config.mutation.MutateConfigurationBase;
 import jp.mzw.revajaxmutator.fixer.AppendedDOMRAFixer;
 import jp.mzw.revajaxmutator.fixer.AttributeModificationTargetVIFixer;
 import jp.mzw.revajaxmutator.fixer.AttributeModificationValueERFixer;

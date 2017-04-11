@@ -1,14 +1,14 @@
 package jp.mzw.revajaxmutator.fixer;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.EventAttachment;
 import jp.mzw.revajaxmutator.parser.RepairSource;
 
 import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.StringLiteral;
+
+import com.google.common.collect.Sets;
 
 /**
  * 
@@ -17,12 +17,12 @@ import org.mozilla.javascript.ast.StringLiteral;
  */
 public class EventTypeTSFixer extends AbstractReplacingAmongFixer<EventAttachment> {
 
-	public EventTypeTSFixer(Collection<EventAttachment> mutationTargets, List<RepairSource> repairSources) {
+	public EventTypeTSFixer(Collection<EventAttachment> mutationTargets, Collection<? extends RepairSource> repairSources) {
 		super(EventAttachment.class, mutationTargets, repairSources);
 	}
 
 	public EventTypeTSFixer(Collection<EventAttachment> mutationTargets) {
-		super(EventAttachment.class, mutationTargets, new ArrayList<RepairSource>());
+		super(EventAttachment.class, mutationTargets, Sets.newHashSet());
 	}
 
 	@Override

@@ -1,0 +1,23 @@
+<html>
+<head>
+<script type="text/javascript" src="path/to/app-test.js"></script>
+<script type="text/javascript" src="path/to/foo.js"></script>
+<script type="text/javascript" src="path/to/bar.js"></script>
+<link rel="stylesheet" type="text/css" href="path/to/app-test.css" charset="utf-8">
+<link rel="stylesheet" type="text/css" href="path/to/foo.css" charset="utf-8">
+<link rel="stylesheet" type="text/css" href="path/to/bar.css" charset="utf-8">
+</head>
+<body>
+<script type="text/javascript">
+function callback() {
+  doSomething();
+};
+function doSomething() {
+  // No operation
+};
+</script>
+<div id="element" onclick="callback();">
+</div>
+ 
+</body>
+</html>

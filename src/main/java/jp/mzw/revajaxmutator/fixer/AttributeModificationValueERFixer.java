@@ -1,19 +1,15 @@
 package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.mozilla.javascript.ast.AstNode;
 
 import jp.mzw.ajaxmutator.mutatable.AttributeModification;
 import jp.mzw.revajaxmutator.parser.RepairSource;
 
-public class AttributeModificationValueERFixer extends
-		AbstractReplacingAmongFixer<AttributeModification> {
+public class AttributeModificationValueERFixer extends AbstractReplacingAmongFixer<AttributeModification> {
 
-	public AttributeModificationValueERFixer(
-			Collection<AttributeModification> mutationTargets,
-			List<RepairSource> repairSources) {
+	public AttributeModificationValueERFixer(Collection<AttributeModification> mutationTargets, Collection<? extends RepairSource> repairSources) {
 		super(AttributeModification.class, mutationTargets, repairSources);
 	}
 
