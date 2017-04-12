@@ -10,7 +10,7 @@ public class DefaultParameters {
 	 * Default target elements for DOM manipulation
 	 * 
 	 * Selected only 'document' among top-level BOM because others are not related to DOM.
-	 * cf. {@link <a href="https://codescracker.com/js/js-window-object.htm">link</a>
+	 * cf. {@link <a href="https://codescracker.com/js/js-window-object.htm">link</a>}
 	 * 
 	 */
 	public static final Set<String> DOM_SELECTION_ATTRIBUTE_VALUES = ImmutableSet.of("document");
