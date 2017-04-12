@@ -6,11 +6,22 @@ import com.google.common.collect.ImmutableSet;
 
 public class DefaultParameters {
 	
-	/** Default target elements for DOM manipulation */
-	public static final Set<String> DOM_SELECTION_ATTRIBUTE_VALUES = ImmutableSet.of("document"); // TODO justify 'document' only or give justified value set
+	/**
+	 * Default target elements for DOM manipulation
+	 * 
+	 * Selected only 'document' among top-level BOM because others are not related to DOM.
+	 * cf. {@link <a href="https://codescracker.com/js/js-window-object.htm">link</a>
+	 * 
+	 */
+	public static final Set<String> DOM_SELECTION_ATTRIBUTE_VALUES = ImmutableSet.of("document");
 
-	/** Default target elements for event handlers */
-	public static final Set<String> TARGET_ELEMENTS_HANDLING_EVENT = ImmutableSet.of("$(document)"); // TODO justify 'document' only or give justified value set
+	/**
+	 * Default target elements for event handlers
+	 * 
+	 * Selected top-level BOM and generic keywords 'this'
+	 * 
+	 */
+	public static final Set<String> TARGET_ELEMENTS_HANDLING_EVENT = ImmutableSet.of("$(window)", "$(document)", "$(history)", "$(location)", "$(navigator)", "$(screen)", "$(this)");
 
 	/** To add similar event types (related to keyboard) as that implemented in JavaScript file */
 	public static final Set<String> EVENT_TYPES_KEYBOARD = ImmutableSet.of("textinput", "keyup", "keypress", "keydown");
