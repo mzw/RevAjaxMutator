@@ -12,13 +12,18 @@ public class DefaultParameters {
 	 * Selected only 'document' among top-level BOM because others are not related to DOM.
 	 * cf. {@link <a href="https://codescracker.com/js/js-window-object.htm">link</a>}
 	 * 
+	 * Selected 'this' because of its generic usage
+	 * 
 	 */
-	public static final Set<String> DOM_SELECTION_ATTRIBUTE_VALUES = ImmutableSet.of("document");
+	public static final Set<String> DOM_SELECTION_ATTRIBUTE_VALUES = ImmutableSet.of("document", "this");
 
 	/**
 	 * Default target elements for event handlers
 	 * 
-	 * Selected top-level BOM and generic keywords 'this'
+	 * Selected top-level BOM
+	 * cf. {@link <a href="https://codescracker.com/js/js-window-object.htm">link</a>}
+	 * 
+	 * Selected 'this' because of its generic usage
 	 * 
 	 */
 	public static final Set<String> TARGET_ELEMENTS_HANDLING_EVENT = ImmutableSet.of("$(window)", "$(document)", "$(history)", "$(location)", "$(navigator)", "$(screen)", "$(this)");
