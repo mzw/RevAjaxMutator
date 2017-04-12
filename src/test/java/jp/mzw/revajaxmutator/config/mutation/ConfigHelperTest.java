@@ -72,13 +72,13 @@ public class ConfigHelperTest {
 	@Test
 	public void testGetRepairSourcesForDomSelectionAttributeFixer() {
 		Collection<? extends RepairSource> parameters = helper.getRepairSourcesForDomSelectionAttributeFixer();
-		assertRepairSourceNums(parameters, 1, 0, 8, 6, 0);
+		assertRepairSourceNums(parameters, DefaultParameters.DOM_SELECTION_ATTRIBUTE_VALUES.size(), 0, 8, 6, 0);
 	}
 
 	@Test
 	public void testGetRepairSourcesForEventTarget() {
 		Collection<? extends RepairSource> parameters = helper.getRepairSourcesForEventTarget();
-		assertRepairSourceNums(parameters, 1, 0, 0, 6, 0);
+		assertRepairSourceNums(parameters, DefaultParameters.TARGET_ELEMENTS_HANDLING_EVENT.size(), 0, 0, 6, 0);
 	}
 
 	@Test
