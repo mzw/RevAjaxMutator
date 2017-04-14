@@ -15,11 +15,12 @@ import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.AstRoot;
+import org.mozilla.javascript.ast.ElementGet;
 import org.mozilla.javascript.ast.FunctionCall;
 import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.InfixExpression;
 import org.mozilla.javascript.ast.Name;
-import org.mozilla.javascript.ast.NodeVisitor;
+import org.mozilla.javascript.ast.ParenthesizedExpression;
 import org.mozilla.javascript.ast.PropertyGet;
 import org.mozilla.javascript.ast.StringLiteral;
 import org.mozilla.javascript.tools.shell.Global;
@@ -55,18 +56,15 @@ public class JavaScriptParser {
 
 	public List<String> getFunctionNames() {
 		final ArrayList<String> ret = new ArrayList<>();
-		this.ast.visitAll(new NodeVisitor() {
-			@Override
-			public boolean visit(AstNode node) {
-				if (node instanceof FunctionNode) {
-					final FunctionNode _node = (FunctionNode) node;
-					final String name = _node.getName();
-					if (!"".equals(name)) {
-						ret.add(name);
-					}
+		this.ast.visitAll(node -> {
+			if (node instanceof FunctionNode) {
+				final FunctionNode _node = (FunctionNode) node;
+				final String name = _node.getName();
+				if (!"".equals(name)) {
+					ret.add(name);
 				}
-				return true;
 			}
+			return true;
 		});
 		return ret;
 	}
@@ -95,40 +93,37 @@ public class JavaScriptParser {
 	 */
 	public List<String> getAttributeValuesFromInfixExpression() {
 		final ArrayList<String> ret = new ArrayList<>();
-		this.ast.visitAll(new NodeVisitor() {
-			@Override
-			public boolean visit(AstNode node) {
-				if (node instanceof InfixExpression) {
-					final InfixExpression _node = (InfixExpression) node;
-					try { // only for node with operator
-						InfixExpression.operatorToString(_node.getOperator());
-						if (_node.getLeft() instanceof PropertyGet) {
-							final PropertyGet _left_node = (PropertyGet) _node.getLeft();
-							final String value = _node.getRight().toSource();
-							for (final String attr : JavaScriptParser.this.globalAttributes) {
-								if (attr.equals(_left_node.getProperty().toSource())) {
-									if (!ret.contains(value)) {
-										ret.add(value);
-										break;
-									}
-								}
-							}
-							for (final String attr : JavaScriptParser.this.attributes) {
-								if (attr.equals(_left_node.getProperty().toSource())) {
-									if (!ret.contains(value)) {
-										System.out.println(attr + ", " + value + ", " + node.toSource());
-										ret.add(value);
-										break;
-									}
+		this.ast.visitAll(node -> {
+			if (node instanceof InfixExpression) {
+				final InfixExpression _node = (InfixExpression) node;
+				try { // only for node with operator
+					InfixExpression.operatorToString(_node.getOperator());
+					if (_node.getLeft() instanceof PropertyGet) {
+						final PropertyGet _left_node = (PropertyGet) _node.getLeft();
+						final String value = _node.getRight().toSource();
+						for (final String attr1 : JavaScriptParser.this.globalAttributes) {
+							if (attr1.equals(_left_node.getProperty().toSource())) {
+								if (!ret.contains(value)) {
+									ret.add(value);
+									break;
 								}
 							}
 						}
-					} catch (final IllegalArgumentException e) {
-						// NOP
+						for (final String attr2 : JavaScriptParser.this.attributes) {
+							if (attr2.equals(_left_node.getProperty().toSource())) {
+								if (!ret.contains(value)) {
+									System.out.println(attr2 + ", " + value + ", " + node.toSource());
+									ret.add(value);
+									break;
+								}
+							}
+						}
 					}
+				} catch (final IllegalArgumentException e) {
+					// NOP
 				}
-				return true;
 			}
+			return true;
 		});
 		return ret;
 	}
@@ -143,33 +138,48 @@ public class JavaScriptParser {
 
 	public List<String> getEventTypes() {
 		final ArrayList<String> ret = new ArrayList<>();
-		this.ast.visitAll(new NodeVisitor() {
-			@Override
-			public boolean visit(AstNode node) {
-				if (node instanceof FunctionCall) {
-					final FunctionCall functionCall = (FunctionCall) node;
-					// Get the name of the function
-					final Name name = ((PropertyGet) functionCall.getTarget()).getProperty();
-					if (name == null) {
-						// it's an anonymous function
-						return true;
-					}
+		this.ast.visitAll(node -> {
+			if (node instanceof FunctionCall) {
+				final FunctionCall functionCall = (FunctionCall) node;
+				// Get the name of the function
+				final Name name = this.parseFunctionCall(functionCall);
+				if (name == null) {
+					// It's an anonymous function
+					return true;
+				}
 
-					// Check if it is an event handler
-					if (eventHandlerKeywords.contains(name.getIdentifier())) {
-						for (final AstNode a : functionCall.getArguments()) {
-							if (a instanceof StringLiteral) {
-								final String argText = ((StringLiteral) a).getValue().toLowerCase();
-								if (eventTypeKeywords.contains(argText)) {
-									ret.add(argText);
-								}
+				// Check if it is an event handler
+				if (eventHandlerKeywords.contains(name.getIdentifier())) {
+					for (final AstNode a : functionCall.getArguments()) {
+						if (a instanceof StringLiteral) {
+							final String argText = ((StringLiteral) a).getValue().toLowerCase();
+							if (eventTypeKeywords.contains(argText)) {
+								ret.add(argText);
 							}
 						}
 					}
 				}
-				return true;
 			}
+			return true;
 		});
 		return ret;
+	}
+
+	private Name parseFunctionCall(FunctionCall functionCall) {
+		// System.out.println(functionCall.getTarget().getClass() + " " +
+		// functionCall.getTarget().getLineno());
+		if (functionCall.getTarget() instanceof FunctionCall) {
+			return functionCall.getTarget().getEnclosingFunction().getFunctionName();
+		} else if (functionCall.getTarget() instanceof Name || functionCall.getTarget() instanceof FunctionCall) {
+			return (Name) functionCall.getTarget();
+		}
+		// Ignore edge cases such as, ElementGet calls, e.g.,
+		// "this.onloads[n]();"
+		else if (functionCall.getTarget() instanceof ElementGet
+				|| functionCall.getTarget() instanceof ParenthesizedExpression) {
+			return null;
+		} else {
+			return ((PropertyGet) functionCall.getTarget()).getProperty();
+		}
 	}
 }
