@@ -2,7 +2,9 @@ package jp.mzw.revajaxmutator.search;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -14,31 +16,23 @@ import org.slf4j.LoggerFactory;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
-import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.test.result.Coverage;
 
 public class Searcher {
 	protected static Logger LOGGER = LoggerFactory.getLogger(Searcher.class);
 
-	AppConfig config;
-	MutationListManager manager;
-	Sorter.SortType sortType;
+	private MutationListManager manager;
+	private Sorter.SortType sortType;
 
-	public Searcher(Class<?> clazz) throws InstantiationException, IllegalAccessException, JSONException, IOException {
-		config = (AppConfig) clazz.newInstance();
-		manager = getMutationListManager();
-		sortType = Sorter.SortType.REPAIR_SOURCE_DFS; // default
-	}
-
-	public Searcher(Class<?> clazz, String sort) throws InstantiationException, IllegalAccessException, JSONException, IOException {
-		config = (AppConfig) clazz.newInstance();
-		manager = getMutationListManager();
-		sortType = Sorter.getSortType(sort);
+	public Searcher(final MutationListManager manager, final Sorter.SortType sortType)
+			throws InstantiationException, IllegalAccessException, JSONException, IOException {
+		this.manager = manager;
+		this.sortType = sortType;
 	}
 
 	public void search() throws IOException {
-		Sorter sorter = new Sorter(manager);
-		List<MutationFileInformation> list = sorter.sort(sortType);
+		Sorter sorter = new Sorter(this.manager);
+		List<MutationFileInformation> list = sorter.sort(this.sortType);
 
 		String path = manager.getMutationListFilePath();
 		File file = new File(path);
@@ -52,8 +46,8 @@ public class Searcher {
 		_manager.generateMutationListFile();
 	}
 
-	public MutationListManager getMutationListManager() throws JSONException, IOException {
-		File mutantDir = new File(config.getRecordedJsFile().getParent(), MutationFileWriter.DEFAULT_FOLDER_NAME);
+	public static MutationListManager getMutationListManager(final File recordedJsFile) throws JSONException, IOException {
+		File mutantDir = new File(recordedJsFile.getParent(), MutationFileWriter.DEFAULT_FOLDER_NAME);
 		File mutationListFile = new File(mutantDir, MutationListManager.MUTATION_LIST_FILE_NAME);
 		if (!mutationListFile.exists()) {
 			LOGGER.error("Cannot find {}", mutationListFile.getAbsolutePath());
@@ -61,20 +55,15 @@ public class Searcher {
 		}
 		MutationListManager manager = new MutationListManager(mutantDir.getAbsolutePath());
 		manager.readExistingMutationListFile();
-
-		setWeight(manager);
-
 		return manager;
 	}
 
-	protected void setWeight(MutationListManager manager) throws JSONException, IOException {
-		// Parse
-		List<File> files = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
+	public void setWeight(final Collection<File> files, final URL url, final String pathToJsFile) throws JSONException, MalformedURLException, IOException {
 		for (File file : files) {
 			if (!file.exists()) {
 				continue;
 			}
-			JSONArray failure = Coverage.getCoverageResults(Coverage.parse(file), new URL(config.getUrl(), config.pathToJsFile()).getPath());
+			JSONArray failure = Coverage.getCoverageResults(Coverage.parse(file), new URL(url, pathToJsFile).getPath());
 			if (failure == null)
 				return;
 			int line_num = failure.length();

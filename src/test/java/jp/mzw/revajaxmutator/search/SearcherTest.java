@@ -18,26 +18,22 @@ import org.junit.Test;
 
 public class SearcherTest {
 
+	AppConfig config;
 	Searcher searcher;
 	MutationListManager manager;
 
 	@Before
-	public void setup() throws InstantiationException, IllegalAccessException,
-			JSONException, IOException {
-		searcher = new Searcher(AppTestConfig.class);
-		manager = searcher.getMutationListManager();
+	public void setup() throws InstantiationException, IllegalAccessException, JSONException, IOException {
+		config = new AppTestConfig();
+		manager = Searcher.getMutationListManager(config.getRecordedJsFile());
+		searcher = new Searcher(manager, Sorter.SortType.REPAIR_SOURCE_DFS);
 	}
 
 	@Test
 	public void fixerNames() {
-		Assert.assertEquals(Arrays.asList("EventCallbackERFixer",
-				"EventTargetTSFixer", "TimerEventDurationVIFixer",
-				"RequestResponseBodyVIFixer", "RequestURLVIFixer",
-				"RequestOnSuccessHandlerERFixer", "RequestMethodRAFixer",
-				"DOMSelectionSelectNearbyFixer", "DOMSelectionAtrributeFixer",
-				"AttributeModificationTargetVIFixer",
-				"AttributeModificationValueERFixer"),
-				manager.getListOfMutationName());
+		Assert.assertEquals(Arrays.asList("EventCallbackERFixer", "EventTargetTSFixer", "TimerEventDurationVIFixer", "RequestResponseBodyVIFixer",
+				"RequestURLVIFixer", "RequestOnSuccessHandlerERFixer", "RequestMethodRAFixer", "DOMSelectionSelectNearbyFixer", "DOMSelectionAtrributeFixer",
+				"AttributeModificationTargetVIFixer", "AttributeModificationValueERFixer"), manager.getListOfMutationName());
 	}
 
 	@Ignore // TODO Debug spectrum-based fault localization
@@ -67,8 +63,14 @@ public class SearcherTest {
 		FileUtils.copyFile(backupFile, file);
 		backupFile.delete();
 	}
+	
+	@Test
+	public void testSortType() throws IOException {
+		Assert.assertEquals(Sorter.SortType.REPAIR_SOURCE_DFS, config.getSortType());
+		Assert.assertEquals(Sorter.SortType.RANDOM, new AppTestConfigRandomSortType().getSortType());
+	}
 
-	protected static class AppTestConfig extends AppConfig {
+	private static class AppTestConfig extends AppConfig {
 		protected AppTestConfig() throws IOException {
 			super("app-test.properties");
 		}
@@ -82,6 +84,29 @@ public class SearcherTest {
 		public MutateConfiguration getProgramRepairConfig() throws IOException {
 			return null;
 		}
+
+	}
+	
+	private static class AppTestConfigRandomSortType extends AppConfig {
 		
+		protected AppTestConfigRandomSortType() throws IOException {
+			super("app-test.properties"); // TODO create new config file containing 'SORT_TYPE = RANDOM'
+		}
+		
+		@Override
+		public Sorter.SortType getSortType() {
+			return Sorter.SortType.RANDOM;
+		}
+
+		@Override
+		public MutateConfiguration getMutationAnalysisConfig() throws InstantiationException, IllegalAccessException, IOException {
+			return null;
+		}
+
+		@Override
+		public MutateConfiguration getProgramRepairConfig() throws IOException {
+			return null;
+		}
+
 	}
 }

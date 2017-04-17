@@ -4,15 +4,19 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
+/**
+ * Represents fault class
+ * 
+ * @author Yuta Maezawa
+ *
+ */
 public enum DefectClass {
 	// AjaxFeature:Event
-	EVENT_ATTACHMENTS(0, "EventAttachment"), TIMER_EVENT_ATTACHMENTS(1,
-			"TimerEventAttachment"),
+	EVENT_ATTACHMENTS(0, "EventAttachment"), TIMER_EVENT_ATTACHMENTS(1, "TimerEventAttachment"),
 	// AjaxFeature:Request
 	REQUESTS(0, "Request"),
 	// AjaxFeature:DOM
-	DOM_MODIFICATION(0, "DOMOModification"), DOM_SELECTIONS(1, "DOMSelection"), ATTRIBUTE_MODIFICATIONS(
-			2, "AttributeModification");
+	DOM_MODIFICATION(0, "DOMOModification"), DOM_SELECTIONS(1, "DOMSelection"), ATTRIBUTE_MODIFICATIONS(2, "AttributeModification");
 
 	int value;
 	private String name;

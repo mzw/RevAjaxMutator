@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
+import jp.mzw.revajaxmutator.search.Sorter;
 
 public class AppConfigTest {
 
@@ -84,6 +85,12 @@ public class AppConfigTest {
 	public void testGetTestcaseFile() {
 		File actual = config.getTestcaseFile();
 		Assert.assertArrayEquals("src/test/java/jp/mzw/revajaxmutator/test/app_test/AppTestTest.java".toCharArray(), actual.getPath().toCharArray());
+	}
+	
+	@Test
+	public void testGetSortType() {
+		Sorter.SortType actual = config.getSortType();
+		Assert.assertEquals(Sorter.SortType.REPAIR_SOURCE_DFS, actual);
 	}
 
 	private static class AppTestConfig extends AppConfig {

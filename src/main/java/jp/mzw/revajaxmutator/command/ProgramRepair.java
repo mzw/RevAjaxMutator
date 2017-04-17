@@ -2,8 +2,10 @@ package jp.mzw.revajaxmutator.command;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
@@ -11,6 +13,7 @@ import org.owasp.webscarab.model.StoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jp.mzw.ajaxmutator.generator.MutationListManager;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
 import jp.mzw.revajaxmutator.config.LocalEnv;
@@ -20,6 +23,8 @@ import jp.mzw.revajaxmutator.genprog.GenProgConductor;
 import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.proxy.RewriterPlugin;
 import jp.mzw.revajaxmutator.search.Searcher;
+import jp.mzw.revajaxmutator.search.Sorter;
+import jp.mzw.revajaxmutator.test.result.Coverage;
 
 public class ProgramRepair extends Command {
 	protected static Logger LOG = LoggerFactory.getLogger(ProgramRepair.class);
@@ -76,7 +81,7 @@ public class ProgramRepair extends Command {
 		MutateConfiguration mutateConfig = config.getProgramRepairConfig();
 		MutationTestConductor conductor = mutateConfig.mutationTestConductor();
 		conductor.generateMutations(mutateConfig.mutators());
-		search(config.getClass());
+		search(config);
 	}
 
 	/**
@@ -132,21 +137,33 @@ public class ProgramRepair extends Command {
 	}
 
 	public void search(String[] args) {
-		if (args.length != 1) {
+		if (args.length < 1) {
 			showUsage();
 			return;
 		}
 
 		try {
-			Class<?> clazz = getClass(args[0]);
-			search(clazz);
+			String configClassName = args[0];
+			Class<?> configClass = getClass(configClassName);
+			AppConfig config = (AppConfig) configClass.newInstance();
+
+			search(config);
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | JSONException | IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void search(Class<?> clazz) throws InstantiationException, IllegalAccessException, JSONException, IOException {
-		Searcher searcher = new Searcher(clazz);
+	public void search(final AppConfig config) throws InstantiationException, IllegalAccessException, JSONException, IOException {
+		URL url = config.getUrl();
+		File recordedJsFile = config.getRecordedJsFile();
+		String pathToJsFile = config.pathToJsFile();
+		File jscoverReportDir = config.getJscoverReportDir();
+		Sorter.SortType sortType = config.getSortType();
+
+		MutationListManager manager = Searcher.getMutationListManager(recordedJsFile);
+		Collection<File> coverageFiles = Coverage.getCoverageResults(jscoverReportDir);
+		Searcher searcher = new Searcher(manager, sortType);
+		searcher.setWeight(coverageFiles, url, pathToJsFile);
 		searcher.search();
 	}
 

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
+import jp.mzw.revajaxmutator.search.Sorter;
 
 public abstract class AppConfig implements IAppConfig {
 	protected Logger LOGGER = LoggerFactory.getLogger(AppConfig.class);
@@ -60,7 +61,7 @@ public abstract class AppConfig implements IAppConfig {
 	 *
 	 */
 	public static enum Param {
-		URL, RAM_RECORD_DIR, JSCOVER_REPORT_DIR, PATH_TO_JS_FILE, PATH_TO_HTML_FILE, PATH_TO_TESTCASE_FILE;
+		URL, RAM_RECORD_DIR, JSCOVER_REPORT_DIR, PATH_TO_JS_FILE, PATH_TO_HTML_FILE, PATH_TO_TESTCASE_FILE, SORT_TYPE;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case URL:
@@ -75,6 +76,8 @@ public abstract class AppConfig implements IAppConfig {
 				return "index.html";
 			case PATH_TO_TESTCASE_FILE:
 				return "src/test/java/package/MyTest.java";
+			case SORT_TYPE:
+				return Sorter.SortType.REPAIR_SOURCE_DFS.name();
 			}
 			return "";
 		}
@@ -267,6 +270,15 @@ public abstract class AppConfig implements IAppConfig {
 	 */
 	public File getTestcaseFile() {
 		return new File(pathToTestcaseFile());
+	}
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public Sorter.SortType getSortType() {
+		String param = getParam(Param.SORT_TYPE);
+		return Sorter.getSortType(param);
 	}
 
 }
