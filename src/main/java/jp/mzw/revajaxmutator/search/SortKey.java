@@ -27,7 +27,7 @@ public class SortKey implements Comparable<SortKey>, Comparator<SortKey> {
 			String repairSource) {
 		this.statementWeight = weight;
 		this.ajaxFeature = AjaxFeature.fromMutatableName(defectClass);
-		this.defectClass = DefectClass.fromStringName(defectClass);
+		this.defectClass = DefectClass.fromMutableName(defectClass);
 		this.fixerClass = FixerClass.fromStringName(fixerClass);
 		this.repairSourceType = RepairSource.getType(repairSource);
 		this.totalWeight = calculateWeight();
