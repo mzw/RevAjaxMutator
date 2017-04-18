@@ -33,140 +33,140 @@ public class FixerClassTest {
 
 	@Test
 	public void testEventTarget() {
-		FixerClass fixer = FixerClass.fromMutableName(EventTargetTSFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(EventTargetTSFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.EVENT_TARGET, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testEventType() {
-		FixerClass fixer = FixerClass.fromMutableName(EventTypeTSFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(EventTypeTSFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.EVENT_TYPE, fixer);
 		Assert.assertEquals(1, fixer.getValue());
 	}
 
 	@Test
 	public void testEventCallback() {
-		FixerClass fixer = FixerClass.fromMutableName(EventCallbackERFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(EventCallbackERFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.EVENT_CALLBACK, fixer);
 		Assert.assertEquals(2, fixer.getValue());
 	}
 
 	@Test
 	public void testTimerEventDuration() {
-		FixerClass fixer = FixerClass.fromMutableName(TimerEventDurationVIFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(TimerEventDurationVIFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.TIMER_EVENT_DURATION, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testTimeEventCallback() {
-		FixerClass fixer = FixerClass.fromMutableName(TimerEventCallbackERFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(TimerEventCallbackERFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.TIMER_EVENT_CALLBACK, fixer);
 		Assert.assertEquals(1, fixer.getValue());
 	}
 
 	@Test
 	public void testRequestOnSuccessHandler() {
-		FixerClass fixer = FixerClass.fromMutableName(RequestOnSuccessHandlerERFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(RequestOnSuccessHandlerERFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.REQUEST_ON_SUCCESS_HANDLER, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testRequestMethod() {
-		FixerClass fixer = FixerClass.fromMutableName(RequestMethodRAFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(RequestMethodRAFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.REQUEST_METHOD, fixer);
 		Assert.assertEquals(1, fixer.getValue());
 	}
 
 	@Test
 	public void testRequestUrl() {
-		FixerClass fixer = FixerClass.fromMutableName(RequestURLVIFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(RequestURLVIFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.REQUEST_URL, fixer);
 		Assert.assertEquals(2, fixer.getValue());
 	}
 
 	@Test
 	public void testRequestResponseBody() {
-		FixerClass fixer = FixerClass.fromMutableName(RequestResponseBodyVIFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(RequestResponseBodyVIFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.REQUEST_RESPONSE_BODY, fixer);
 		Assert.assertEquals(3, fixer.getValue());
 	}
 
 	@Test
 	public void testAppendedDom() {
-		FixerClass fixer = FixerClass.fromMutableName(AppendedDOMRAFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(AppendedDOMRAFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.APPENDED_DOM, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomCreationToNoOp() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMCreationToNoOpFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMCreationToNoOpFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_CREATION_TO_NO_OP, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomRemovalToNoOp() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMRemovalToNoOpFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMRemovalToNoOpFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_REMOVAL_TO_NO_OP, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomCloningToNoOp() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMCloningToNoOpFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMCloningToNoOpFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_CLONING_TO_NO_OP, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomNormalizationToNoOp() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMNormalizationToNoOpFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMNormalizationToNoOpFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_NORMALIZATION_TO_NO_OP, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomReplacementSrcTarget() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMReplacementSrcTargetFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMReplacementSrcTargetFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_REPLACEMENT_SRC_TARGET, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomSelectionSelectNeaby() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMSelectionSelectNearbyFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMSelectionSelectNearbyFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_SELECTION_SELECT_NEARBY, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testDomSelectionAttribute() {
-		FixerClass fixer = FixerClass.fromMutableName(DOMSelectionAtrributeFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(DOMSelectionAtrributeFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.DOM_SELECTION_ATTRIBUTE, fixer);
 		Assert.assertEquals(1, fixer.getValue());
 	}
 
 	@Test
 	public void testAttributeModificationTarget() {
-		FixerClass fixer = FixerClass.fromMutableName(AttributeModificationTargetVIFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(AttributeModificationTargetVIFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.ATTRIBUTE_MODIFICATION_TARGET, fixer);
 		Assert.assertEquals(0, fixer.getValue());
 	}
 
 	@Test
 	public void testAttributeModificationValue() {
-		FixerClass fixer = FixerClass.fromMutableName(AttributeModificationValueERFixer.class.getSimpleName());
+		FixerClass fixer = FixerClass.fromFixerName(AttributeModificationValueERFixer.class.getSimpleName());
 		Assert.assertEquals(FixerClass.ATTRIBUTE_MODIFICATION_VALUE, fixer);
 		Assert.assertEquals(1, fixer.getValue());
 	}
 
 	@Test
-	public void voidTestInvalidMutableName() {
-		FixerClass fixer = FixerClass.fromMutableName("invalid");
+	public void voidTestInvalidFixerName() {
+		FixerClass fixer = FixerClass.fromFixerName("invalid");
 		Assert.assertNull(fixer);
 	}
 }

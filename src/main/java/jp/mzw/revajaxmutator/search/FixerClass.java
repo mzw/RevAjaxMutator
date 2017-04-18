@@ -25,14 +25,14 @@ public enum FixerClass {
 	/** Weight to apply repair operators */
 	private int value;
 
-	/** Corresponding mutable name */
+	/** Corresponding fixer name */
 	private String name;
 
 	/**
 	 * Constructor
 	 * 
 	 * @param value is weight to apply repair operators
-	 * @param name represents corresponding mutable
+	 * @param name represents corresponding fixer
 	 */
 	private FixerClass(int value, String name) {
 		this.value = value;
@@ -49,12 +49,12 @@ public enum FixerClass {
 	}
 
 	/**
-	 * Get FixerClass corresponding to given mutable name
+	 * Get FixerClass corresponding to given fixer name
 	 * 
-	 * @param name represents mutable
-	 * @return null if invalid mutable name is given
+	 * @param name represents fixer
+	 * @return null if invalid fixer name is given
 	 */
-	public static FixerClass fromMutableName(String name) {
+	public static FixerClass fromFixerName(String name) {
 		for (FixerClass fixer : FixerClass.values()) {
 			if (fixer.name.equals(name)) {
 				return fixer;
