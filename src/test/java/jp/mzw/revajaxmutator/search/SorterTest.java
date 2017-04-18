@@ -22,13 +22,15 @@ public class SorterTest {
 	private static MutationListManager manager;
 	private static List<MutationFileInformation> mutants;
 
+	private static final int NUM_CREATED_MUTANTS = 1567;
+
 	@BeforeClass
 	public static void setUpBeforeClass() throws JSONException, IOException {
 		manager = new MutationListManager(PATH_TO_MUTATAION_LIST);
 		manager.readExistingMutationListFile();
 		mutants = manager.getMutationFileInformationList();
 		Assert.assertNotNull(mutants);
-		Assert.assertEquals(1567, mutants.size());
+		Assert.assertEquals(NUM_CREATED_MUTANTS, mutants.size());
 	}
 
 	@Test
@@ -79,12 +81,21 @@ public class SorterTest {
 		List<MutationFileInformation> sorted1 = (List<MutationFileInformation>) method.invoke(sorter, map, mutants);
 		@SuppressWarnings("unchecked")
 		List<MutationFileInformation> sorted2 = (List<MutationFileInformation>) method.invoke(sorter, map, mutants);
-		Assert.assertEquals(1567, sorted1.size());
-		Assert.assertEquals(1567, sorted2.size());
+		Assert.assertEquals(NUM_CREATED_MUTANTS, sorted1.size());
+		Assert.assertEquals(NUM_CREATED_MUTANTS, sorted2.size());
 
-		MutationFileInformation mutant1 = sorted1.get(0);
-		MutationFileInformation mutant2 = sorted2.get(0);
-		Assert.assertFalse(mutant1.getFileName().equals(mutant2.getFileName()));
+		boolean allSame = true;
+		for (int i = 0; i < NUM_CREATED_MUTANTS; i++) {
+			MutationFileInformation mutant1 = sorted1.get(i);
+			MutationFileInformation mutant2 = sorted2.get(i);
+			if (!mutant1.getFileName().equals(mutant2.getFileName())) {
+				allSame = false;
+				break;
+			}
+		}
+		if (allSame) {
+			Assert.fail();
+		}
 	}
 
 	@Test
