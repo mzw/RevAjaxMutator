@@ -53,79 +53,47 @@ public class DefaultProgramRepairConfig extends MutateConfigurationBase {
 
 	public DefaultProgramRepairConfig(AppConfig config) throws IOException {
 
-		MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
-		builder.setAttributeModificationDetectors(ImmutableSet.of(
-				new AttributeAssignmentDetector(),
-				new SetAttributeDetector(),
-				new JQueryAttributeModificationDetector()));
-		builder.setDomAppendingDetectors(ImmutableSet.of(
-				new AppendChildDetector(), new JQueryAppendDetector()));
-		builder.setDomCreationDetectors(ImmutableSet
-				.of(new CreateElementDetector()));
-		builder.setDomCloningDetectors(ImmutableSet.of(
-				new CloneNodeDetector(), new JQueryCloneDetector()));
-		builder.setDomNormalizationDetectors(ImmutableSet
-				.of(new DOMNormalizationDetector()));
-		builder.setDomReplacementDetectors(ImmutableSet
-				.of(new ReplaceChildDetector(),
-						new JQueryReplaceWithDetector()));
-		builder.setDomRemovalDetectors(ImmutableSet.of(
-				new RemoveChildDetector(), new JQueryRemoveDetector()));
-		builder.setDomSelectionDetectors(ImmutableSet.of(
-				new DOMSelectionDetector(),
-				new JQueryDOMSelectionDetector()));
-		builder.setEventAttacherDetectors(ImmutableSet.of(
-				new AddEventListenerDetector(), new AttachEventDetector(),
+		final MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
+		builder.setAttributeModificationDetectors(ImmutableSet.of(new AttributeAssignmentDetector(),
+				new SetAttributeDetector(), new JQueryAttributeModificationDetector()));
+		builder.setDomAppendingDetectors(ImmutableSet.of(new AppendChildDetector(), new JQueryAppendDetector()));
+		builder.setDomCreationDetectors(ImmutableSet.of(new CreateElementDetector()));
+		builder.setDomCloningDetectors(ImmutableSet.of(new CloneNodeDetector(), new JQueryCloneDetector()));
+		builder.setDomNormalizationDetectors(ImmutableSet.of(new DOMNormalizationDetector()));
+		builder.setDomReplacementDetectors(
+				ImmutableSet.of(new ReplaceChildDetector(), new JQueryReplaceWithDetector()));
+		builder.setDomRemovalDetectors(ImmutableSet.of(new RemoveChildDetector(), new JQueryRemoveDetector()));
+		builder.setDomSelectionDetectors(ImmutableSet.of(new DOMSelectionDetector(), new JQueryDOMSelectionDetector()));
+		builder.setEventAttacherDetectors(ImmutableSet.of(new AddEventListenerDetector(), new AttachEventDetector(),
 				new JQueryEventAttachmentDetector()));
-		builder.setTimerEventDetectors(ImmutableSet
-				.of(new TimerEventDetector()));
-		builder.setRequestDetectors(ImmutableSet
-				.of(new JQueryRequestDetector()));
-		visitor = builder.build();
+		builder.setTimerEventDetectors(ImmutableSet.of(new TimerEventDetector()));
+		builder.setRequestDetectors(ImmutableSet.of(new JQueryRequestDetector()));
+		this.visitor = builder.build();
 
-		conductor = new MutationTestConductor();
-		conductor.setup(config.getRecordedJsFile().getPath(), "", visitor);
-		conductor.setSaveInformationInterval(1);
+		this.conductor = new MutationTestConductor();
+		this.conductor.setup(config.getRecordedJsFile().getPath(), "", this.visitor);
+		this.conductor.setSaveInformationInterval(1);
 
-		ConfigHelper configHelper = new ConfigHelper()
-				.parseHtml(config.getRecordedHtmlFile())
-				.parseTestCase(config.getTestcaseFile())
-				.parseJavaScript(config.getRecordedJsFile());
+		final ConfigHelper configHelper = new ConfigHelper().parseHtml(config.getRecordedHtmlFile())
+				.parseTestCase(config.getTestcaseFile()).parseJavaScript(config.getRecordedJsFile());
 
-		mutators = ImmutableSet
-				.<Mutator<?>> of(
-						new EventTargetTSFixer(visitor
-								.getEventAttachments(), configHelper
-								.getRepairSourcesForEventTarget()),
-						new EventTypeTSFixer(visitor.getEventAttachments(),
-								configHelper.getRepairSourcesForEventType()),
-						new EventCallbackERFixer(visitor
-								.getEventAttachments(), configHelper
-								.getRepairSourcesForEventCallback()),
-						new TimerEventDurationVIFixer(configHelper
-								.getRepairSourcesForTimerEventDuration()),
-						new TimerEventCallbackERFixer(visitor
-								.getTimerEventAttachmentExpressions()),
-						new AppendedDOMRAFixer(visitor.getDomAppendings()),
-						new AttributeModificationTargetVIFixer(visitor
-								.getAttributeModifications()),
-						new AttributeModificationValueERFixer(visitor
-								.getAttributeModifications(), configHelper
-								.getRepairSourcesForAttributeValues()),
-						new DOMSelectionSelectNearbyFixer(),
-						new RequestOnSuccessHandlerERFixer(visitor
-								.getRequests()),
-						new RequestMethodRAFixer(visitor.getRequests()),
-						new RequestURLVIFixer(visitor.getRequests()),
-						new RequestResponseBodyVIFixer(),
-						new DOMCreationToNoOpFixer(),
-						new DOMRemovalToNoOpFixer(),
-						new DOMReplacementSrcTargetFixer(),
-						new DOMCloningToNoOpFixer(),
-						new DOMNormalizationToNoOpFixer(),
-						new DOMSelectionAtrributeFixer(
-								visitor.getDomSelections(),
-								configHelper
-										.getRepairSourcesForDomSelectionAttributeFixer()));
+		this.mutators = ImmutableSet.<Mutator<?>>of(
+				new EventTargetTSFixer(this.visitor.getEventAttachments(),
+						configHelper.getRepairSourcesForEventTarget()),
+				new EventTypeTSFixer(this.visitor.getEventAttachments(), configHelper.getRepairSourcesForEventType()),
+				new EventCallbackERFixer(this.visitor.getEventAttachments(),
+						configHelper.getRepairSourcesForEventCallback()),
+				new TimerEventDurationVIFixer(configHelper.getRepairSourcesForTimerEventDuration()),
+				new TimerEventCallbackERFixer(this.visitor.getTimerEventAttachmentExpressions()),
+				new AppendedDOMRAFixer(this.visitor.getDomAppendings()),
+				new AttributeModificationTargetVIFixer(this.visitor.getAttributeModifications()),
+				new AttributeModificationValueERFixer(this.visitor.getAttributeModifications(),
+						configHelper.getRepairSourcesForAttributeValues()),
+				new DOMSelectionSelectNearbyFixer(), new RequestOnSuccessHandlerERFixer(this.visitor.getRequests()),
+				new RequestMethodRAFixer(this.visitor.getRequests()), new RequestURLVIFixer(this.visitor.getRequests()),
+				new RequestResponseBodyVIFixer(), new DOMCreationToNoOpFixer(), new DOMRemovalToNoOpFixer(),
+				new DOMReplacementSrcTargetFixer(), new DOMCloningToNoOpFixer(), new DOMNormalizationToNoOpFixer(),
+				new DOMSelectionAtrributeFixer(this.visitor.getDomSelections(),
+						configHelper.getRepairSourcesForDomSelectionAttributeFixer()));
 	}
 }

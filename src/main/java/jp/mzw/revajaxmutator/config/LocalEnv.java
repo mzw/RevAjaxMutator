@@ -17,7 +17,7 @@ public class LocalEnv {
 	}
 
 	public static enum Param {
-		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM;
+		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case FIREFOX_BIN:
@@ -36,6 +36,8 @@ public class LocalEnv {
 				return new Long(3).toString();
 			case THREAD_NUM:
 				return new Integer(Runtime.getRuntime().availableProcessors()).toString();
+			case SELENIUM_HUB_IP:
+				return null;
 			}
 			return "";
 		}
@@ -83,5 +85,9 @@ public class LocalEnv {
 	public int getThreadNum() {
 		final String param = this.getParam(Param.THREAD_NUM);
 		return Integer.parseInt(param);
+	}
+
+	public String getSeleniumHubAddress() {
+		return this.getParam(Param.SELENIUM_HUB_IP);
 	}
 }

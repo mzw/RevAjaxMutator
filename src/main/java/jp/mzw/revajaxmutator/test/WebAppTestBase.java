@@ -3,12 +3,18 @@ package jp.mzw.revajaxmutator.test;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -24,6 +30,7 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +65,7 @@ abstract public class WebAppTestBase {
 		localenv = new LocalEnv(LocalEnv.FILENAME);
 		config = clazz.newInstance();
 		// Thread locals
-		drivers = new ThreadLocal<>();
+		currentDriver = new ThreadLocal<>();
 		waits = new ThreadLocal<>();
 		actions = new ThreadLocal<>();
 		// Launch
@@ -66,7 +73,8 @@ abstract public class WebAppTestBase {
 	}
 
 	/** Possess Web browser in thread-local manner */
-	protected static ThreadLocal<WebDriver> drivers;
+	protected static ThreadLocal<WebDriver> currentDriver;
+	private static List<WebDriver> driversToCleanup = Collections.synchronizedList(new ArrayList<WebDriver>());
 
 	/** Possess {@code WebDriverWait} instances in thread-local manner */
 	protected static ThreadLocal<WebDriverWait> waits;
@@ -80,7 +88,7 @@ abstract public class WebAppTestBase {
 	 * @return
 	 */
 	public static WebDriver getDriver() {
-		return drivers.get();
+		return currentDriver.get();
 	}
 
 	/**
@@ -105,14 +113,11 @@ abstract public class WebAppTestBase {
 	 * @param config
 	 * @throws IOException
 	 */
+	@SuppressWarnings("deprecation")
 	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
 		final String firefoxBin = localenv.getFirefoxBin();
 		final String chromeBin = localenv.getChromeBin();
 		if (chromeBin != null) {
-			// cap.setCapability("chrome.switches",
-			// Arrays.asList("--proxy-server=" +
-			// "http://user:password@proxy.com:8080"));
-
 			System.setProperty("webdriver.chrome.driver", chromeBin);
 
 			final ChromeOptions options = new ChromeOptions();
@@ -122,11 +127,18 @@ abstract public class WebAppTestBase {
 			final DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setCapability(ChromeOptions.CAPABILITY, options);
 
-			final ChromeDriver driver = new ChromeDriver(cap);
+			// Connect to Selenium grid if available
+			WebDriver driver = null;
+			if (localenv.getSeleniumHubAddress() != null) {
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+			} else {
+				driver = new ChromeDriver(cap);
+			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
 			final Actions action = new Actions(driver);
 
-			drivers.set(driver);
+			currentDriver.set(driver);
+			driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (firefoxBin != null) {
@@ -155,22 +167,26 @@ abstract public class WebAppTestBase {
 			cap.setCapability("moz:firefoxOptions", options);
 			cap.setCapability("marionette", true);
 
-			@SuppressWarnings("deprecation")
 			final GeckoDriverService service = new GeckoDriverService.Builder(new FirefoxBinary(new File(firefoxBin)))
 					.usingDriverExecutable(new File(localenv.getGeckodriverBin())).usingAnyFreePort().usingAnyFreePort()
 					.build();
 			service.start();
 
-			@SuppressWarnings("deprecation")
-			final WebDriver driver = new FirefoxDriver(service, cap, cap);
+			WebDriver driver = null;
+			if (localenv.getSeleniumHubAddress() != null) {
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+			} else {
+				driver = new FirefoxDriver(service, cap, cap);
+			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
 			final Actions action = new Actions(driver);
 
-			drivers.set(driver);
+			currentDriver.set(driver);
+			driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (localenv.getPhantomjsBin() != null) {
-			final DesiredCapabilities cap = new DesiredCapabilities();
+			final DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 
 			final ArrayList<String> cliArgsCap = new ArrayList<String>();
 			cliArgsCap.add("--proxy=" + localenv.getProxyAddress());
@@ -188,11 +204,17 @@ abstract public class WebAppTestBase {
 
 			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
 
-			final PhantomJSDriver driver = new PhantomJSDriver(cap);
+			WebDriver driver = null;
+			if (localenv.getSeleniumHubAddress() != null) {
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+			} else {
+				driver = new PhantomJSDriver(cap);
+			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
 			final Actions action = new Actions(driver);
 
-			drivers.set(driver);
+			currentDriver.set(driver);
+			driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		}
@@ -205,12 +227,17 @@ abstract public class WebAppTestBase {
 	/**
 	 * Report coverage results if available
 	 *
-	 * Quit Web browser if instantiated
+	 * Quit all drivers if instantiated
 	 */
 	@AfterClass
 	public static void tearDownAfterClassBase() {
 		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
-		getDriver().quit();
+		final Iterator<WebDriver> iterator = driversToCleanup.iterator();
+		while (iterator.hasNext()) {
+			final WebDriver driver = iterator.next();
+			driver.quit();
+			iterator.remove();
+		}
 	}
 
 	/**
@@ -219,11 +246,29 @@ abstract public class WebAppTestBase {
 	 * Wait for showing all widgets
 	 *
 	 * @throws MalformedURLException
+	 * @throws URISyntaxException
 	 */
 	@Before
-	public void setUpBase() throws MalformedURLException {
-		getDriver().get(config.getUrl().toString());
+	public void setUpBase() throws MalformedURLException, URISyntaxException {
+		// Insert a cookie which uniquely identifies this test, so that the
+		// proxy knows which .js file to set
+		this.openBrowserWithSessionCookie();
+
+		// TODO Write to file!
 		waitUntilShowWidgets();
+	}
+
+	private void openBrowserWithSessionCookie() throws MalformedURLException {
+		// First go to dummyURL to preset a cookie (selenium does not allow
+		// setting cookies before going to any page)
+		final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
+		getDriver().get(dummyURL);
+		// waitUntilShowWidgets();
+
+		getDriver().manage().addCookie(new Cookie("jsMutantFile", "12345"));
+
+		// Travel to our intended destination with the cookie set
+		getDriver().get(config.getUrl().toString());
 	}
 
 	/**
