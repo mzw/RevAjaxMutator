@@ -38,14 +38,14 @@ public class DOMReplacementSrcTargetFixerTest extends MutatorTestBase {
 		Set<DOMReplacement> domReplacements = visitor.getDomReplacements();
 		Mutator<DOMReplacement> mutator = new DOMReplacementSrcTargetFixer();
 		List<Mutation> mutationList = mutator.generateMutationList(Iterables.get(domReplacements, 0));
-        assertEquals(
-                "document.findElementById('hoge').replaceChild(child1, child2)",
-                mutationList.get(0).getOriginalNode().toSource());
-        assertEquals(
-                "document.findElementById('hoge').replaceChild(child2, child1)",
-                mutationList.get(0).getMutatingContent());
-        mutationList = mutator.generateMutationList(Iterables.get(domReplacements, 1));
-        assertEquals("$foo.replaceWith($('#bar'))", mutationList.get(0).getOriginalNode().toSource());
-        assertEquals("$('#bar').replaceWith($foo)", mutationList.get(0).getMutatingContent());
+		assertEquals(
+				"document.findElementById('hoge').replaceChild(child1, child2)", 
+				mutationList.get(0).getOriginalNode().toSource());
+		assertEquals(
+				"document.findElementById('hoge').replaceChild(child2, child1)", 
+				mutationList.get(0).getMutatingContent());
+		mutationList = mutator.generateMutationList(Iterables.get(domReplacements, 1));
+		assertEquals("$foo.replaceWith($('#bar'))", mutationList.get(0).getOriginalNode().toSource());
+		assertEquals("$('#bar).replaceWith($foo)", mutationList.get(0).getMutatingContent());
 	}
 }

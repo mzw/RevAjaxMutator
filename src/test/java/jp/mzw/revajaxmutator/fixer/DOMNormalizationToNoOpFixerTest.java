@@ -20,15 +20,15 @@ import static org.junit.Assert.assertEquals;
 
 public class DOMNormalizationToNoOpFixerTest extends MutatorTestBase{
 	@Override
-    protected void prepare() {
-        inputs = new String[] {
-                "document.findElementById('foo').normalize();",
-        };
-
-        MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
-        builder.setDomNormalizationDetectors(ImmutableSet.of(new DOMNormalizationDetector()));
-        visitor = builder.build();
-    }
+	protected void prepare() {
+		inputs = new String[] {
+				"document.findElementById('foo').normalize();",
+		};
+		
+		MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
+		builder.setDomNormalizationDetectors(ImmutableSet.of(new DOMNormalizationDetector()));
+		visitor = builder.build();
+	}
 
 	@Test
 	public void testDOMCloningToNoOpFixer() {
