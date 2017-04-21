@@ -6,9 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
@@ -50,6 +47,24 @@ abstract public class WebAppTestBase {
 	/** Possess configuration related to an application under test */
 	protected static AppConfig config;
 
+	/** Identifier used to indicate to the proxy which mutation file to get */
+	protected String mutationFileId;
+
+	public void setMutationFileId(String mutationFileId) {
+		this.mutationFileId = mutationFileId;
+	}
+
+	/** Possess Web browser in thread-local manner */
+	protected static ThreadLocal<WebDriver> currentDriver;
+	// private static List<WebDriver> driversToCleanup =
+	// Collections.synchronizedList(new ArrayList<WebDriver>());
+
+	/** Possess {@code WebDriverWait} instances in thread-local manner */
+	protected static ThreadLocal<WebDriverWait> waits;
+
+	/** Possess {@code Actions} instances in thread-local manner */
+	protected static ThreadLocal<Actions> actions;
+
 	/**
 	 * [Important] a test suite needs to inherit {@code WebAppTestBase} and call
 	 * this method at its {@code BeforeClass}-annotated method
@@ -71,16 +86,6 @@ abstract public class WebAppTestBase {
 		// Launch
 		launchBrowser(localenv, config);
 	}
-
-	/** Possess Web browser in thread-local manner */
-	protected static ThreadLocal<WebDriver> currentDriver;
-	private static List<WebDriver> driversToCleanup = Collections.synchronizedList(new ArrayList<WebDriver>());
-
-	/** Possess {@code WebDriverWait} instances in thread-local manner */
-	protected static ThreadLocal<WebDriverWait> waits;
-
-	/** Possess {@code Actions} instances in thread-local manner */
-	protected static ThreadLocal<Actions> actions;
 
 	/**
 	 * Provides Web browser in thread-local manner
@@ -138,7 +143,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			driversToCleanup.add(driver);
+			// driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (firefoxBin != null) {
@@ -182,7 +187,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			driversToCleanup.add(driver);
+			// driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (localenv.getPhantomjsBin() != null) {
@@ -214,7 +219,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			driversToCleanup.add(driver);
+			// driversToCleanup.add(driver);
 			waits.set(wait);
 			actions.set(action);
 		}
@@ -232,12 +237,13 @@ abstract public class WebAppTestBase {
 	@AfterClass
 	public static void tearDownAfterClassBase() {
 		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
-		final Iterator<WebDriver> iterator = driversToCleanup.iterator();
-		while (iterator.hasNext()) {
-			final WebDriver driver = iterator.next();
-			driver.quit();
-			iterator.remove();
-		}
+		getDriver().quit();
+		// final Iterator<WebDriver> iterator = driversToCleanup.iterator();
+		// while (iterator.hasNext()) {
+		// final WebDriver driver = iterator.next();
+		// driver.quit();
+		// iterator.remove();
+		// }
 	}
 
 	/**
@@ -254,18 +260,17 @@ abstract public class WebAppTestBase {
 		// proxy knows which .js file to set
 		this.openBrowserWithSessionCookie();
 
-		// TODO Write to file!
 		waitUntilShowWidgets();
 	}
 
 	private void openBrowserWithSessionCookie() throws MalformedURLException {
-		// First go to dummyURL to preset a cookie (selenium does not allow
-		// setting cookies before going to any page)
+		// First go to dummyURL to preset a cookie - selenium does not allow
+		// setting cookies before going to any page
+		// Source: http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies
 		final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 		getDriver().get(dummyURL);
-		// waitUntilShowWidgets();
 
-		getDriver().manage().addCookie(new Cookie("jsMutantFile", "12345"));
+		getDriver().manage().addCookie(new Cookie("jsMutantFile", this.mutationFileId));
 
 		// Travel to our intended destination with the cookie set
 		getDriver().get(config.getUrl().toString());

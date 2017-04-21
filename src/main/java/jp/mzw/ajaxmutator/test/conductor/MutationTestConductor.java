@@ -403,7 +403,6 @@ public class MutationTestConductor {
 
 				// Execute the test case with the mutated/patched file
 				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
-				// TODO pass mutation information to "execute"
 				if (testExecutor.execute()) { // This mutant cannot be killed
 					this.unkilledMutantsInfo.put(description, mutationFileInformation.toString());
 					LOGGER.info("mutant {} is not be killed", description);
@@ -446,30 +445,6 @@ public class MutationTestConductor {
 			@SuppressWarnings("unused")
 			final List<?> mutated = patch.<String>applyTo(original);
 			Util.writeToFile(this.pathToJsFile, Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
-		} catch (final PatchFailedException e) {
-			LOGGER.error("Applying mutation file '{}' failed.", fileInfo.getFileName(), e);
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Create a new file with the applied mutation/patch.
-	 *
-	 * @param id
-	 *            the unique identifier for the mutation
-	 * @param original
-	 *            the list of lines in the original .js file
-	 * @param fileInfo
-	 *            the information needed to mutate the file
-	 * @return true if the file was successfully created
-	 */
-	protected boolean createMutantFile(String id, List<String> original, MutationFileInformation fileInfo) {
-		final Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
-		try {
-			@SuppressWarnings("unused")
-			final List<?> mutated = patch.<String>applyTo(original);
-			Util.writeToFile(this.pathToJsFile + id, Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
 		} catch (final PatchFailedException e) {
 			LOGGER.error("Applying mutation file '{}' failed.", fileInfo.getFileName(), e);
 			return false;
