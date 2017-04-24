@@ -32,11 +32,11 @@ public class JUnitExecutor implements TestExecutor {
 	private final boolean shouldRunAllTest;
 	private final Class<?>[] targetClasses;
 	private Map<String, Boolean> testResults;
-	private List<String> orderedMethodNames = null;
+	private List<String> orderedMethodNames;
 	private String executionMessage;
 	// Used in concurrency to determine what kind of mutation tests this
 	// Executor will run
-	private String mutationFixAssignment;
+	private static String mutationFixAssignment;
 
 	public JUnitExecutor(Class<?>... targetClasses) {
 		this(true, targetClasses);
@@ -124,12 +124,17 @@ public class JUnitExecutor implements TestExecutor {
 			throw new IllegalStateException(error);
 		}
 
-		System.out.println("(" + this.hashCode() + ") Before JUnitCore.run...");
+		// System.out.println("(" + this.hashCode() + ") Before
+		// JUnitCore.run...");
 		final Result result = new JUnitCore().run(runner);
-		System.out.println("(" + this.hashCode() + ") After JUnitCore.run..." + result.wasSuccessful());
-		System.out.println("(" + this.hashCode() + ") Run count " + result.getRunCount());
-		System.out.println("(" + this.hashCode() + ") Failure count " + result.getFailureCount());
-		System.out.println("(" + this.hashCode() + ") Ignore count " + result.getIgnoreCount());
+		// System.out.println("(" + this.hashCode() + ") After JUnitCore.run..."
+		// + result.wasSuccessful());
+		// System.out.println("(" + this.hashCode() + ") Run count " +
+		// result.getRunCount());
+		// System.out.println("(" + this.hashCode() + ") Failure count " +
+		// result.getFailureCount());
+		// System.out.println("(" + this.hashCode() + ") Ignore count " +
+		// result.getIgnoreCount());
 
 		this.storeResult(result);
 		return result.wasSuccessful();
@@ -187,12 +192,12 @@ public class JUnitExecutor implements TestExecutor {
 
 	@Override
 	public String getMutationFixAssignment() {
-		return this.mutationFixAssignment;
+		return mutationFixAssignment;
 	}
 
 	@Override
-	public void setMutationFixAssignment(String mutationFixAssignment) {
-		this.mutationFixAssignment = mutationFixAssignment;
+	public void setMutationFixAssignment(String assignment) {
+		mutationFixAssignment = assignment;
 	}
 
 }

@@ -163,7 +163,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		// this.sampling.sample(this.mutationListManager.getMutationFileInformationList());
 
 		// Running test cases on each mutant in a multiple-threads manner
-		final ExecutorService executor = Executors.newFixedThreadPool(Math.max(1, this.numOfThreads - 1));
+		final ExecutorService executor = Executors.newFixedThreadPool(2);
 		final List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
 		for (final String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
@@ -353,7 +353,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	// }
 
 	/**
-	 * Create a new file with the applied mutation/patch.
+	 * Create a new file with the applied mutation/patch in the format:
+	 * <filename>.<mutation_id>
 	 *
 	 * @param id
 	 *            the unique identifier for the mutation

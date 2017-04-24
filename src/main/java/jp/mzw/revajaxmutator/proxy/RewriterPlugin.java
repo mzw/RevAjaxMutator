@@ -150,10 +150,6 @@ public class RewriterPlugin extends ProxyPlugin {
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
-
-		// TODO remove mutant file from system to conserve space, it is no
-		// longer needed -- if there are several tests, maybe it is called
-		// several times, check!
 	}
 
 	private class Plugin implements HTTPClient {

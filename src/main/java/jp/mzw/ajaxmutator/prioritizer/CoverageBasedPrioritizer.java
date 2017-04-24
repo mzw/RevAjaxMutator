@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +26,8 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 	protected static Logger LOGGER = LoggerFactory.getLogger(CoverageBasedPrioritizer.class);
 
 	protected Map<File, boolean[]> coverages;
+
+	protected int pointer;
 
 	public CoverageBasedPrioritizer() {
 	}
@@ -95,7 +96,8 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 		// Util.getFileNameWithoutExtension(mutant.getFileName());
 		// final TestExecutor executor = this.getTargetTestExecutor(executors,
 		// mutationType);
-		final TestExecutor executor = executors.get(new Random().nextInt(executors.size()));
+		final TestExecutor executor = executors.get(this.pointer % executors.size());
+		this.pointer++;
 		executor.setOrderedMethodNames(orderedMethodNames);
 		return executor;
 	}

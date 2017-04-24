@@ -201,7 +201,8 @@ public class ProgramRepair extends Command {
 				config.getRecordedJsFile());
 
 		final RichMutationTestConductor conductor = new RichMutationTestConductor();
-		conductor.setup(config.getMutationAnalysisConfig().mutationTestConductor(), coverages);
+		final MutationTestConductor configConductor = mutateConfig.mutationTestConductor();
+		conductor.setup(configConductor, coverages);
 
 		final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 		conductor.setThreadNum(localenv.getThreadNum());

@@ -36,7 +36,6 @@ import com.google.gson.JsonObject;
 
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
-import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
 
 abstract public class WebAppTestBase {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
@@ -48,11 +47,7 @@ abstract public class WebAppTestBase {
 	protected static AppConfig config;
 
 	/** Identifier used to indicate to the proxy which mutation file to get */
-	protected String mutationFileId;
-
-	public void setMutationFileId(String mutationFileId) {
-		this.mutationFileId = mutationFileId;
-	}
+	protected static ThreadLocal<String> mutationFileId;
 
 	/** Possess Web browser in thread-local manner */
 	protected static ThreadLocal<WebDriver> currentDriver;
@@ -76,6 +71,7 @@ abstract public class WebAppTestBase {
 	 */
 	public static void setUpBeforeClass(Class<? extends AppConfig> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
+		System.out.println("(" + Thread.currentThread().hashCode() + ") BEFORECLASS - INIT");
 		// Load configurations
 		localenv = new LocalEnv(LocalEnv.FILENAME);
 		config = clazz.newInstance();
@@ -83,6 +79,7 @@ abstract public class WebAppTestBase {
 		currentDriver = new ThreadLocal<>();
 		waits = new ThreadLocal<>();
 		actions = new ThreadLocal<>();
+		mutationFileId = new ThreadLocal<>();
 		// Launch
 		launchBrowser(localenv, config);
 	}
@@ -110,6 +107,10 @@ abstract public class WebAppTestBase {
 	 */
 	public static Actions getActions() {
 		return actions.get();
+	}
+
+	public void setMutationFileId(String id) {
+		mutationFileId.set(id);
 	}
 
 	/**
@@ -236,14 +237,22 @@ abstract public class WebAppTestBase {
 	 */
 	@AfterClass
 	public static void tearDownAfterClassBase() {
-		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
+		System.out.println("(" + Thread.currentThread().hashCode() + ") AFTERCLASS - TEARDOWN");
+		// JSCoverProxyServer.reportCoverageResults(getDriver(),
+		// config.getJscoverReportDir());
 		getDriver().quit();
+		System.out.println("(" + Thread.currentThread().hashCode() + ") AFTERCLASS - DRIVER CLOSED");
+		// TODO teardown waits and actions too?
+
 		// final Iterator<WebDriver> iterator = driversToCleanup.iterator();
+		// int i = 0;
 		// while (iterator.hasNext()) {
+		// i++;
 		// final WebDriver driver = iterator.next();
 		// driver.quit();
 		// iterator.remove();
 		// }
+		// System.out.println("TEARDOWN " + i);
 	}
 
 	/**
@@ -253,33 +262,34 @@ abstract public class WebAppTestBase {
 	 *
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
+	 * @throws InterruptedException
 	 */
 	@Before
-	public void setUpBase() throws MalformedURLException, URISyntaxException {
+	public void setUpBase() throws MalformedURLException, URISyntaxException, InterruptedException {
+		System.out.println("(" + Thread.currentThread().hashCode() + ") BEFORE - GET URL");
 		// Insert a cookie which uniquely identifies this test, so that the
 		// proxy knows which .js file to set
-		this.openBrowserWithSessionCookie();
+		this.setSessionCookie();
 
-		waitUntilShowWidgets();
+		getDriver().get(config.getUrl().toString());
+		this.waitUntilShowWidgets();
 	}
 
-	private void openBrowserWithSessionCookie() throws MalformedURLException {
+	private void setSessionCookie() throws MalformedURLException {
 		// First go to dummyURL to preset a cookie - selenium does not allow
 		// setting cookies before going to any page
 		// Source: http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies
-		final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
-		getDriver().get(dummyURL);
-
-		getDriver().manage().addCookie(new Cookie("jsMutantFile", this.mutationFileId));
-
-		// Travel to our intended destination with the cookie set
-		getDriver().get(config.getUrl().toString());
+		if (mutationFileId.get() != null && mutationFileId.get() != "") {
+			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
+			getDriver().get(dummyURL);
+			getDriver().manage().addCookie(new Cookie("jsMutantFile", mutationFileId.get()));
+		}
 	}
 
 	/**
 	 * Wait for showing all widgets
 	 */
-	protected static void waitUntilShowWidgets() {
+	protected void waitUntilShowWidgets() {
 		getWait().until(
 				driver -> ((JavascriptExecutor) driver).executeScript("return document.readyState").equals("complete"));
 	}
@@ -287,18 +297,18 @@ abstract public class WebAppTestBase {
 	/*--------------------------------------------------
 		Utilities
 	 --------------------------------------------------*/
-	public static WebElement until(final By locator) {
+	public WebElement until(final By locator) {
 		getWait().until(driver -> driver.findElement(locator) != null);
 		return getDriver().findElement(locator);
 	}
 
-	public static WebElement until(final By locator, final String text) {
+	public WebElement until(final By locator, final String text) {
 		getWait().until(driver -> driver.findElement(locator) != null);
 		getWait().until(driver -> driver.findElement(locator).getText().equals(text));
 		return getDriver().findElement(locator);
 	}
 
-	public static void sleep(long millis) {
+	public void sleep(long millis) {
 		try {
 			Thread.sleep(millis);
 		} catch (final InterruptedException e) {
@@ -309,7 +319,7 @@ abstract public class WebAppTestBase {
 	/*--------------------------------------------------
 		Utilities
 	 --------------------------------------------------*/
-	public static void takeScreenshot(String filename) {
+	public void takeScreenshot(String filename) {
 		try {
 			final File screenshot = ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
 			FileUtils.copyFile(screenshot, new File(filename));
