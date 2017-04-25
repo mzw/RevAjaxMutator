@@ -179,11 +179,11 @@ public class RichMutationTestConductor extends MutationTestConductor {
 					.getMutationFileInformationList(description)) {
 				// execution can be canceled from outside.
 				if (!this.conducting) {
+					executor.shutdownNow();
 					break;
 				}
 				// When mutant is not "live non-equivalent", skip to run test
 				// cases on it.
-				// TODO replace applyMutationFile call
 				if (mutant.canBeSkipped() // ||
 											// !this.applyMutationFile(original,
 											// mutant)
@@ -197,11 +197,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// mutant.getStartLine(), mutant.getEndLine())) {
 				// LOGGER.info(mutant.getFileName() + " is skipped by
 				// coverage");
-				// continue;
-				// }
-
-				// TODO
-				// if (!createMutationFile(original, mutant)) {
 				// continue;
 				// }
 
@@ -219,10 +214,13 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				}
 				LOGGER.info("Executing test(s) on {}", mutant.getAbsolutePath());
 
+				// Create the patched/mutant file which will be used by the
+				// proxy to replace the server .js file in the GET call
 				if (!this.createMutantFile(numberOfAppliedMutation, original, mutant)) {
 					continue;
 				}
 
+				// Execute the test case
 				final TestExecutor targetTestExecutor = this.prioritizer.getTestExecutor(mutant, testExecutors);
 				final Future<Boolean> future = executor.submit(new TestCallable(targetTestExecutor, mutant, description,
 						numberOfAppliedMutation, numberOfMaxMutants));
@@ -231,6 +229,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 			// execution can be canceled from outside.
 			if (!this.conducting) {
+				executor.shutdownNow();
 				break;
 			}
 		}
@@ -308,7 +307,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			}
 			final String message = this.executor.getMessageOnLastExecution();
 			if (message != null) {
-				LOGGER.info(message);
+				synchronized (LOGGER) {
+					LOGGER.info(message);
+				}
 			}
 
 			RichMutationTestConductor.this.removeMutantFile(this.numberOfAppliedMutation);
