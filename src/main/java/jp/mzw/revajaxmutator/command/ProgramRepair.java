@@ -214,7 +214,7 @@ public class ProgramRepair extends Command {
 		// TODO
 		final List<TestExecutor> executors = Lists.newArrayList();
 		for (final Mutator<?> mutator : mutateConfig.mutators()) {
-			final TestExecutor e = new JUnitExecutor(false, testClasses);
+			final TestExecutor e = new JUnitExecutor(true, testClasses);
 			final String mutationName = mutator.mutationName();
 			e.setMutationFixAssignment(mutationName);
 			executors.add(e);

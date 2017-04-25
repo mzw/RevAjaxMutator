@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,6 +47,12 @@ import jp.mzw.ajaxmutator.util.Util;
  */
 public class RichMutationTestConductor extends MutationTestConductor {
 	protected static Logger LOGGER = LoggerFactory.getLogger(RichMutationTestConductor.class);
+
+	/**
+	 * A barrier that prevents a thread from running a new test until all the
+	 * other threads from the same batch finish their run
+	 */
+	private CyclicBarrier batchTestBarrier;
 
 	/** Contains coverage results of target JavaScript code */
 	protected Map<File, boolean[]> coverages;
@@ -163,7 +170,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		// this.sampling.sample(this.mutationListManager.getMutationFileInformationList());
 
 		// Running test cases on each mutant in a multiple-threads manner
-		final ExecutorService executor = Executors.newFixedThreadPool(2);
+		final ExecutorService executor = Executors.newFixedThreadPool(this.numOfThreads);
+		this.batchTestBarrier = new CyclicBarrier(this.numOfThreads);
 		final List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
 		for (final String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
@@ -219,12 +227,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				final Future<Boolean> future = executor.submit(new TestCallable(targetTestExecutor, mutant, description,
 						numberOfAppliedMutation, numberOfMaxMutants));
 				futures.add(future);
-
-				try {
-					Thread.sleep(1000);
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
-				}
 			}
 
 			// execution can be canceled from outside.
@@ -311,6 +313,14 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 			RichMutationTestConductor.this.removeMutantFile(this.numberOfAppliedMutation);
 			RichMutationTestConductor.this.logProgress(this.numberOfAppliedMutation, this.numberOfMaxMutants);
+
+			// TODO workaround for issue where a new test would make all current
+			// running tests fail.
+			// Block until all threads finish before continuing to run a new
+			// test.
+			RichMutationTestConductor.this.batchTestBarrier.await();
+			RichMutationTestConductor.this.batchTestBarrier.reset();
+
 			return success;
 		}
 	}

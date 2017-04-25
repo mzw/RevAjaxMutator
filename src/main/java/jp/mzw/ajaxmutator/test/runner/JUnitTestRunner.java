@@ -44,15 +44,21 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JUnitTestRunner.class);
 
 	protected final boolean shouldRunAllTest;
-	protected boolean skipNextExecution = false;
-	protected RunNotifierFailureReporter reporter;
-	protected RunNotifier lastNotifier;
-	protected final String mutationFileId;
+	protected ThreadLocal<Boolean> skipNextExecution;
+	protected ThreadLocal<RunNotifierFailureReporter> reporter;
+	protected ThreadLocal<RunNotifier> lastNotifier;
+	protected ThreadLocal<String> mutationFileId;
 
 	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest, String mutationId) throws InitializationError {
 		super(testClass);
 		this.shouldRunAllTest = shouldRunAllTest;
-		this.mutationFileId = mutationId;
+
+		this.reporter = new ThreadLocal<>();
+		this.lastNotifier = new ThreadLocal<>();
+		this.mutationFileId = new ThreadLocal<>();
+		this.skipNextExecution = new ThreadLocal<>();
+		this.skipNextExecution.set(false);
+		this.mutationFileId.set(mutationId);
 	}
 
 	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest) throws InitializationError {
@@ -63,22 +69,22 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
 
 		final Description description = this.describeChild(method);
-		if (method.getAnnotation(Ignore.class) != null || this.skipNextExecution) {
+		if (method.getAnnotation(Ignore.class) != null || this.skipNextExecution.get()) {
 			notifier.fireTestIgnored(description);
 		} else {
 			if (!this.shouldRunAllTest) {
-				if (this.reporter == null || !this.lastNotifier.equals(notifier)) {
-					this.reporter = new RunNotifierFailureReporter(notifier);
-					this.lastNotifier = notifier;
+				if (this.reporter.get() == null || !this.lastNotifier.get().equals(notifier)) {
+					this.reporter.set(new RunNotifierFailureReporter(notifier));
+					this.lastNotifier.set(notifier);
 				}
 			} else {
-				if (this.reporter == null) {
-					this.reporter = new RunNotifierFailureReporter(notifier);
+				if (this.reporter.get() == null) {
+					this.reporter.set(new RunNotifierFailureReporter(notifier));
 				}
 			}
 			LOGGER.info("<Thread:{}> run test {} : {}", Thread.currentThread().getId(), this.getTestClass().getName(),
 					method.getName());
-			this.runLeaf(this.methodBlock(method), description, this.reporter);
+			this.runLeaf(this.methodBlock(method), description, this.reporter.get());
 		}
 	}
 
@@ -191,7 +197,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		final Object instance = this.getTestClass().getOnlyConstructor().newInstance();
 
 		final WebAppTestBase webAppTest = (WebAppTestBase) instance;
-		webAppTest.setMutationFileId(this.mutationFileId);
+		webAppTest.setMutationFileId(this.mutationFileId.get());
 
 		return instance;
 	}
@@ -467,7 +473,9 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 		@Override
 		public void fireTestFailure(Failure failure) {
 			this.notifier.fireTestFailure(failure);
-			JUnitTestRunner.this.skipNextExecution = true;
+			JUnitTestRunner.this.skipNextExecution.set(true);
+			// System.out.println("(" + Thread.currentThread().hashCode() + ")
+			// SKIP NEXT EXECUTION!!!");
 		}
 	}
 }

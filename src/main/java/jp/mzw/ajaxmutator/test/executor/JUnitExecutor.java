@@ -124,17 +124,7 @@ public class JUnitExecutor implements TestExecutor {
 			throw new IllegalStateException(error);
 		}
 
-		// System.out.println("(" + this.hashCode() + ") Before
-		// JUnitCore.run...");
 		final Result result = new JUnitCore().run(runner);
-		// System.out.println("(" + this.hashCode() + ") After JUnitCore.run..."
-		// + result.wasSuccessful());
-		// System.out.println("(" + this.hashCode() + ") Run count " +
-		// result.getRunCount());
-		// System.out.println("(" + this.hashCode() + ") Failure count " +
-		// result.getFailureCount());
-		// System.out.println("(" + this.hashCode() + ") Ignore count " +
-		// result.getIgnoreCount());
 
 		this.storeResult(result);
 		return result.wasSuccessful();

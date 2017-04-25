@@ -36,6 +36,7 @@ import com.google.gson.JsonObject;
 
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
 
 abstract public class WebAppTestBase {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
@@ -51,8 +52,6 @@ abstract public class WebAppTestBase {
 
 	/** Possess Web browser in thread-local manner */
 	protected static ThreadLocal<WebDriver> currentDriver;
-	// private static List<WebDriver> driversToCleanup =
-	// Collections.synchronizedList(new ArrayList<WebDriver>());
 
 	/** Possess {@code WebDriverWait} instances in thread-local manner */
 	protected static ThreadLocal<WebDriverWait> waits;
@@ -71,15 +70,19 @@ abstract public class WebAppTestBase {
 	 */
 	public static void setUpBeforeClass(Class<? extends AppConfig> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
-		System.out.println("(" + Thread.currentThread().hashCode() + ") BEFORECLASS - INIT");
+		// System.out.println("(" + Thread.currentThread().hashCode() + ")
+		// BEFORECLASS - INIT");
+
 		// Load configurations
 		localenv = new LocalEnv(LocalEnv.FILENAME);
 		config = clazz.newInstance();
+
 		// Thread locals
 		currentDriver = new ThreadLocal<>();
 		waits = new ThreadLocal<>();
 		actions = new ThreadLocal<>();
 		mutationFileId = new ThreadLocal<>();
+
 		// Launch
 		launchBrowser(localenv, config);
 	}
@@ -144,7 +147,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.add(driver);
+			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (firefoxBin != null) {
@@ -188,7 +191,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.add(driver);
+			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (localenv.getPhantomjsBin() != null) {
@@ -220,7 +223,7 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.add(driver);
+			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		}
@@ -234,25 +237,17 @@ abstract public class WebAppTestBase {
 	 * Report coverage results if available
 	 *
 	 * Quit all drivers if instantiated
+	 *
+	 * @throws InterruptedException
 	 */
 	@AfterClass
-	public static void tearDownAfterClassBase() {
-		System.out.println("(" + Thread.currentThread().hashCode() + ") AFTERCLASS - TEARDOWN");
-		// JSCoverProxyServer.reportCoverageResults(getDriver(),
-		// config.getJscoverReportDir());
+	public static void tearDownAfterClassBase() throws InterruptedException {
+		// System.out.println("(" + Thread.currentThread().hashCode() + ")
+		// AFTERCLASS - TEARDOWN");
+		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
 		getDriver().quit();
-		System.out.println("(" + Thread.currentThread().hashCode() + ") AFTERCLASS - DRIVER CLOSED");
-		// TODO teardown waits and actions too?
-
-		// final Iterator<WebDriver> iterator = driversToCleanup.iterator();
-		// int i = 0;
-		// while (iterator.hasNext()) {
-		// i++;
-		// final WebDriver driver = iterator.next();
-		// driver.quit();
-		// iterator.remove();
-		// }
-		// System.out.println("TEARDOWN " + i);
+		// System.out.println("(" + Thread.currentThread().hashCode() + ")
+		// AFTERCLASS - DRIVER CLOSED");
 	}
 
 	/**
@@ -266,7 +261,9 @@ abstract public class WebAppTestBase {
 	 */
 	@Before
 	public void setUpBase() throws MalformedURLException, URISyntaxException, InterruptedException {
-		System.out.println("(" + Thread.currentThread().hashCode() + ") BEFORE - GET URL");
+		// System.out.println("(" + Thread.currentThread().hashCode() + ")
+		// BEFORE - GET URL");
+
 		// Insert a cookie which uniquely identifies this test, so that the
 		// proxy knows which .js file to set
 		this.setSessionCookie();
