@@ -10,6 +10,8 @@ public class LocalEnv {
 
 	protected Properties config;
 
+	private static boolean shouldRunJSCoverProxy;
+
 	public LocalEnv(String filename) throws IOException {
 		final InputStream is = this.getClass().getClassLoader().getResourceAsStream(filename);
 		this.config = new Properties();
@@ -17,7 +19,7 @@ public class LocalEnv {
 	}
 
 	public static enum Param {
-		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP;
+		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case FIREFOX_BIN:
@@ -38,6 +40,12 @@ public class LocalEnv {
 				return new Integer(Runtime.getRuntime().availableProcessors()).toString();
 			case SELENIUM_HUB_IP:
 				return null;
+			case JSCOVER_REPORT_DIR:
+				return "jscover";
+			case JSCOVER_IP:
+				return "127.0.0.1";
+			case JSCOVER_PORT:
+				return new Integer(3129).toString();
 			}
 			return "";
 		}
@@ -65,11 +73,22 @@ public class LocalEnv {
 	}
 
 	public String getProxyIp() {
-		return this.getParam(Param.PROXY_IP);
+		String param;
+		if (LocalEnv.shouldRunJSCoverProxy) {
+			param = this.getParam(Param.JSCOVER_IP);
+		} else {
+			param = this.getParam(Param.PROXY_IP);
+		}
+		return param;
 	}
 
 	public int getProxyPort() {
-		final String param = this.getParam(Param.PROXY_PORT);
+		String param;
+		if (LocalEnv.shouldRunJSCoverProxy) {
+			param = this.getParam(Param.JSCOVER_PORT);
+		} else {
+			param = this.getParam(Param.PROXY_PORT);
+		}
 		return Integer.parseInt(param);
 	}
 
@@ -89,5 +108,21 @@ public class LocalEnv {
 
 	public String getSeleniumHubAddress() {
 		return this.getParam(Param.SELENIUM_HUB_IP);
+	}
+
+	public String getJsCoverageDir() {
+		return this.getParam(Param.JSCOVER_REPORT_DIR);
+	}
+
+	public String getJsCoveragePort() {
+		return this.getParam(Param.JSCOVER_PORT);
+	}
+
+	public boolean shouldRunJSCoverProxy() {
+		return LocalEnv.shouldRunJSCoverProxy;
+	}
+
+	public void setShouldRunJSCoverProxy(boolean shouldRunJSCoverProxy) {
+		LocalEnv.shouldRunJSCoverProxy = shouldRunJSCoverProxy;
 	}
 }

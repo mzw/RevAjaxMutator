@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.experimental.theories.Theories;
+import org.junit.runner.JUnitCore;
 import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
-import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.InitializationError;
 import org.owasp.webscarab.model.StoreException;
@@ -31,6 +31,7 @@ import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
+import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
 import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.proxy.RecorderPlugin;
 import jp.mzw.revajaxmutator.proxy.RewriterPlugin;
@@ -64,40 +65,53 @@ public class MutationAnalysis extends Command {
 		}
 
 		try {
+			// Configuration setup
 			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
-
 			final String configClassName = args[0];
 			final Class<?> configClass = getClass(configClassName);
 			final AppConfig config = (AppConfig) configClass.newInstance();
 
+			// Start WebScarab proxy with the RecorderPlugin to store the .html
+			// and .js file in the local filesystem for later mutation
 			final File recordDir = config.getRecordDir();
 			recordDir.mkdirs();
 			final RecorderPlugin plugin = new RecorderPlugin(recordDir.getAbsolutePath());
 			ProxyServer.launch(Arrays.asList(plugin), localenv.getProxyAddress());
+			System.out.println("RECORDING SOURCE CODE FILES");
+			this.runTests(args);
 
-			for (int i = 1; i < args.length; i++) {
-				final String testClassName = args[i];
-				final Class<?> testClass = getClass(testClassName);
+			// Start JSCover proxy to record coverage results
+			JSCoverProxyServer.launch(localenv.getJsCoverageDir(), localenv.getJsCoveragePort());
+			localenv.setShouldRunJSCoverProxy(true);
+			System.out.println("RUNNING COVERAGE REPORT");
+			this.runTests(args);
+			localenv.setShouldRunJSCoverProxy(false);
 
-				Runner runner = null;
-				final RunWith runWith = testClass.getAnnotation(RunWith.class);
-				if (runWith == null) {
-					runner = new JUnitTestRunner(testClass, true);
-				} else if (Theories.class.equals(runWith.value())) {
-					runner = new JUnitTheoryRunner(testClass, true);
-				} else {
-					runner = new BlockJUnit4ClassRunner(testClass);
-				}
-				runner.run(new RunNotifier());
-				// new JUnitCore().run(runner);
-			}
-			ProxyServer.interrupt();
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InitializationError
 				| StoreException | InterruptedException | IOException e) {
 			LOG.error(e.getMessage());
+		} finally {
 			ProxyServer.interrupt();
 		}
 
+	}
+
+	private void runTests(String[] args) throws ClassNotFoundException, InitializationError {
+		for (int i = 1; i < args.length; i++) {
+			final String testClassName = args[i];
+			final Class<?> testClass = getClass(testClassName);
+
+			Runner runner = null;
+			final RunWith runWith = testClass.getAnnotation(RunWith.class);
+			if (runWith == null) {
+				runner = new JUnitTestRunner(testClass, true);
+			} else if (Theories.class.equals(runWith.value())) {
+				runner = new JUnitTheoryRunner(testClass, true);
+			} else {
+				runner = new BlockJUnit4ClassRunner(testClass);
+			}
+			new JUnitCore().run(runner);
+		}
 	}
 
 	/**

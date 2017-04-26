@@ -28,6 +28,7 @@ import jp.mzw.ajaxmutator.prioritizer.Prioritizer;
 import jp.mzw.ajaxmutator.sampling.Sampling;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Util;
+import jp.mzw.revajaxmutator.test.result.Coverage;
 
 /**
  * RichMutationTestConductor extends {@link MutationTestConductor} at the
@@ -168,6 +169,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 		// TODO Apply do-fewer approach
 		// this.sampling.sample(this.mutationListManager.getMutationFileInformationList());
+		if (this.coverages.isEmpty()) {
+			LOGGER.warn("Skipping sampling optimization.\nTo enable, run the \"coverage\" option first.");
+		}
 
 		// Running test cases on each mutant in a multiple-threads manner
 		final ExecutorService executor = Executors.newFixedThreadPool(this.numOfThreads);
@@ -191,14 +195,14 @@ public class RichMutationTestConductor extends MutationTestConductor {
 					continue;
 				}
 				// TODO
-				// When test cases do not cover mutated locations of mutants,
-				// skip to run the test cases on the mutants
-				// if (!Coverage.isCovered(this.coverages,
-				// mutant.getStartLine(), mutant.getEndLine())) {
-				// LOGGER.info(mutant.getFileName() + " is skipped by
-				// coverage");
-				// continue;
-				// }
+				// Skip test cases that do not cover mutated locations of
+				// mutants
+				if (!this.coverages.isEmpty()
+						&& !Coverage.isCovered(this.coverages, mutant.getStartLine(), mutant.getEndLine())) {
+					LOGGER.info(mutant.getFileName() + " is skipped by coverage");
+					System.out.println(mutant.getFileName() + " is skipped by coverage");
+					continue;
+				}
 
 				// TODO Apply mutation sampling
 				// if (!this.sampling.isSampled(mutant)) {
@@ -207,6 +211,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// continue;
 				// }
 
+				// Backup the results every "n" mutations
 				numberOfAppliedMutation++;
 				if (numberOfAppliedMutation >= this.saveInformationInterval
 						& (numberOfAppliedMutation % this.saveInformationInterval == 0)) {
@@ -214,8 +219,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				}
 				LOGGER.info("Executing test(s) on {}", mutant.getAbsolutePath());
 
-				// Create the patched/mutant file which will be used by the
-				// proxy to replace the server .js file in the GET call
+				// Create the patched/mutant file in the local system
+				// This is used by the proxy to replace the incoming .js file in
+				// the GET call
 				if (!this.createMutantFile(numberOfAppliedMutation, original, mutant)) {
 					continue;
 				}
@@ -289,10 +295,10 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			final String mutationId = Integer.toString(this.numberOfAppliedMutation);
 			if (this.executor.execute(mutationId)) {
 				// Unkilled mutant
-				synchronized (RichMutationTestConductor.this.unkilledMutantsInfo) {
-					RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
-				}
-				// TODO check if this needs to be synchronized
+				// synchronized
+				// (RichMutationTestConductor.this.unkilledMutantsInfo) {
+				RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
+				// }
 				synchronized (LOGGER) {
 					LOGGER.info("mutant {} is not be killed", this.description);
 				}
@@ -300,9 +306,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			} else {
 				// Killed mutant
 				// TODO check if this needs to be synchronized
-				synchronized (this.mutant) {
-					this.mutant.setState(MutationFileInformation.State.KILLED);
-				}
+				// synchronized (this.mutant) {
+				this.mutant.setState(MutationFileInformation.State.KILLED);
+				// }
 				success = true;
 			}
 			final String message = this.executor.getMessageOnLastExecution();
