@@ -46,6 +46,6 @@ public class DOMReplacementSrcTargetFixerTest extends MutatorTestBase {
 				mutationList.get(0).getMutatingContent());
 		mutationList = mutator.generateMutationList(Iterables.get(domReplacements, 1));
 		assertEquals("$foo.replaceWith($('#bar'))", mutationList.get(0).getOriginalNode().toSource());
-		assertEquals("$('#bar).replaceWith($foo)", mutationList.get(0).getMutatingContent());
+		assertEquals("$('#bar').replaceWith($foo)", mutationList.get(0).getMutatingContent());
 	}
 }

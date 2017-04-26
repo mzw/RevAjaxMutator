@@ -25,7 +25,7 @@ public class DOMRemovalToNoOpFixerTest extends MutatorTestBase {
 		inputs = new String[] {
 				"document.getElementById('hoge').removeChild(bar);",
 				"// some comment here" + System.lineSeparator(), 
-				"abc.removeChild(document.getElementByTagName('abc');", 
+				"abc.removeChild(document.getElementByTagName('abc'));", 
 				"elm.find('p').remove();"
 		};
 		
