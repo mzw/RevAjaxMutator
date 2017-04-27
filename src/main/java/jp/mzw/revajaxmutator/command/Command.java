@@ -17,6 +17,7 @@ abstract public class Command implements ICommand {
 			new Test().all(args);
 			System.exit(0);
 		}
+		// Generate test coverage
 		if ("test-each".equals(cmd)) {
 			new Test().each(args);
 			System.exit(0);

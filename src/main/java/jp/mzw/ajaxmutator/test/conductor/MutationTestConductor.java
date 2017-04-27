@@ -472,9 +472,9 @@ public class MutationTestConductor {
 	protected void logExecutionDetail(int numberOfAppliedMutation) {
 		LOGGER.info("---------------------------------------------");
 		final StringBuilder detailedInfo = new StringBuilder();
-		int numberOfUnkilledMutatns = 0;
+		int numberOfUnkilledMutants = 0;
 		for (final String key : this.unkilledMutantsInfo.keySet()) {
-			numberOfUnkilledMutatns += this.unkilledMutantsInfo.get(key).size();
+			numberOfUnkilledMutants += this.unkilledMutantsInfo.get(key).size();
 			detailedInfo.append(key).append(": ").append(this.unkilledMutantsInfo.get(key).size())
 					.append(System.lineSeparator());
 			for (final String info : this.unkilledMutantsInfo.get(key)) {
@@ -486,8 +486,8 @@ public class MutationTestConductor {
 		LOGGER.info(detailedInfo.toString());
 
 		final int numberOfMaxMutants = this.mutationListManager.getNumberOfMaxMutants();
-		final double score = Math.floor((1.0 - (1.0 * numberOfUnkilledMutatns / numberOfMaxMutants)) * 100 * 10) / 10;
-		LOGGER.info("{} unkilled mutants among {} ({})", numberOfUnkilledMutatns, numberOfAppliedMutation,
+		final double score = Math.floor((1.0 - (1.0 * numberOfUnkilledMutants / numberOfMaxMutants)) * 100 * 10) / 10;
+		LOGGER.info("{} unkilled mutants among {} ({})", numberOfUnkilledMutants, numberOfAppliedMutation,
 				numberOfMaxMutants);
 		LOGGER.info("Mutation score is: {} %", score);
 	}

@@ -266,7 +266,9 @@ abstract public class WebAppTestBase {
 
 		// Insert a cookie which uniquely identifies this test, so that the
 		// proxy knows which .js file to set
-		this.setSessionCookie();
+		if (!LocalEnv.shouldRunJSCoverProxy()) {
+			this.setSessionCookie();
+		}
 
 		getDriver().get(config.getUrl().toString());
 		this.waitUntilShowWidgets();

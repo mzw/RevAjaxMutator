@@ -185,11 +185,6 @@ public class ProgramRepair extends Command {
 
 	private void validateConcurrently(AppConfig config, Class<?>[] testClasses)
 			throws InstantiationException, IllegalAccessException, IOException {
-		// final MutationTestConductor conductor =
-		// config.getMutationAnalysisConfig().mutationTestConductor();
-		// final JUnitExecutor executor = new JUnitExecutor(false, testClasses);
-		// conductor.mutationAnalysisUsingExistingMutations(executor);
-
 		final MutateConfiguration mutateConfig = config.getMutationAnalysisConfig();
 
 		final List<File> coverageFiles = Coverage.getCoverageResults(config.getJscoverReportDir());

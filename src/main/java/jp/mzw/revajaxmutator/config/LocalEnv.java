@@ -33,7 +33,7 @@ public class LocalEnv {
 			case PROXY_IP:
 				return "127.0.0.1";
 			case PROXY_PORT:
-				return new Integer(8080).toString();
+				return new Integer(8081).toString();
 			case TIMEOUT:
 				return new Long(3).toString();
 			case THREAD_NUM:
@@ -118,7 +118,7 @@ public class LocalEnv {
 		return this.getParam(Param.JSCOVER_PORT);
 	}
 
-	public boolean shouldRunJSCoverProxy() {
+	public static boolean shouldRunJSCoverProxy() {
 		return LocalEnv.shouldRunJSCoverProxy;
 	}
 

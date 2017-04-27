@@ -31,7 +31,6 @@ import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
-import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
 import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.proxy.RecorderPlugin;
 import jp.mzw.revajaxmutator.proxy.RewriterPlugin;
@@ -81,14 +80,15 @@ public class MutationAnalysis extends Command {
 			this.runTests(args);
 
 			// Start JSCover proxy to record coverage results
-			JSCoverProxyServer.launch(localenv.getJsCoverageDir(), localenv.getJsCoveragePort());
-			localenv.setShouldRunJSCoverProxy(true);
-			System.out.println("RUNNING COVERAGE REPORT");
-			this.runTests(args);
-			localenv.setShouldRunJSCoverProxy(false);
+			// JSCoverProxyServer.launch(localenv.getJsCoverageDir(),
+			// localenv.getJsCoveragePort());
+			// localenv.setShouldRunJSCoverProxy(true);
+			// System.out.println("RUNNING COVERAGE REPORT");
+			// this.runTests(args);
+			// localenv.setShouldRunJSCoverProxy(false);
 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InitializationError
-				| StoreException | InterruptedException | IOException e) {
+				| InterruptedException | IOException | StoreException e) {
 			LOG.error(e.getMessage());
 		} finally {
 			ProxyServer.interrupt();

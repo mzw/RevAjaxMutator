@@ -69,7 +69,7 @@ public abstract class AppConfig implements IAppConfig {
 			case RAM_RECORD_DIR:
 				return "record/app";
 			case JSCOVER_REPORT_DIR:
-				return "jscover/app";
+				return "jscover";
 			case PATH_TO_JS_FILE:
 				return "js/foo.js";
 			case PATH_TO_HTML_FILE:

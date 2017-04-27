@@ -19,9 +19,15 @@ public class JSCoverProxyServer {
 		}
 
 		if (server == null) {
-			server = new Thread(() -> jscover.Main
-					.main(new String[] { "-ws", "--port=" + port, "--proxy", "--local-storage", "--report-dir=" + dir,
-							"--no-instrument-reg=.*jquery.*", "--no-instrument-reg=.*bootstrap.*", }));
+			final ArrayList<String> _args = new ArrayList<String>();
+			_args.add("-ws");
+			_args.add("--port=" + port);
+			_args.add("--proxy");
+			_args.add("--local-storage");
+			_args.add("--report-dir=" + dir);
+			_args.add("--no-instrument-reg=.*jquery.*");
+			_args.add("--no-instrument-reg=.*bootstrap.*");
+			server = new Thread(() -> jscover.Main.main(_args.toArray(new String[_args.size()])));
 			server.start();
 			Thread.sleep(300); // wait for launching proxy server
 		}

@@ -169,9 +169,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 		// TODO Apply do-fewer approach
 		// this.sampling.sample(this.mutationListManager.getMutationFileInformationList());
-		if (this.coverages.isEmpty()) {
-			LOGGER.warn("Skipping sampling optimization.\nTo enable, run the \"coverage\" option first.");
-		}
 
 		// Running test cases on each mutant in a multiple-threads manner
 		final ExecutorService executor = Executors.newFixedThreadPool(this.numOfThreads);
