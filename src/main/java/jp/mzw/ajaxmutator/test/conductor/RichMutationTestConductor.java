@@ -103,7 +103,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		if (0 < n) {
 			this.numOfThreads = n;
 		} else {
-			throw new IllegalStateException("The number of thread should be bigger than 0.");
+			throw new IllegalStateException("The number of threads need to be bigger than 0.");
 		}
 	}
 
@@ -167,7 +167,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final List<String> original = Util.readFromFile(this.pathToJsFile);
 		final List<String> nameOfMutations = this.mutationListManager.getListOfMutationName();
 
-		// TODO Apply do-fewer approach
+		// TODO Apply mutation sampling
 		// this.sampling.sample(this.mutationListManager.getMutationFileInformationList());
 
 		// Running test cases on each mutant in a multiple-threads manner
@@ -191,13 +191,12 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				) {
 					continue;
 				}
-				// TODO
+
 				// Skip test cases that do not cover mutated locations of
 				// mutants
 				if (!this.coverages.isEmpty()
 						&& !Coverage.isCovered(this.coverages, mutant.getStartLine(), mutant.getEndLine())) {
 					LOGGER.info(mutant.getFileName() + " is skipped by coverage");
-					System.out.println(mutant.getFileName() + " is skipped by coverage");
 					continue;
 				}
 
@@ -296,9 +295,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// (RichMutationTestConductor.this.unkilledMutantsInfo) {
 				RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
 				// }
-				synchronized (LOGGER) {
-					LOGGER.info("mutant {} is not be killed", this.description);
-				}
+				LOGGER.info("mutant {} is not killed", this.description);
 				success = false;
 			} else {
 				// Killed mutant
@@ -310,9 +307,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			}
 			final String message = this.executor.getMessageOnLastExecution();
 			if (message != null) {
-				synchronized (LOGGER) {
-					LOGGER.info(message);
-				}
+				LOGGER.info(message);
 			}
 
 			RichMutationTestConductor.this.removeMutantFile(this.numberOfAppliedMutation);

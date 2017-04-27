@@ -208,7 +208,7 @@ public class MutationAnalysis extends Command {
 	}
 
 	/**
-	 * TODO Run test cases on mutants concurrently
+	 * Run test cases on mutants concurrently
 	 *
 	 * @param args
 	 * @throws InstantiationException
@@ -240,7 +240,7 @@ public class MutationAnalysis extends Command {
 	}
 
 	/**
-	 * TODO Run test cases on mutants in a multiple-threads manner
+	 * Run test cases on mutants in a multiple-threads manner
 	 *
 	 * @param config
 	 * @param testClasses
