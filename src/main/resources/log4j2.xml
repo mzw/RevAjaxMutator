@@ -4,12 +4,12 @@
         <!-- <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
         </Console> -->
-        <File name="RAM_FILE_APPENDER" fileName="logs/ram.log" immediateFlush="false" append="false" >
+        <RandomAccessFile name="RAM_FILE_APPENDER" fileName="logs/ram.log" immediateFlush="false" append="false" >
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} - %msg%n"/>
-        </File>
-        <File name="PROXY_FILE_APPENDER" fileName="logs/proxy.log" immediateFlush="false" append="false" >
+        </RandomAccessFile>
+        <RandomAccessFile name="PROXY_FILE_APPENDER" fileName="logs/proxy.log" immediateFlush="false" append="false" >
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} - %msg%n"/>
-        </File>
+        </RandomAccessFile>
     </Appenders>
     <Loggers>
         <Root level="debug">

@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -54,6 +54,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 * other threads from the same batch finish their run
 	 */
 	private CyclicBarrier batchTestBarrier;
+
+	private Semaphore newTaskSemaphore;
 
 	/** Contains coverage results of target JavaScript code */
 	protected Map<File, boolean[]> coverages;
@@ -173,6 +175,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		// Running test cases on each mutant in a multiple-threads manner
 		final ExecutorService executor = Executors.newFixedThreadPool(this.numOfThreads);
 		this.batchTestBarrier = new CyclicBarrier(this.numOfThreads);
+		this.newTaskSemaphore = new Semaphore(this.numOfThreads);
 		final List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
 		for (final String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
@@ -224,9 +227,17 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 				// Execute the test case
 				final TestExecutor targetTestExecutor = this.prioritizer.getTestExecutor(mutant, testExecutors);
-				final Future<Boolean> future = executor.submit(new TestCallable(targetTestExecutor, mutant, description,
-						numberOfAppliedMutation, numberOfMaxMutants));
+				final TestCallable task = new TestCallable(targetTestExecutor, mutant, description,
+						numberOfAppliedMutation, numberOfMaxMutants);
+				final Future<Boolean> future = executor.submit(task);
 				futures.add(future);
+
+				// Wait until all old tasks complete before issuing more
+				try {
+					this.newTaskSemaphore.acquire();
+				} catch (final InterruptedException e) {
+					LOGGER.error(e.getMessage());
+				}
 			}
 
 			// execution can be canceled from outside.
@@ -235,13 +246,12 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				break;
 			}
 		}
+		// Wait for the current tests to finish
 		for (final Future<Boolean> future : futures) {
 			try {
-				future.get();
-			} catch (final InterruptedException e) {
-				e.printStackTrace();
-			} catch (final ExecutionException e) {
-				e.printStackTrace();
+				future.get(10, TimeUnit.SECONDS);
+			} catch (final Exception e) {
+				// NOP
 			}
 		}
 
@@ -291,18 +301,12 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			final String mutationId = Integer.toString(this.numberOfAppliedMutation);
 			if (this.executor.execute(mutationId)) {
 				// Unkilled mutant
-				// synchronized
-				// (RichMutationTestConductor.this.unkilledMutantsInfo) {
 				RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
-				// }
 				LOGGER.info("mutant {} is not killed", this.description);
 				success = false;
 			} else {
 				// Killed mutant
-				// TODO check if this needs to be synchronized
-				// synchronized (this.mutant) {
 				this.mutant.setState(MutationFileInformation.State.KILLED);
-				// }
 				success = true;
 			}
 			final String message = this.executor.getMessageOnLastExecution();
@@ -319,6 +323,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			// test.
 			RichMutationTestConductor.this.batchTestBarrier.await();
 			RichMutationTestConductor.this.batchTestBarrier.reset();
+
+			RichMutationTestConductor.this.newTaskSemaphore.release();
 
 			return success;
 		}
