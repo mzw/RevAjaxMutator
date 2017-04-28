@@ -75,7 +75,7 @@ public class RewriterPlugin extends ProxyPlugin {
 
 			// Get cookie to know which mutated file to get
 			String mutantId = "";
-			try (final FileWriter fw = new FileWriter("/home/filipe/proxy_debug.txt", true)) {
+			try (final FileWriter fw = new FileWriter("proxy_debug.txt", true)) {
 				final String[] cookies = request.getHeaders("Cookie");
 				// fw.write(String.join(", ", cookies) + "\n");
 				final String jsMutantRegex = "jsMutantFile=[a-zA-Z0-9]*";

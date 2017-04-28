@@ -52,6 +52,6 @@ public class RewriterPluginTest {
 
 		final String responseFileContent = new String(response.getContent(), "UTF-8");
 
-		Assert.assertEquals(responseFileContent, dummyMutantContent);
+		Assert.assertEquals(dummyMutantContent, responseFileContent);
 	}
 }

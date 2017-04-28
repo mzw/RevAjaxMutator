@@ -5,6 +5,7 @@ record/
 */workaround/
 ram.log
 logs/
+proxy_debug.txt
 
 # WebScarab files
 /.conversation/
