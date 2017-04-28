@@ -82,12 +82,12 @@ public class ConfigHelperTest {
 		assertRepairSourceNums(parameters, DefaultParameters.TARGET_ELEMENTS_HANDLING_EVENT.size(), 0, 0, 6, 0);
 	}
 
-	// TODO fix event type parsing in jsparser
+	// TODO jsparser and the helper return different event types
 	@Ignore
 	@Test
 	public void testGetRepairSourcesForEventType() {
 		final Collection<? extends RepairSource> parameters = helper.getRepairSourcesForEventType();
-		assertRepairSourceNums(parameters, 0, DefaultParameters.EVENT_TYPES_MOUSE.size(), 0, 0, 0);
+		assertRepairSourceNums(parameters, 0, 2, 0, 0, 0);
 	}
 
 	@Test
@@ -134,6 +134,7 @@ public class ConfigHelperTest {
 			if (RepairSource.Type.Default.equals(param.getType())) {
 				defaults++;
 			} else if (RepairSource.Type.JavaScript.equals(param.getType())) {
+				// System.out.println(param.getValue());
 				js++;
 			} else if (RepairSource.Type.HTML.equals(param.getType())) {
 				html++;

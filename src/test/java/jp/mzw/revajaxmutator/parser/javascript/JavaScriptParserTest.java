@@ -42,8 +42,14 @@ public class JavaScriptParserTest {
 		assertEquals("\"myid\"", parser.getAttributeValuesFromInfixExpression().iterator().next());
 	}
 
+	/**
+	 * Tests event types in the style of "el.on(<event_type>)"
+	 *
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
 	@Test
-	public void getEventTypes() throws URISyntaxException, IOException {
+	public void getEventTypes1() throws URISyntaxException, IOException {
 		final File file = this.getTestCaseFile("parser-test/roundcubemail.app.js");
 		final JavaScriptParser parser = new JavaScriptParser(file);
 		final Set<String> result = parser.getEventTypes();
@@ -51,6 +57,25 @@ public class JavaScriptParserTest {
 				"keydown", "mousedown", "mouseover");
 		final int expectedNrElements = expectedTypes.size();
 		expectedTypes.retainAll(result);
+		assertEquals(expectedNrElements, expectedTypes.size());
+	}
+
+	/**
+	 * Tests event types in the style of "el.event_type(action)"
+	 *
+	 * @throws URISyntaxException
+	 * @throws IOException
+	 */
+	@Test
+	public void getEventTypes2() throws URISyntaxException, IOException {
+		final File file = this.getTestCaseFile(
+				"record-test/quizzy/http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js");
+		final JavaScriptParser parser = new JavaScriptParser(file);
+		final Set<String> result = parser.getEventTypes();
+		final Set<String> expectedTypes = Sets.newHashSet("click", "get");
+		final int expectedNrElements = expectedTypes.size();
+		expectedTypes.retainAll(result);
+
 		assertEquals(expectedNrElements, expectedTypes.size());
 	}
 

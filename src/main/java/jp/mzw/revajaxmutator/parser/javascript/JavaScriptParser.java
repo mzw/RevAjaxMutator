@@ -14,6 +14,7 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ast.AstNode;
 import org.mozilla.javascript.ast.AstRoot;
 import org.mozilla.javascript.ast.ElementGet;
+import org.mozilla.javascript.ast.ExpressionStatement;
 import org.mozilla.javascript.ast.FunctionCall;
 import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.InfixExpression;
@@ -183,7 +184,7 @@ public class JavaScriptParser {
 	private static final Set<String> eventTypeKeywords = ImmutableSet.of("blue", "change", "click", "dblclick",
 			"contextmenu", "focus", "focusin", "focusout", "hover", "keydown", "keypress", "keyup", "mousedown",
 			"mouseenter", "mouseleave", "mouseremove", "mouseout", "mouseover", "mouseup", "mousewheel", "copy", "cut",
-			"paste", "resize", "scroll", "select", "submit", "unload");
+			"paste", "resize", "scroll", "select", "submit", "unload", "get", "post");
 
 	/**
 	 * Get set of event types implemented in given JavaScript file
@@ -192,7 +193,9 @@ public class JavaScriptParser {
 	 */
 	public Set<String> getEventTypes() {
 		final Set<String> ret = Sets.newHashSet();
+		// System.out.println(this.ast.debugPrint());
 		this.ast.visitAll(node -> {
+			// "el.event_handler(event_type)"
 			if (node instanceof FunctionCall) {
 				final FunctionCall functionCall = (FunctionCall) node;
 				// Get the name of the function
@@ -214,6 +217,19 @@ public class JavaScriptParser {
 					}
 					if (eventTypeKeywords.contains(name.getIdentifier())) {
 						ret.add(name.getIdentifier());
+					}
+				}
+			}
+			// "el.event_type(action)"
+			if (node instanceof ExpressionStatement) {
+				final ExpressionStatement exp = (ExpressionStatement) node;
+				if (exp.getExpression() instanceof FunctionCall
+						&& ((FunctionCall) exp.getExpression()).getTarget() instanceof PropertyGet) {
+					final PropertyGet elProperty = (PropertyGet) ((FunctionCall) exp.getExpression()).getTarget();
+					final Name propName = elProperty.getProperty();
+					final String propText = propName.getIdentifier().toLowerCase();
+					if (JavaScriptParser.eventTypeKeywords.contains(propText)) {
+						ret.add(propText);
 					}
 				}
 			}
