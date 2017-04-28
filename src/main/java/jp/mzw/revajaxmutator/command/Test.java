@@ -35,34 +35,35 @@ public class Test extends Command {
 	 */
 	@Override
 	public String getUsageContent() {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 
 		builder.append(Command.getCommandDescription("test ${TestClassName}", "Run test cases"));
-		builder.append(Command.getCommandDescription("test-each ${ConfigClassName} ${TestClassName}", "Run each test case"));
+		builder.append(
+				Command.getCommandDescription("test-each ${ConfigClassName} ${TestClassName}", "Run each test case"));
 
 		return builder.toString();
 	}
 
 	/**
 	 * Run all test cases
-	 * 
+	 *
 	 * @param args
 	 */
 	public void all(String[] args) {
 		if (args.length < 1) {
-			showUsage();
+			this.showUsage();
 			return;
 		}
 
 		try {
-			LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 			ProxyServer.launch(null, localenv.getProxyAddress());
 
-			for (String testClassName : args) {
-				Class<?> testClass = getClass(testClassName);
+			for (final String testClassName : args) {
+				final Class<?> testClass = getClass(testClassName);
 
 				Runner runner = null;
-				RunWith runWith = testClass.getAnnotation(RunWith.class);
+				final RunWith runWith = testClass.getAnnotation(RunWith.class);
 				if (runWith == null) {
 					runner = new JUnitTestRunner(testClass, true);
 				} else if (Theories.class.equals(runWith.value())) {
@@ -71,7 +72,7 @@ public class Test extends Command {
 					runner = new BlockJUnit4ClassRunner(testClass);
 				}
 
-				Result result = (new JUnitCore()).run(runner);
+				final Result result = (new JUnitCore()).run(runner);
 				showTestResult(result);
 
 				ProxyServer.interrupt();
@@ -85,47 +86,50 @@ public class Test extends Command {
 
 	/**
 	 * Run each test case and measure its coverage
-	 * 
+	 *
 	 * @param args
 	 */
 	public void each(String[] args) {
 		if (args.length < 2) {
-			showUsage();
+			this.showUsage();
 			return;
 		}
 
 		try {
-			LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 
-			String configClassName = args[0];
-			Class<?> configClass = getClass(configClassName);
-			AppConfig config = (AppConfig) configClass.newInstance();
+			final String configClassName = args[0];
+			final Class<?> configClass = getClass(configClassName);
+			final AppConfig config = (AppConfig) configClass.newInstance();
 
-			File dir = config.getJscoverReportDir();
-			JSCoverProxyServer.launch(dir.getAbsolutePath(), new Integer(localenv.getProxyPort()).toString());
+			final File dir = config.getJscoverReportDir();
+			JSCoverProxyServer.launch(dir.getAbsolutePath(), localenv.getJsCoveragePort());
+			// JSCoverProxyServer.launch(localenv.getJsCoverageDir(),
+			// localenv.getJsCoveragePort());
+			localenv.setShouldRunJSCoverProxy(true);
 
-			List<TestResult> results = new ArrayList<>();
+			final List<TestResult> results = new ArrayList<>();
 			for (int i = 1; i < args.length; i++) {
-				String testClassName = args[i];
-				Class<?> testClass = getClass(testClassName);
+				final String testClassName = args[i];
+				final Class<?> testClass = getClass(testClassName);
 
 				// TODO Remove or backup previous results
 
-				for (Method method : testClass.getMethods()) {
+				for (final Method method : testClass.getMethods()) {
 					if (isTestMethod(method)) {
 						// TODO run with Theory?
-						Result result = (new JUnitCore()).run(new EachJUnitTestRunner(testClass, true, method));
+						final Result result = (new JUnitCore()).run(new EachJUnitTestRunner(testClass, true, method));
 						showTestResult(result);
 						results.add(new TestResult(testClass.getName(), method.getName(), result));
 
 						Thread.sleep(500); // wait for outputting JSCover file
-						String eachDirName = testClassName + "#" + method.getName();
-						File eachDir = new File(dir, eachDirName);
+						final String eachDirName = testClassName + "#" + method.getName();
+						final File eachDir = new File(dir, eachDirName);
 						if (eachDir.exists()) {
 							eachDir.delete();
 						}
 						eachDir.mkdirs();
-						for (File file : dir.listFiles()) {
+						for (final File file : dir.listFiles()) {
 							if (file.getName().contains("jscoverage") || file.getName().contains("original-src")) {
 								file.renameTo(new File(eachDir, file.getName()));
 							}
@@ -133,22 +137,25 @@ public class Test extends Command {
 					}
 				}
 			}
+			localenv.setShouldRunJSCoverProxy(false);
 			TestResult.store(dir, results);
 
 			JSCoverProxyServer.interrupt();
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InitializationError | InterruptedException | IOException e) {
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | InterruptedException
+				| IOException | InitializationError e) {
 			LOG.error(e.getMessage());
 			JSCoverProxyServer.interrupt();
 		}
 	}
 
 	/**
-	 * 
+	 *
 	 * @param result
 	 */
 	private static void showTestResult(Result result) {
-		System.out.println(String.format("%d tests, %d ignore, %d fail", result.getRunCount(), result.getIgnoreCount(), result.getFailureCount()));
-		for (Failure f : result.getFailures()) {
+		System.out.println(String.format("%d tests, %d ignore, %d fail", result.getRunCount(), result.getIgnoreCount(),
+				result.getFailureCount()));
+		for (final Failure f : result.getFailures()) {
 			System.out.println(f.getDescription());
 			System.out.println(" exception: " + f.getException());
 			LOG.warn(f.getDescription().toString());

@@ -2,22 +2,24 @@ package jp.mzw.revajaxmutator.fixer;
 
 import java.util.Collection;
 
-import jp.mzw.ajaxmutator.mutatable.EventAttachment;
-import jp.mzw.revajaxmutator.parser.RepairSource;
-
 import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.Name;
 import org.mozilla.javascript.ast.StringLiteral;
 
 import com.google.common.collect.Sets;
 
+import jp.mzw.ajaxmutator.mutatable.EventAttachment;
+import jp.mzw.revajaxmutator.parser.RepairSource;
+
 /**
- * 
+ *
  * @author Junto Nakaoka
  *
  */
 public class EventTypeTSFixer extends AbstractReplacingAmongFixer<EventAttachment> {
 
-	public EventTypeTSFixer(Collection<EventAttachment> mutationTargets, Collection<? extends RepairSource> repairSources) {
+	public EventTypeTSFixer(Collection<EventAttachment> mutationTargets,
+			Collection<? extends RepairSource> repairSources) {
 		super(EventAttachment.class, mutationTargets, repairSources);
 	}
 
@@ -36,28 +38,33 @@ public class EventTypeTSFixer extends AbstractReplacingAmongFixer<EventAttachmen
 	@Override
 	protected String formatAccordingTo(AstNode mutatingNode, AstNode mutatedNode) {
 		if ((mutatedNode instanceof StringLiteral) && !(mutatingNode instanceof StringLiteral)) {
-			String mutatingEventType = ((StringLiteral) mutatingNode).getValue();
-			String mutatedEventType = mutatedNode.toSource();
-			return '"' + manipulateOnPrefix(mutatingEventType, mutatedEventType) + '"';
+			final String mutatingEventType = mutatingNode instanceof Name ? ((Name) mutatingNode).getIdentifier()
+					: ((StringLiteral) mutatingNode).getValue();
+			final String mutatedEventType = mutatedNode.toSource();
+			return '"' + this.manipulateOnPrefix(mutatingEventType, mutatedEventType) + '"';
 		} else if (!(mutatedNode instanceof StringLiteral) && (mutatingNode instanceof StringLiteral)) {
-			String mutatingEventType = mutatingNode.toSource();
-			String mutatedEventType = ((StringLiteral) mutatedNode).getValue();
-			return manipulateOnPrefix(mutatingEventType, mutatedEventType);
+			final String mutatingEventType = mutatingNode.toSource();
+			final String mutatedEventType = mutatedNode instanceof Name ? ((Name) mutatedNode).getIdentifier()
+					: ((StringLiteral) mutatedNode).getValue();
+			return this.manipulateOnPrefix(mutatingEventType, mutatedEventType);
 		} else if ((mutatedNode instanceof StringLiteral) && (mutatingNode instanceof StringLiteral)) {
-			String mutatingEventType = ((StringLiteral) mutatingNode).getValue();
-			String mutatedEventType = ((StringLiteral) mutatedNode).getValue();
-			return '"' + manipulateOnPrefix(mutatingEventType, mutatedEventType) + '"';
+			final String mutatingEventType = ((StringLiteral) mutatingNode).getValue();
+			final String mutatedEventType = ((StringLiteral) mutatedNode).getValue();
+			return '"' + this.manipulateOnPrefix(mutatingEventType, mutatedEventType) + '"';
 		}
 		return super.formatAccordingTo(mutatingNode, mutatedNode);
 	}
 
 	/**
-	 * Case #1: If mutated start with 'on' but mutating does not start with 'on', return 'on' + mutating.
-	 * Case #2: If mutated does not start with 'on' but mutating starts with 'on', return mutating without 'on'.
+	 * Case #1: If mutated start with 'on' but mutating does not start with
+	 * 'on', return 'on' + mutating. Case #2: If mutated does not start with
+	 * 'on' but mutating starts with 'on', return mutating without 'on'.
 	 * Otherwise, return mutating.
-	 * 
-	 * @param mutatingEventType candidate
-	 * @param mutatedEventType base
+	 *
+	 * @param mutatingEventType
+	 *            candidate
+	 * @param mutatedEventType
+	 *            base
 	 * @return proper event type
 	 */
 	private String manipulateOnPrefix(String mutatingEventType, String mutatedEventType) {

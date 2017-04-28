@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -18,12 +19,12 @@ import org.owasp.webscarab.model.Response;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RewriterPlugin extends ProxyPlugin {
-	private String mDirname;
-	private List<String> mRewriteFiles;
+	private final String mDirname;
+	private final List<String> mRewriteFiles;
 
 	public RewriterPlugin(String dirname) {
-		mDirname = dirname;
-		mRewriteFiles = new ArrayList<String>();
+		this.mDirname = dirname;
+		this.mRewriteFiles = new ArrayList<String>();
 	}
 
 	@Override
@@ -37,29 +38,31 @@ public class RewriterPlugin extends ProxyPlugin {
 	}
 
 	public void setRewriteFile(String filename) {
-		if (filename != null && !mRewriteFiles.contains(filename)) {
-			mRewriteFiles.add(filename);
+		if (filename != null && !this.mRewriteFiles.contains(filename)) {
+			this.mRewriteFiles.add(filename);
 		}
 	}
 
 	/** */
 	public static final String MUTANT_HEADER_NAME = "mutant";
-	
+
 	/**
 	 * TODO Need to implement test cases
-	 * 
+	 *
 	 * @param request
 	 * @param response
+	 * @throws Exception
 	 */
 	protected synchronized void rewriteResponseContent(Request request, Response response) {
 		try {
-			String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
+			final String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
 
+			// Check if the url is for the .js file
 			boolean matched = false;
 			String regex = null;
-			for (String _filename : mRewriteFiles) {
-				Pattern pattern = Pattern.compile(_filename);
-				Matcher matcher = pattern.matcher(filename);
+			for (final String _filename : this.mRewriteFiles) {
+				final Pattern pattern = Pattern.compile(_filename);
+				final Matcher matcher = pattern.matcher(filename);
 				if (matcher.find()) {
 					matched = true;
 					regex = _filename;
@@ -70,16 +73,34 @@ public class RewriterPlugin extends ProxyPlugin {
 				return;
 			}
 
+			// Get cookie to know which mutated file to get
+			String mutantId = "";
+			try (final FileWriter fw = new FileWriter("/home/filipe/proxy_debug.txt", true)) {
+				final String[] cookies = request.getHeaders("Cookie");
+				// fw.write(String.join(", ", cookies) + "\n");
+				final String jsMutantRegex = "jsMutantFile=[a-zA-Z0-9]*";
+				final Pattern jsMutantPattern = Pattern.compile(jsMutantRegex);
+				final Matcher jsMutantMatcher = jsMutantPattern.matcher(cookies[0]);
+				if (jsMutantMatcher.find()) {
+					mutantId = "." + jsMutantMatcher.group().split("=")[1];
+					fw.write(mutantId + "\n");
+				}
+			}
+
+			// Get the mutated file to replace in the response message
 			BufferedInputStream in = null;
 			if (request.getHeader(MUTANT_HEADER_NAME) == null) {
-				Pattern pattern = Pattern.compile(regex);
-				for (File file : new File(mDirname).listFiles()) {
+				// Search for .js file
+				final Pattern pattern = Pattern.compile(regex);
+				for (File file : new File(this.mDirname).listFiles()) {
 					if (file.isFile()) {
-						Matcher matcher = pattern.matcher(file.getName());
+						final Matcher matcher = pattern.matcher(file.getName());
 						if (matcher.find()) {
-							in = new BufferedInputStream(new FileInputStream(file));
+							in = new BufferedInputStream(new FileInputStream(file + mutantId));
 							break;
 						}
+						// If file name is too big, it was split into a
+						// hierarchy of directories
 					} else if (file.isDirectory()) {
 						String name = file.getName();
 						while (0 < file.listFiles().length) {
@@ -89,9 +110,9 @@ public class RewriterPlugin extends ProxyPlugin {
 								break;
 							}
 						}
-						Matcher matcher = pattern.matcher(name);
+						final Matcher matcher = pattern.matcher(name);
 						if (matcher.find()) {
-							in = new BufferedInputStream(new FileInputStream(file));
+							in = new BufferedInputStream(new FileInputStream(file + mutantId));
 							break;
 						}
 					}
@@ -100,51 +121,54 @@ public class RewriterPlugin extends ProxyPlugin {
 					return;
 				}
 			} else {
-				String mutantname = request.getHeader(MUTANT_HEADER_NAME);
+				final String mutantname = request.getHeader(MUTANT_HEADER_NAME);
 
 				String testedFilename = "";
 
-				File dir = new File(mDirname + "/" + "tested");
-				File[] files = dir.listFiles();
-				for (File file : files) {
+				final File dir = new File(this.mDirname + "/" + "tested");
+				final File[] files = dir.listFiles();
+				for (final File file : files) {
 					if (file.getName().contains(mutantname)) {
 						testedFilename = file.getName();
 					}
 				}
-				in = new BufferedInputStream(new FileInputStream(mDirname + "/" + "tested" + "/" + testedFilename));
+				in = new BufferedInputStream(
+						new FileInputStream(this.mDirname + "/" + "tested" + "/" + testedFilename));
 			}
 
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			byte[] buf = new byte[1024 * 8];
+			// Replace incoming server .js file with local, mutated .js file
+			final ByteArrayOutputStream out = new ByteArrayOutputStream();
+			final byte[] buf = new byte[1024 * 8];
 			int len = 0;
 			while ((len = in.read(buf)) != -1) {
 				out.write(buf, 0, len);
 			}
 			in.close();
 			response.setContent(out.toByteArray());
-		} catch (FileNotFoundException e) {
+		} catch (final FileNotFoundException e) {
 			// ignore non-recorded urls
-		} catch (IOException e) {
+		} catch (final IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	private class Plugin implements HTTPClient {
-		private HTTPClient mClient;
+		private final HTTPClient mClient;
 
 		public Plugin(HTTPClient client) {
-			mClient = client;
+			this.mClient = client;
 		}
 
+		@Override
 		public Response fetchResponse(Request request) throws IOException {
-			// remove if-modified-since and if-none-matche to avoid 304
+			// remove if-modified-since and if-none-match to avoid 304
 			request.deleteHeader("If-Modified-Since");
 			request.deleteHeader("If-None-Match");
 
-			Response response = mClient.fetchResponse(request);
+			final Response response = this.mClient.fetchResponse(request);
 
 			if ("200".equals(response.getStatus())) {
-				rewriteResponseContent(request, response);
+				RewriterPlugin.this.rewriteResponseContent(request, response);
 			}
 			return response;
 		}

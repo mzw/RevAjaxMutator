@@ -1,4 +1,4 @@
-package jp.mzw.revajaxmutator.parser.javascript;
+package jp.mzw.revajaxmutator.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -7,14 +7,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
+import jp.mzw.revajaxmutator.parser.javascript.JavaScriptParser;
 
 public class JavaScriptParserTest {
 
+	@Ignore
 	@Test
 	public void parse() throws IOException, URISyntaxException {
 		final File file = this.getTestCaseFile("quizzy.js");
@@ -22,36 +25,35 @@ public class JavaScriptParserTest {
 		assertNotNull(parser.getAstRoot());
 	}
 
+	@Ignore
 	@Test
 	public void getAllFunctions() throws URISyntaxException, IOException {
 		final File file = this.getTestCaseFile("quizzy.js");
 		final JavaScriptParser parser = new JavaScriptParser(file);
-		final Set<String> result = parser.getFunctionNames();
-		final Set<String> expected = Sets.newHashSet("startQuiz", "requestNextQuestion", "checkQuestion",
-				"restartQuizzy");
-		final int expectedSize = expected.size();
-		expected.retainAll(result);
-
-		assertEquals(expectedSize, expected.size());
+		assertEquals(Arrays.asList("startQuiz", "requestNextQuestion", "checkQuestion", "restartQuizzy"),
+				parser.getFunctionNames());
 	}
 
+	@Ignore
 	@Test
 	public void getAttributeValuesFromInfixExpression() throws URISyntaxException, IOException {
 		final File file = this.getTestCaseFile("parser-test/jsparser_test.js");
 		final JavaScriptParser parser = new JavaScriptParser(file);
-		assertEquals("\"myid\"", parser.getAttributeValuesFromInfixExpression().iterator().next());
+		assertEquals(Arrays.asList("\"myid\""), parser.getAttributeValuesFromInfixExpression());
 	}
 
+	@Ignore
 	@Test
 	public void getEventTypes() throws URISyntaxException, IOException {
 		final File file = this.getTestCaseFile("parser-test/roundcubemail.app.js");
 		final JavaScriptParser parser = new JavaScriptParser(file);
-		final Set<String> result = parser.getEventTypes();
-		final Set<String> expectedTypes = Sets.newHashSet("select", "keypress", "click", "dblclick", "mouseup", "keyup",
-				"keydown", "mousedown", "mouseover");
-		final int expectedNrElements = expectedTypes.size();
-		expectedTypes.retainAll(result);
-		assertEquals(expectedNrElements, expectedTypes.size());
+		@SuppressWarnings("unchecked")
+		final List<String> eventTypes = (List<String>) parser.getEventTypes();
+
+		assertEquals(Arrays.asList("select", "keypress", "click", "dblclick", "click", "mouseup", "keypress",
+				"dblclick", "select", "select", "keypress", "keypress", "select", "keypress", "select", "select",
+				"keyup", "select", "keydown", "mouseup", "mouseup", "mouseup", "mousedown", "mouseup", "keypress",
+				"mouseover", "mouseover", "keydown", "keydown", "select", "click"), eventTypes);
 	}
 
 	private File getTestCaseFile(String filename) throws URISyntaxException {

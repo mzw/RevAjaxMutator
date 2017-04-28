@@ -17,6 +17,7 @@ abstract public class Command implements ICommand {
 			new Test().all(args);
 			System.exit(0);
 		}
+		// Generate test coverage
 		if ("test-each".equals(cmd)) {
 			new Test().each(args);
 			System.exit(0);
@@ -54,6 +55,10 @@ abstract public class Command implements ICommand {
 			new ProgramRepair().validate(args);
 			System.exit(0);
 		}
+		if ("validate-concurrently".equals(cmd)) {
+			new ProgramRepair().validateConcurrently(args);
+			System.exit(0);
+		}
 
 		// Others
 		if ("record".equals(cmd)) {
@@ -71,7 +76,7 @@ abstract public class Command implements ICommand {
 
 	/**
 	 * Get list of commands
-	 * 
+	 *
 	 * @return list of commands
 	 */
 	public static List<Class<? extends Command>> getCommands() {
@@ -80,11 +85,11 @@ abstract public class Command implements ICommand {
 
 	/**
 	 * Get usage header
-	 * 
+	 *
 	 * @return usage header as string
 	 */
 	protected static String getUsageHeader() {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		builder.append("$ java -cp ${ClassPath} jp.mzw.revajaxmutator.CLI <command> [arguments...]").append("\n");
 		builder.append("\n");
 		builder.append("Commands:").append("\n");
@@ -95,21 +100,21 @@ abstract public class Command implements ICommand {
 	 * Show usage of this command
 	 */
 	public void showUsage() {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		builder.append(getUsageHeader());
-		builder.append(getUsageContent());
+		builder.append(this.getUsageContent());
 		System.out.println(builder);
 	}
 
 	/**
 	 * Determine whether given method has Test annotation
-	 * 
+	 *
 	 * @param method
 	 *            is test method candidate
 	 * @return true if has, otherwise false
 	 */
 	public static boolean isTestMethod(Method method) {
-		for (Annotation annotation : method.getAnnotations()) {
+		for (final Annotation annotation : method.getAnnotations()) {
 			if (annotation.annotationType().equals(org.junit.Test.class)) {
 				return true;
 			}
@@ -118,7 +123,7 @@ abstract public class Command implements ICommand {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param className
 	 * @return
 	 * @throws ClassNotFoundException
@@ -126,17 +131,17 @@ abstract public class Command implements ICommand {
 	public static Class<?> getClass(String className) throws ClassNotFoundException {
 		try {
 			return Class.forName(className);
-		} catch (ClassNotFoundException e) {
+		} catch (final ClassNotFoundException e) {
 			if (!className.contains(".")) {
 				throw e;
 			}
 		}
-		int i = className.lastIndexOf('.');
+		final int i = className.lastIndexOf('.');
 		return Class.forName(className.substring(0, i) + '$' + className.substring(i + 1));
 	}
-	
+
 	protected static String getCommandDescription(String command, String description) {
-		StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder();
 		builder.append("    ").append(command).append("\n");
 		builder.append("                  ").append(description).append("\n");
 		return builder.toString();

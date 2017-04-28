@@ -2,10 +2,21 @@ package jp.mzw.ajaxmutator.test.runner;
 
 import static org.junit.internal.runners.rules.RuleMemberValidator.RULE_VALIDATOR;
 
-import org.junit.*;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.Test.None;
 import org.junit.internal.runners.model.ReflectiveCallable;
-import org.junit.internal.runners.statements.*;
+import org.junit.internal.runners.statements.ExpectException;
+import org.junit.internal.runners.statements.Fail;
+import org.junit.internal.runners.statements.FailOnTimeout;
+import org.junit.internal.runners.statements.InvokeMethod;
+import org.junit.internal.runners.statements.RunAfters;
+import org.junit.internal.runners.statements.RunBefores;
 import org.junit.rules.RunRules;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -14,6 +25,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runner.notification.StoppedByUserException;
+import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.ParentRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -22,7 +34,7 @@ import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import jp.mzw.revajaxmutator.test.WebAppTestBase;
 
 /**
  * Basically same as {@link BlockJUnit4ClassRunner}, but this class can skip
@@ -32,67 +44,79 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	private static final Logger LOGGER = LoggerFactory.getLogger(JUnitTestRunner.class);
 
 	protected final boolean shouldRunAllTest;
-	protected boolean skipNextExecution = false;
-	protected RunNotifierFailureReporter reporter;
-	protected RunNotifier lastNotifier;
+	protected ThreadLocal<Boolean> skipNextExecution;
+	protected ThreadLocal<RunNotifierFailureReporter> reporter;
+	protected ThreadLocal<RunNotifier> lastNotifier;
+	protected ThreadLocal<String> mutationFileId;
 
-	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest) throws InitializationError {
+	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest, String mutationId) throws InitializationError {
 		super(testClass);
 		this.shouldRunAllTest = shouldRunAllTest;
+
+		this.reporter = new ThreadLocal<>();
+		this.lastNotifier = new ThreadLocal<>();
+		this.mutationFileId = new ThreadLocal<>();
+		this.skipNextExecution = new ThreadLocal<>();
+		this.skipNextExecution.set(false);
+		this.mutationFileId.set(mutationId);
+	}
+
+	public JUnitTestRunner(Class<?> testClass, boolean shouldRunAllTest) throws InitializationError {
+		this(testClass, shouldRunAllTest, "");
 	}
 
 	@Override
 	protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
 
-		Description description = describeChild(method);
-		if (method.getAnnotation(Ignore.class) != null || skipNextExecution) {
+		final Description description = this.describeChild(method);
+		if (method.getAnnotation(Ignore.class) != null || this.skipNextExecution.get()) {
 			notifier.fireTestIgnored(description);
 		} else {
-			if (!shouldRunAllTest) {
-				if (reporter == null || !lastNotifier.equals(notifier)) {
-					reporter = new RunNotifierFailureReporter(notifier);
-					lastNotifier = notifier;
+			if (!this.shouldRunAllTest) {
+				if (this.reporter.get() == null || !this.lastNotifier.get().equals(notifier)) {
+					this.reporter.set(new RunNotifierFailureReporter(notifier));
+					this.lastNotifier.set(notifier);
 				}
 			} else {
-				if (reporter == null) {
-					reporter = new RunNotifierFailureReporter(notifier);
+				if (this.reporter.get() == null) {
+					this.reporter.set(new RunNotifierFailureReporter(notifier));
 				}
 			}
-			LOGGER.info("<Thread:{}> run test {} : {}", Thread.currentThread().getId(), getTestClass().getName(),
+			LOGGER.info("<Thread:{}> run test {} : {}", Thread.currentThread().getId(), this.getTestClass().getName(),
 					method.getName());
-			runLeaf(methodBlock(method), description, reporter);
+			this.runLeaf(this.methodBlock(method), description, this.reporter.get());
 		}
 	}
 
 	@Override
 	protected Description describeChild(FrameworkMethod method) {
-		return Description.createTestDescription(getTestClass().getJavaClass(), testName(method),
+		return Description.createTestDescription(this.getTestClass().getJavaClass(), this.testName(method),
 				method.getAnnotations());
 	}
 
 	@Override
 	protected List<FrameworkMethod> getChildren() {
-		return computeTestMethods();
+		return this.computeTestMethods();
 	}
 
 	protected List<FrameworkMethod> computeTestMethods() {
-		return getTestClass().getAnnotatedMethods(Test.class);
+		return this.getTestClass().getAnnotatedMethods(Test.class);
 	}
 
 	@Override
 	protected void collectInitializationErrors(List<Throwable> errors) {
 		super.collectInitializationErrors(errors);
 
-		validateNoNonStaticInnerClass(errors);
-		validateConstructor(errors);
-		validateInstanceMethods(errors);
-		validateFields(errors);
+		this.validateNoNonStaticInnerClass(errors);
+		this.validateConstructor(errors);
+		this.validateInstanceMethods(errors);
+		this.validateFields(errors);
 
 	}
 
 	protected void validateNoNonStaticInnerClass(List<Throwable> errors) {
-		if (getTestClass().isANonStaticInnerClass()) {
-			String gripe = "The inner class " + getTestClass().getName() + " is not static.";
+		if (this.getTestClass().isANonStaticInnerClass()) {
+			final String gripe = "The inner class " + this.getTestClass().getName() + " is not static.";
 			errors.add(new Exception(gripe));
 		}
 	}
@@ -103,8 +127,8 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * different validation rules.
 	 */
 	protected void validateConstructor(List<Throwable> errors) {
-		validateOnlyOneConstructor(errors);
-		validateZeroArgConstructor(errors);
+		this.validateOnlyOneConstructor(errors);
+		this.validateZeroArgConstructor(errors);
 	}
 
 	/**
@@ -112,8 +136,8 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * (do not override)
 	 */
 	protected void validateOnlyOneConstructor(List<Throwable> errors) {
-		if (!hasOneConstructor()) {
-			String gripe = "Test class should have exactly one public constructor";
+		if (!this.hasOneConstructor()) {
+			final String gripe = "Test class should have exactly one public constructor";
 			errors.add(new Exception(gripe));
 		}
 	}
@@ -123,15 +147,15 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * parameters (do not override)
 	 */
 	protected void validateZeroArgConstructor(List<Throwable> errors) {
-		if (!getTestClass().isANonStaticInnerClass() && hasOneConstructor()
-				&& (getTestClass().getOnlyConstructor().getParameterTypes().length != 0)) {
-			String gripe = "Test class should have exactly one public zero-argument constructor";
+		if (!this.getTestClass().isANonStaticInnerClass() && this.hasOneConstructor()
+				&& (this.getTestClass().getOnlyConstructor().getParameterTypes().length != 0)) {
+			final String gripe = "Test class should have exactly one public zero-argument constructor";
 			errors.add(new Exception(gripe));
 		}
 	}
 
 	protected boolean hasOneConstructor() {
-		return getTestClass().getJavaClass().getConstructors().length == 1;
+		return this.getTestClass().getJavaClass().getConstructors().length == 1;
 	}
 
 	/**
@@ -143,16 +167,17 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected void validateInstanceMethods(List<Throwable> errors) {
-		validatePublicVoidNoArgMethods(After.class, false, errors);
-		validatePublicVoidNoArgMethods(Before.class, false, errors);
-		validateTestMethods(errors);
+		this.validatePublicVoidNoArgMethods(After.class, false, errors);
+		this.validatePublicVoidNoArgMethods(Before.class, false, errors);
+		this.validateTestMethods(errors);
 
-		if (computeTestMethods().size() == 0)
+		if (this.computeTestMethods().size() == 0) {
 			errors.add(new Exception("No runnable methods"));
+		}
 	}
 
 	protected void validateFields(List<Throwable> errors) {
-		RULE_VALIDATOR.validate(getTestClass(), errors);
+		RULE_VALIDATOR.validate(this.getTestClass(), errors);
 	}
 
 	/**
@@ -160,7 +185,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * is not a public, void instance method with no arguments.
 	 */
 	protected void validateTestMethods(List<Throwable> errors) {
-		validatePublicVoidNoArgMethods(Test.class, false, errors);
+		this.validatePublicVoidNoArgMethods(Test.class, false, errors);
 	}
 
 	/**
@@ -169,7 +194,12 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 * one exists).
 	 */
 	protected Object createTest() throws Exception {
-		return getTestClass().getOnlyConstructor().newInstance();
+		final Object instance = this.getTestClass().getOnlyConstructor().newInstance();
+
+		final WebAppTestBase webAppTest = (WebAppTestBase) instance;
+		webAppTest.setMutationFileId(this.mutationFileId.get());
+
+		return instance;
 	}
 
 	/**
@@ -218,19 +248,19 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 			test = new ReflectiveCallable() {
 				@Override
 				protected Object runReflectiveCall() throws Throwable {
-					return createTest();
+					return JUnitTestRunner.this.createTest();
 				}
 			}.run();
-		} catch (Throwable e) {
+		} catch (final Throwable e) {
 			return new Fail(e);
 		}
 
-		Statement statement = methodInvoker(method, test);
-		statement = possiblyExpectingExceptions(method, test, statement);
-		statement = withPotentialTimeout(method, test, statement);
-		statement = withBefores(method, test, statement);
-		statement = withAfters(method, test, statement);
-		statement = withRules(method, test, statement);
+		Statement statement = this.methodInvoker(method, test);
+		statement = this.possiblyExpectingExceptions(method, test, statement);
+		statement = this.withPotentialTimeout(method, test, statement);
+		statement = this.withBefores(method, test, statement);
+		statement = this.withAfters(method, test, statement);
+		statement = this.withRules(method, test, statement);
 		return statement;
 	}
 
@@ -255,8 +285,9 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected Statement possiblyExpectingExceptions(FrameworkMethod method, Object test, Statement next) {
-		Test annotation = method.getAnnotation(Test.class);
-		return expectsException(annotation) ? new ExpectException(next, getExpectedException(annotation)) : next;
+		final Test annotation = method.getAnnotation(Test.class);
+		return this.expectsException(annotation) ? new ExpectException(next, this.getExpectedException(annotation))
+				: next;
 	}
 
 	/**
@@ -268,7 +299,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected Statement withPotentialTimeout(FrameworkMethod method, Object test, Statement next) {
-		long timeout = getTimeout(method.getAnnotation(Test.class));
+		final long timeout = this.getTimeout(method.getAnnotation(Test.class));
 		return timeout > 0 ? new FailOnTimeout(next, timeout) : next;
 	}
 
@@ -281,7 +312,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected Statement withBefores(FrameworkMethod method, Object target, Statement statement) {
-		List<FrameworkMethod> befores = getTestClass().getAnnotatedMethods(Before.class);
+		final List<FrameworkMethod> befores = this.getTestClass().getAnnotatedMethods(Before.class);
 		return befores.isEmpty() ? statement : new RunBefores(statement, befores, target);
 	}
 
@@ -296,27 +327,29 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected Statement withAfters(FrameworkMethod method, Object target, Statement statement) {
-		List<FrameworkMethod> afters = getTestClass().getAnnotatedMethods(After.class);
+		final List<FrameworkMethod> afters = this.getTestClass().getAnnotatedMethods(After.class);
 		return afters.isEmpty() ? statement : new RunAfters(statement, afters, target);
 	}
 
 	protected Statement withRules(FrameworkMethod method, Object target, Statement statement) {
 		Statement result = statement;
-		result = withMethodRules(method, target, result);
-		result = withTestRules(method, target, result);
+		result = this.withMethodRules(method, target, result);
+		result = this.withTestRules(method, target, result);
 		return result;
 	}
 
 	protected Statement withMethodRules(FrameworkMethod method, Object target, Statement result) {
-		List<TestRule> testRules = getTestRules(target);
-		for (org.junit.rules.MethodRule each : getMethodRules(target))
-			if (!testRules.contains(each))
+		final List<TestRule> testRules = this.getTestRules(target);
+		for (final org.junit.rules.MethodRule each : this.getMethodRules(target)) {
+			if (!testRules.contains(each)) {
 				result = each.apply(result, method, target);
+			}
+		}
 		return result;
 	}
 
 	protected List<org.junit.rules.MethodRule> getMethodRules(Object target) {
-		return rules(target);
+		return this.rules(target);
 	}
 
 	/**
@@ -330,7 +363,7 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 */
 	@Deprecated
 	protected List<org.junit.rules.MethodRule> rules(Object target) {
-		return getTestClass().getAnnotatedFieldValues(target, Rule.class, org.junit.rules.MethodRule.class);
+		return this.getTestClass().getAnnotatedFieldValues(target, Rule.class, org.junit.rules.MethodRule.class);
 	}
 
 	/**
@@ -343,8 +376,8 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 *         or the base statement
 	 */
 	protected Statement withTestRules(FrameworkMethod method, Object target, Statement statement) {
-		List<TestRule> testRules = getTestRules(target);
-		return testRules.isEmpty() ? statement : new RunRules(statement, testRules, describeChild(method));
+		final List<TestRule> testRules = this.getTestRules(target);
+		return testRules.isEmpty() ? statement : new RunRules(statement, testRules, this.describeChild(method));
 	}
 
 	/**
@@ -354,23 +387,25 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 	 *         test
 	 */
 	protected List<TestRule> getTestRules(Object target) {
-		return getTestClass().getAnnotatedFieldValues(target, Rule.class, TestRule.class);
+		return this.getTestClass().getAnnotatedFieldValues(target, Rule.class, TestRule.class);
 	}
 
 	protected Class<? extends Throwable> getExpectedException(Test annotation) {
-		if (annotation == null || annotation.expected() == None.class)
+		if (annotation == null || annotation.expected() == None.class) {
 			return null;
-		else
+		} else {
 			return annotation.expected();
+		}
 	}
 
 	protected boolean expectsException(Test annotation) {
-		return getExpectedException(annotation) != null;
+		return this.getExpectedException(annotation) != null;
 	}
 
 	protected long getTimeout(Test annotation) {
-		if (annotation == null)
+		if (annotation == null) {
 			return 0;
+		}
 		return annotation.timeout();
 	}
 
@@ -387,58 +422,60 @@ public class JUnitTestRunner extends ParentRunner<FrameworkMethod> {
 
 		@Override
 		public void addListener(RunListener listener) {
-			notifier.addListener(listener);
+			this.notifier.addListener(listener);
 		}
 
 		@Override
 		public void removeListener(RunListener listener) {
-			notifier.removeListener(listener);
+			this.notifier.removeListener(listener);
 		}
 
 		@Override
 		public void fireTestRunStarted(Description description) {
-			notifier.fireTestRunStarted(description);
+			this.notifier.fireTestRunStarted(description);
 		}
 
 		@Override
 		public void fireTestRunFinished(Result result) {
-			notifier.fireTestRunFinished(result);
+			this.notifier.fireTestRunFinished(result);
 		}
 
 		@Override
 		public void fireTestStarted(Description description) throws StoppedByUserException {
-			notifier.fireTestStarted(description);
+			this.notifier.fireTestStarted(description);
 		}
 
 		@Override
 		public void fireTestAssumptionFailed(Failure failure) {
-			notifier.fireTestAssumptionFailed(failure);
+			this.notifier.fireTestAssumptionFailed(failure);
 		}
 
 		@Override
 		public void fireTestIgnored(Description description) {
-			notifier.fireTestIgnored(description);
+			this.notifier.fireTestIgnored(description);
 		}
 
 		@Override
 		public void fireTestFinished(Description description) {
-			notifier.fireTestFinished(description);
+			this.notifier.fireTestFinished(description);
 		}
 
 		@Override
 		public void pleaseStop() {
-			notifier.pleaseStop();
+			this.notifier.pleaseStop();
 		}
 
 		@Override
 		public void addFirstListener(RunListener listener) {
-			notifier.addFirstListener(listener);
+			this.notifier.addFirstListener(listener);
 		}
 
 		@Override
 		public void fireTestFailure(Failure failure) {
-			notifier.fireTestFailure(failure);
-			skipNextExecution = true;
+			this.notifier.fireTestFailure(failure);
+			JUnitTestRunner.this.skipNextExecution.set(true);
+			// System.out.println("(" + Thread.currentThread().hashCode() + ")
+			// SKIP NEXT EXECUTION!!!");
 		}
 	}
 }

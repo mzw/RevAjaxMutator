@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <!-- <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+        </Console> -->
+        <RandomAccessFile name="RAM_FILE_APPENDER" fileName="logs/ram.log" immediateFlush="false" append="false" >
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} - %msg%n"/>
+        </RandomAccessFile>
+        <RandomAccessFile name="PROXY_FILE_APPENDER" fileName="logs/proxy.log" immediateFlush="false" append="false" >
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{1} - %msg%n"/>
+        </RandomAccessFile>
+    </Appenders>
+    <Loggers>
+        <Root level="debug">
+            <!-- <AppenderRef ref="Console" /> -->
+            <AppenderRef ref="RAM_FILE_APPENDER"/>
+            <AppenderRef ref="PROXY_FILE_APPENDER"/>
+        </Root>
+    </Loggers>
+</Configuration>
