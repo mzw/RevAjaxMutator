@@ -222,6 +222,16 @@ abstract public class WebAppTestBase {
 		return getDriver().findElement(locator);
 	}
 
+	public static WebElement clickable(final By locator) {
+		getWait().until(new Function<WebDriver, Boolean>() {
+			public Boolean apply(WebDriver driver) {
+				WebElement element = driver.findElement(locator);
+				return element != null && element.isDisplayed() && element.isEnabled();
+			}
+		});
+		return getDriver().findElement(locator);
+	}
+
 	public static WebElement until(final By locator, final String text) {
 		getWait().until(new Function<WebDriver, Boolean>() {
 			public Boolean apply(WebDriver driver) {

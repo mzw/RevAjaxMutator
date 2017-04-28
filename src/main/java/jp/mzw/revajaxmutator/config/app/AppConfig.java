@@ -95,6 +95,16 @@ public abstract class AppConfig implements IAppConfig {
 	}
 
 	/**
+	 * Get parameter values written in application configuration file
+	 * 
+	 * @param param
+	 * @return
+	 */
+	public String getParam(String param) {
+		return config.getProperty(param.toLowerCase());
+	}
+
+	/**
 	 * 
 	 */
 	public File getRecordDir() {

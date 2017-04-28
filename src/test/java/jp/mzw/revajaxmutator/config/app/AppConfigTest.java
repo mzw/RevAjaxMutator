@@ -93,6 +93,12 @@ public class AppConfigTest {
 		Assert.assertEquals(Sorter.SortType.REPAIR_SOURCE_DFS, actual);
 	}
 
+	@Test
+	public void testGetParamWithString() {
+		String actual = config.getParam("path_to_js_file");
+		Assert.assertArrayEquals("path/to/app-test.js".toCharArray(), actual.toCharArray());
+	}
+
 	private static class AppTestConfig extends AppConfig {
 		private AppTestConfig() throws IOException {
 			super("app-test.properties");
