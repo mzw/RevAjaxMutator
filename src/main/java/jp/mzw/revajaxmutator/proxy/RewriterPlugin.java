@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -47,7 +46,6 @@ public class RewriterPlugin extends ProxyPlugin {
 	public static final String MUTANT_HEADER_NAME = "mutant";
 
 	/**
-	 * TODO Need to implement test cases
 	 *
 	 * @param request
 	 * @param response
@@ -75,16 +73,12 @@ public class RewriterPlugin extends ProxyPlugin {
 
 			// Get cookie to know which mutated file to get
 			String mutantId = "";
-			try (final FileWriter fw = new FileWriter("/home/filipe/proxy_debug.txt", true)) {
-				final String[] cookies = request.getHeaders("Cookie");
-				// fw.write(String.join(", ", cookies) + "\n");
-				final String jsMutantRegex = "jsMutantFile=[a-zA-Z0-9]*";
-				final Pattern jsMutantPattern = Pattern.compile(jsMutantRegex);
-				final Matcher jsMutantMatcher = jsMutantPattern.matcher(cookies[0]);
-				if (jsMutantMatcher.find()) {
-					mutantId = "." + jsMutantMatcher.group().split("=")[1];
-					fw.write(mutantId + "\n");
-				}
+			final String[] cookies = request.getHeaders("Cookie");
+			final String jsMutantRegex = "jsMutantFile=[a-zA-Z0-9]*";
+			final Pattern jsMutantPattern = Pattern.compile(jsMutantRegex);
+			final Matcher jsMutantMatcher = jsMutantPattern.matcher(cookies[0]);
+			if (jsMutantMatcher.find()) {
+				mutantId = "." + jsMutantMatcher.group().split("=")[1];
 			}
 
 			// Get the mutated file to replace in the response message

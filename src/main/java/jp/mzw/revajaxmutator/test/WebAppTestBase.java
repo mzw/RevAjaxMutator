@@ -264,16 +264,16 @@ abstract public class WebAppTestBase {
 		this.waitUntilShowWidgets();
 	}
 
+	/**
+	 * To add a cookie to the session, we first need to navigate to the domain.
+	 * Selenium does not allow setting cookies before going to any page.
+	 *
+	 * @see <a href=
+	 *      "http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies">Selenium
+	 *      docs</a>
+	 *
+	 */
 	private void setSessionCookie() throws MalformedURLException {
-		/**
-		 * First go to dummyURL to preset a cookie - selenium does not allow
-		 * setting cookies before going to any page
-		 *
-		 * @see <a href=
-		 *      "http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies">Selenium
-		 *      docs</a>
-		 * 
-		 */
 		if (mutationFileId.get() != null && mutationFileId.get() != "") {
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
