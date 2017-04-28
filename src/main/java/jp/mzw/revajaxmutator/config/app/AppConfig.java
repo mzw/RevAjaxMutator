@@ -96,6 +96,16 @@ public abstract class AppConfig implements IAppConfig {
 	}
 
 	/**
+	 * Get parameter values written in application configuration file
+	 *
+	 * @param param
+	 * @return
+	 */
+	public String getParam(String param) {
+		return this.config.getProperty(param.toLowerCase());
+	}
+
+	/**
 	 *
 	 */
 	@Override
@@ -286,13 +296,13 @@ public abstract class AppConfig implements IAppConfig {
 			return false;
 		}
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @return
 	 */
 	public Sorter.SortType getSortType() {
-		String param = getParam(Param.SORT_TYPE);
+		final String param = this.getParam(Param.SORT_TYPE);
 		return Sorter.getSortType(param);
 	}
 

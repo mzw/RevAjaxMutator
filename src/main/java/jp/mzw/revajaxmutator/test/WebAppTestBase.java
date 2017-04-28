@@ -70,9 +70,6 @@ abstract public class WebAppTestBase {
 	 */
 	public static void setUpBeforeClass(Class<? extends AppConfig> clazz)
 			throws IOException, InstantiationException, IllegalAccessException {
-		// System.out.println("(" + Thread.currentThread().hashCode() + ")
-		// BEFORECLASS - INIT");
-
 		// Load configurations
 		localenv = new LocalEnv(LocalEnv.FILENAME);
 		config = clazz.newInstance();
@@ -242,12 +239,8 @@ abstract public class WebAppTestBase {
 	 */
 	@AfterClass
 	public static void tearDownAfterClassBase() throws InterruptedException {
-		// System.out.println("(" + Thread.currentThread().hashCode() + ")
-		// AFTERCLASS - TEARDOWN");
 		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
 		getDriver().quit();
-		// System.out.println("(" + Thread.currentThread().hashCode() + ")
-		// AFTERCLASS - DRIVER CLOSED");
 	}
 
 	/**
@@ -261,9 +254,6 @@ abstract public class WebAppTestBase {
 	 */
 	@Before
 	public void setUpBase() throws MalformedURLException, URISyntaxException, InterruptedException {
-		// System.out.println("(" + Thread.currentThread().hashCode() + ")
-		// BEFORE - GET URL");
-
 		// Insert a cookie which uniquely identifies this test, so that the
 		// proxy knows which .js file to set
 		if (!LocalEnv.shouldRunJSCoverProxy()) {
@@ -275,9 +265,15 @@ abstract public class WebAppTestBase {
 	}
 
 	private void setSessionCookie() throws MalformedURLException {
-		// First go to dummyURL to preset a cookie - selenium does not allow
-		// setting cookies before going to any page
-		// Source: http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies
+		/**
+		 * First go to dummyURL to preset a cookie - selenium does not allow
+		 * setting cookies before going to any page
+		 *
+		 * @see <a href=
+		 *      "http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies">Selenium
+		 *      docs</a>
+		 * 
+		 */
 		if (mutationFileId.get() != null && mutationFileId.get() != "") {
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
@@ -306,6 +302,21 @@ abstract public class WebAppTestBase {
 		getWait().until(driver -> driver.findElement(locator).getText().equals(text));
 		return getDriver().findElement(locator);
 	}
+
+	public static WebElement clickable(final By locator) {
+		getWait().until(driver -> {
+			final WebElement element = driver.findElement(locator);
+			return element != null && element.isDisplayed() && element.isEnabled();
+		});
+		return getDriver().findElement(locator);
+	}
+
+	// public static WebElement until(final By locator, final String text) {
+	// getWait().until(driver -> driver.findElement(locator) != null);
+	// getWait().until(driver ->
+	// driver.findElement(locator).getText().equals(text));
+	// return getDriver().findElement(locator);
+	// }
 
 	public void sleep(long millis) {
 		try {
