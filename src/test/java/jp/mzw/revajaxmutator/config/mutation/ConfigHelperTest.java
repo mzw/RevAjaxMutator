@@ -6,7 +6,6 @@ import java.util.Collection;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import jp.mzw.revajaxmutator.config.mutation.defaults.DefaultParameters;
@@ -82,12 +81,10 @@ public class ConfigHelperTest {
 		assertRepairSourceNums(parameters, DefaultParameters.TARGET_ELEMENTS_HANDLING_EVENT.size(), 0, 0, 6, 0);
 	}
 
-	// TODO jsparser and the helper return different event types
-	@Ignore
 	@Test
 	public void testGetRepairSourcesForEventType() {
 		final Collection<? extends RepairSource> parameters = helper.getRepairSourcesForEventType();
-		assertRepairSourceNums(parameters, 0, 2, 0, 0, 0);
+		assertRepairSourceNums(parameters, 0, DefaultParameters.EVENT_TYPES_MOUSE.size(), 0, 0, 0);
 	}
 
 	@Test
@@ -124,7 +121,7 @@ public class ConfigHelperTest {
 
 	private static void assertRepairSourceNums(final Collection<? extends RepairSource> parameters,
 			final int expectedDefaultNum, final int expectedJsNum, final int expectedHtmlNum,
-			final int expeectedTestcaseNum, final int expectedNoneNum) {
+			final int expectedTestcaseNum, final int expectedNoneNum) {
 		int defaults = 0;
 		int js = 0;
 		int html = 0;
@@ -134,7 +131,6 @@ public class ConfigHelperTest {
 			if (RepairSource.Type.Default.equals(param.getType())) {
 				defaults++;
 			} else if (RepairSource.Type.JavaScript.equals(param.getType())) {
-				// System.out.println(param.getValue());
 				js++;
 			} else if (RepairSource.Type.HTML.equals(param.getType())) {
 				html++;
@@ -149,7 +145,7 @@ public class ConfigHelperTest {
 		Assert.assertEquals("The number of parameters from default pool", expectedDefaultNum, defaults);
 		Assert.assertEquals("The number of parameters from javascript file", expectedJsNum, js);
 		Assert.assertEquals("The number of parameters from html file", expectedHtmlNum, html);
-		Assert.assertEquals("The number of parameters from test-case file", expeectedTestcaseNum, testcases);
+		Assert.assertEquals("The number of parameters from test-case file", expectedTestcaseNum, testcases);
 		Assert.assertEquals("The number of none parameters", expectedNoneNum, none);
 	}
 }
