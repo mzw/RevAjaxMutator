@@ -18,8 +18,8 @@ import org.owasp.webscarab.model.Response;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
 public class RewriterPlugin extends ProxyPlugin {
-	private final String mDirname;
-	private final List<String> mRewriteFiles;
+	protected final String mDirname;
+	protected final List<String> mRewriteFiles;
 
 	public RewriterPlugin(String dirname) {
 		this.mDirname = dirname;
@@ -82,68 +82,66 @@ public class RewriterPlugin extends ProxyPlugin {
 			}
 
 			// Get the mutated file to replace in the response message
-			BufferedInputStream in = null;
-			if (request.getHeader(MUTANT_HEADER_NAME) == null) {
-				// Search for .js file
-				final Pattern pattern = Pattern.compile(regex);
-				for (File file : new File(this.mDirname).listFiles()) {
-					if (file.isFile()) {
-						final Matcher matcher = pattern.matcher(file.getName());
-						if (matcher.find()) {
-							in = new BufferedInputStream(new FileInputStream(file + mutantId));
-							break;
-						}
-						// If file name is too big, it was split into a
-						// hierarchy of directories
-					} else if (file.isDirectory()) {
-						String name = file.getName();
-						while (0 < file.listFiles().length) {
-							file = file.listFiles()[0];
-							name += file.getName();
-							if (file.isFile()) {
-								break;
-							}
-						}
-						final Matcher matcher = pattern.matcher(name);
-						if (matcher.find()) {
-							in = new BufferedInputStream(new FileInputStream(file + mutantId));
-							break;
-						}
-					}
+			try (BufferedInputStream in = this.findMutantFile(request, regex, mutantId);
+					ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+				// Replace incoming server .js file with local, mutated .js file
+				final byte[] buf = new byte[1024 * 8];
+				int len = 0;
+				while ((len = in.read(buf)) != -1) {
+					out.write(buf, 0, len);
 				}
-				if (in == null) {
-					return;
-				}
-			} else {
-				final String mutantname = request.getHeader(MUTANT_HEADER_NAME);
-
-				String testedFilename = "";
-
-				final File dir = new File(this.mDirname + "/" + "tested");
-				final File[] files = dir.listFiles();
-				for (final File file : files) {
-					if (file.getName().contains(mutantname)) {
-						testedFilename = file.getName();
-					}
-				}
-				in = new BufferedInputStream(
-						new FileInputStream(this.mDirname + "/" + "tested" + "/" + testedFilename));
+				response.setContent(out.toByteArray());
 			}
-
-			// Replace incoming server .js file with local, mutated .js file
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final byte[] buf = new byte[1024 * 8];
-			int len = 0;
-			while ((len = in.read(buf)) != -1) {
-				out.write(buf, 0, len);
-			}
-			in.close();
-			response.setContent(out.toByteArray());
 		} catch (final FileNotFoundException e) {
 			// ignore non-recorded urls
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	protected BufferedInputStream findMutantFile(Request request, String regex, String mutantId)
+			throws FileNotFoundException {
+		if (request.getHeader(MUTANT_HEADER_NAME) == null) {
+			// Search for .js file
+			final Pattern pattern = Pattern.compile(regex);
+			for (File file : new File(this.mDirname).listFiles()) {
+				if (file.isFile()) {
+					final Matcher matcher = pattern.matcher(file.getName());
+					if (matcher.find()) {
+						return new BufferedInputStream(new FileInputStream(file + mutantId));
+					}
+					// If file name is too big, it was split into a
+					// hierarchy of directories
+				} else if (file.isDirectory()) {
+					String name = file.getName();
+					while (0 < file.listFiles().length) {
+						file = file.listFiles()[0];
+						name += file.getName();
+						if (file.isFile()) {
+							break;
+						}
+					}
+					final Matcher matcher = pattern.matcher(name);
+					if (matcher.find()) {
+						return new BufferedInputStream(new FileInputStream(file + mutantId));
+					}
+				}
+			}
+		} else {
+			final String mutantname = request.getHeader(MUTANT_HEADER_NAME);
+
+			String testedFilename = "";
+
+			final File dir = new File(this.mDirname + "/" + "tested");
+			final File[] files = dir.listFiles();
+			for (final File file : files) {
+				if (file.getName().contains(mutantname)) {
+					testedFilename = file.getName();
+				}
+			}
+			return new BufferedInputStream(new FileInputStream(this.mDirname + "/" + "tested" + "/" + testedFilename));
+		}
+		throw new FileNotFoundException();
 	}
 
 	private class Plugin implements HTTPClient {

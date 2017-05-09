@@ -195,8 +195,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 					continue;
 				}
 
-				// Skip test cases that do not cover mutated locations of
-				// mutants
+				// Skip test cases that do not cover mutated locations
 				if (!this.coverages.isEmpty()
 						&& !Coverage.isCovered(this.coverages, mutant.getStartLine(), mutant.getEndLine())) {
 					LOGGER.info(mutant.getFileName() + " is skipped by coverage");

@@ -1,6 +1,8 @@
 package jp.mzw.revajaxmutator.proxy;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.owasp.webscarab.model.Preferences;
@@ -9,16 +11,18 @@ import org.owasp.webscarab.plugin.Framework;
 import org.owasp.webscarab.plugin.proxy.Proxy;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
+import jp.mzw.ajaxmutator.util.Util;
+
 public class ProxyServer {
 	protected static Proxy mProxy;
 
 	public static void launch(List<ProxyPlugin> plugins, String proxy) throws StoreException, InterruptedException {
-		Framework framework = new Framework();
+		final Framework framework = new Framework();
 		Preferences.setPreference("Proxy.listeners", proxy);
 		framework.setSession("FileSystem", new File(".conversation"), "");
 		mProxy = new Proxy(framework);
 		if (plugins != null) {
-			for (ProxyPlugin plugin : plugins) {
+			for (final ProxyPlugin plugin : plugins) {
 				mProxy.addPlugin(plugin);
 			}
 		}
@@ -36,7 +40,7 @@ public class ProxyServer {
 
 	public static void disableFilterPlugin() throws InterruptedException {
 		if (mProxy != null && mProxy.stop()) {
-			FilterPlugin filter_plugin = (FilterPlugin) mProxy.getPlugin("FilterPlugin");
+			final FilterPlugin filter_plugin = (FilterPlugin) mProxy.getPlugin("FilterPlugin");
 			filter_plugin.setEnabled(false);
 			mProxy.run();
 			Thread.sleep(300); // wait for launching proxy server
@@ -47,5 +51,14 @@ public class ProxyServer {
 		if (mProxy != null) {
 			mProxy.stop();
 		}
+	}
+
+	public static void main(String[] args) throws IOException, StoreException, InterruptedException {
+
+		final RewriterPlugin plugin = new SeleniumGridRewriterPlugin();
+		ProxyServer.launch(Arrays.asList(plugin), "127.0.0.1:" + Util.getFreePort());
+
+		// Wait indefinitely
+		Thread.currentThread().join();
 	}
 }

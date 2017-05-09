@@ -27,6 +27,7 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.LocalFileDetector;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
@@ -137,6 +138,9 @@ abstract public class WebAppTestBase {
 			WebDriver driver = null;
 			if (localenv.getSeleniumHubAddress() != null) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+				// Makes Selenium grid upload local files (i.e. mutant
+				// files) to the worker nodes
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
 				driver = new ChromeDriver(cap);
 			}
@@ -144,7 +148,6 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (firefoxBin != null) {
@@ -181,6 +184,7 @@ abstract public class WebAppTestBase {
 			WebDriver driver = null;
 			if (localenv.getSeleniumHubAddress() != null) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
 				driver = new FirefoxDriver(service, cap, cap);
 			}
@@ -188,7 +192,6 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		} else if (localenv.getPhantomjsBin() != null) {
@@ -213,6 +216,7 @@ abstract public class WebAppTestBase {
 			WebDriver driver = null;
 			if (localenv.getSeleniumHubAddress() != null) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
 				driver = new PhantomJSDriver(cap);
 			}
@@ -220,7 +224,6 @@ abstract public class WebAppTestBase {
 			final Actions action = new Actions(driver);
 
 			currentDriver.set(driver);
-			// driversToCleanup.get().add(driver);
 			waits.set(wait);
 			actions.set(action);
 		}
