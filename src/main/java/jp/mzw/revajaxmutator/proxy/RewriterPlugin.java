@@ -52,9 +52,11 @@ public class RewriterPlugin extends ProxyPlugin {
 	 * @throws Exception
 	 */
 	protected synchronized void rewriteResponseContent(Request request, Response response) {
+		System.out.println(" -- RewriterPlugin.rewriteResponseContent()"); // TODO
+																			// DELETE
 		try {
 			final String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
-
+			System.out.println(" -- url: " + filename); // TODO DELETE
 			// Check if the url is for the .js file
 			boolean matched = false;
 			String regex = null;
@@ -80,7 +82,7 @@ public class RewriterPlugin extends ProxyPlugin {
 			if (jsMutantMatcher.find()) {
 				mutantId = "." + jsMutantMatcher.group().split("=")[1];
 			}
-
+			System.out.println(" -- cookie: " + mutantId); // TODO DELETE
 			// Get the mutated file to replace in the response message
 			try (BufferedInputStream in = this.findMutantFile(request, regex, mutantId);
 					ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -153,16 +155,20 @@ public class RewriterPlugin extends ProxyPlugin {
 
 		@Override
 		public Response fetchResponse(Request request) throws IOException {
+			System.out.println(" -- RewriterPlugin.fetchResponse()");
 			// remove if-modified-since and if-none-match to avoid 304
 			request.deleteHeader("If-Modified-Since");
 			request.deleteHeader("If-None-Match");
 
-			final Response response = this.mClient.fetchResponse(request);
+			if (request.getURL() != null) {
+				final Response response = this.mClient.fetchResponse(request);
 
-			if ("200".equals(response.getStatus())) {
-				RewriterPlugin.this.rewriteResponseContent(request, response);
+				if ("200".equals(response.getStatus())) {
+					RewriterPlugin.this.rewriteResponseContent(request, response);
+				}
+				return response;
 			}
-			return response;
+			return null;
 		}
 
 	}

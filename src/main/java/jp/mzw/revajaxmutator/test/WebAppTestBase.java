@@ -38,6 +38,7 @@ import com.google.gson.JsonObject;
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
+import jp.mzw.revajaxmutator.proxy.SeleniumGridRewriterPlugin;
 
 abstract public class WebAppTestBase {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
@@ -129,7 +130,6 @@ abstract public class WebAppTestBase {
 
 			final ChromeOptions options = new ChromeOptions();
 			// options.addArguments("--headless");
-			options.addArguments("--proxy-server=" + "http://" + localenv.getProxyAddress());
 
 			final DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setCapability(ChromeOptions.CAPABILITY, options);
@@ -137,11 +137,13 @@ abstract public class WebAppTestBase {
 			// Connect to Selenium grid if available
 			WebDriver driver = null;
 			if (localenv.getSeleniumHubAddress() != null) {
+				options.addArguments("--proxy-server=" + "http://" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
 				// Makes Selenium grid upload local files (i.e. mutant
 				// files) to the worker nodes
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
+				options.addArguments("--proxy-server=" + "http://" + localenv.getProxyAddress());
 				driver = new ChromeDriver(cap);
 			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
@@ -153,20 +155,25 @@ abstract public class WebAppTestBase {
 		} else if (firefoxBin != null) {
 			final DesiredCapabilities cap = DesiredCapabilities.firefox();
 
+			final String proxyIp = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyIp()
+					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_IP;
+			final String proxyPort = (localenv.getSeleniumHubAddress() != null)
+					? new Integer(localenv.getProxyPort()).toString() : SeleniumGridRewriterPlugin.SEL_GRID_PROXY_PORT;
+
 			final JsonObject json = new JsonObject();
 			json.addProperty("proxyType", "MANUAL");
-			json.addProperty("httpProxy", localenv.getProxyIp());
-			json.addProperty("httpProxyPort", localenv.getProxyPort());
-			json.addProperty("sslProxy", localenv.getProxyIp());
-			json.addProperty("sslProxyPort", localenv.getProxyPort());
+			json.addProperty("httpProxy", proxyIp);
+			json.addProperty("httpProxyPort", proxyPort);
+			json.addProperty("sslProxy", proxyIp);
+			json.addProperty("sslProxyPort", proxyPort);
 			cap.setCapability(CapabilityType.PROXY, json);
 
 			final JsonObject prefs = new JsonObject();
 			prefs.addProperty("network.proxy.type", 1);
-			prefs.addProperty("network.proxy.http", localenv.getProxyIp());
-			prefs.addProperty("network.proxy.http_port", localenv.getProxyPort());
-			prefs.addProperty("network.proxy.ssl", localenv.getProxyIp());
-			prefs.addProperty("network.proxy.ssl_port", localenv.getProxyPort());
+			prefs.addProperty("network.proxy.http", proxyIp);
+			prefs.addProperty("network.proxy.http_port", proxyPort);
+			prefs.addProperty("network.proxy.ssl", proxyIp);
+			prefs.addProperty("network.proxy.ssl_port", proxyPort);
 			prefs.addProperty("network.proxy.share_proxy_settings", Boolean.TRUE);
 			prefs.addProperty("network.proxy.no_proxies_on", "");
 
@@ -198,7 +205,9 @@ abstract public class WebAppTestBase {
 			final DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 
 			final ArrayList<String> cliArgsCap = new ArrayList<String>();
-			cliArgsCap.add("--proxy=" + localenv.getProxyAddress());
+			final String proxyAddr = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyAddress()
+					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS;
+			cliArgsCap.add("--proxy=" + proxyAddr);
 			cliArgsCap.add("--proxy-type=http");
 			cliArgsCap.add("--local-to-remote-url-access=true");
 			cliArgsCap.add("--web-security=false");
@@ -261,10 +270,21 @@ abstract public class WebAppTestBase {
 		// proxy knows which .js file to set
 		if (!LocalEnv.shouldRunJSCoverProxy()) {
 			this.setSessionCookie();
+			// Upload file to the worker that will execute the test if
+			// using Selenium grid
+			if (localenv.getSeleniumHubAddress() != null) {
+				this.sendMutantFileToSeleniumWorker();
+			}
 		}
 
 		getDriver().get(config.getUrl().toString());
 		this.waitUntilShowWidgets();
+	}
+
+	private void sendMutantFileToSeleniumWorker() {
+		final WebElement upload = this.until(By.xpath("/html/body"));
+		final String mutantFilepath = config.pathToJsFile() + "." + mutationFileId.get();
+		upload.sendKeys(mutantFilepath);
 	}
 
 	/**

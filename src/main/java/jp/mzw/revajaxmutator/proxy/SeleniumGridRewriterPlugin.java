@@ -23,6 +23,10 @@ import org.owasp.webscarab.model.Request;
  */
 public class SeleniumGridRewriterPlugin extends RewriterPlugin {
 
+	public static final String SEL_GRID_PROXY_IP = "127.0.0.1";
+	public static final String SEL_GRID_PROXY_PORT = "42795";
+	public static final String SEL_GRID_PROXY_ADDRESS = SEL_GRID_PROXY_IP + ":" + SEL_GRID_PROXY_PORT;
+
 	public SeleniumGridRewriterPlugin() {
 		this(System.getProperty("java.io.tmpdir"));
 	}
@@ -39,6 +43,7 @@ public class SeleniumGridRewriterPlugin extends RewriterPlugin {
 	@Override
 	protected BufferedInputStream findMutantFile(Request request, String regex, String mutantExt)
 			throws FileNotFoundException {
+		System.out.println(" -- SeleniumGridRewriterPlugin.findMutantFile()");
 		try {
 			return new BufferedInputStream(new FileInputStream(
 					this.findTransferredMutatedFile(mutantExt, new File(this.mDirname)).getAbsolutePath()));
@@ -50,6 +55,7 @@ public class SeleniumGridRewriterPlugin extends RewriterPlugin {
 	}
 
 	private File findTransferredMutatedFile(String mutantExt, File root) throws IOException {
+		System.out.println(" -- SeleniumGridRewriterPlugin.findTransferredMutatedFile()");
 		final Collection<File> files = FileUtils.listFiles(root, null, true);
 
 		for (final Iterator<File> iterator = files.iterator(); iterator.hasNext();) {
@@ -57,10 +63,11 @@ public class SeleniumGridRewriterPlugin extends RewriterPlugin {
 			if (file.isDirectory()) {
 				return this.findTransferredMutatedFile(mutantExt, file);
 			} else if (file.getName().endsWith(mutantExt)) {
+				System.out.println(" -- !!!!!!!!!!!!!!!!!!!!!!! FOUND FILE: " + file.getName());
 				return file;
 			}
 		}
-
+		System.out.println(" -- !!!!!!!!!!!!!!!!!!!!!!! FILE NOT FOUND");
 		return null;
 	}
 }

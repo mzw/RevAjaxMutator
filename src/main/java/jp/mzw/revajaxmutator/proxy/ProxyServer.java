@@ -11,8 +11,6 @@ import org.owasp.webscarab.plugin.Framework;
 import org.owasp.webscarab.plugin.proxy.Proxy;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 
-import jp.mzw.ajaxmutator.util.Util;
-
 public class ProxyServer {
 	protected static Proxy mProxy;
 
@@ -56,7 +54,7 @@ public class ProxyServer {
 	public static void main(String[] args) throws IOException, StoreException, InterruptedException {
 
 		final RewriterPlugin plugin = new SeleniumGridRewriterPlugin();
-		ProxyServer.launch(Arrays.asList(plugin), "127.0.0.1:" + Util.getFreePort());
+		ProxyServer.launch(Arrays.asList(plugin), SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
 
 		// Wait indefinitely
 		Thread.currentThread().join();
