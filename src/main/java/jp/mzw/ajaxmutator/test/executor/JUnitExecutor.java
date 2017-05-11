@@ -27,7 +27,7 @@ import jp.mzw.ajaxmutator.test.runner.OrderedJUnitTestRunner;
  * @author Kazuki Nishiura
  */
 public class JUnitExecutor implements TestExecutor {
-	protected Logger LOGGER = LoggerFactory.getLogger(JUnitExecutor.class);
+	protected static Logger LOGGER = LoggerFactory.getLogger(JUnitExecutor.class);
 
 	private final boolean shouldRunAllTest;
 	private final Class<?>[] targetClasses;
@@ -117,7 +117,7 @@ public class JUnitExecutor implements TestExecutor {
 			} else if (Theories.class.equals(runWith.value())) {
 				runner = new JUnitTheoryRunner(testClass, this.shouldRunAllTest, mutationId);
 			} else {
-				this.LOGGER.debug("Found unimplemented test-runner: {}", runWith.value());
+				LOGGER.debug("Found unimplemented test-runner: {}", runWith.value());
 				runner = new JUnitTestRunner(testClass, this.shouldRunAllTest, mutationId);
 			}
 		} catch (final InitializationError error) {
@@ -144,7 +144,7 @@ public class JUnitExecutor implements TestExecutor {
 		}
 		if (!result.wasSuccessful()) {
 			for (final Failure failure : result.getFailures()) {
-				this.LOGGER.debug("Failure trace: {}", failure.getTrace());
+				LOGGER.debug("Failure trace: {}", failure.getTrace());
 				if (failure.getDescription().getMethodName() == null) {
 					this.testResults.put("setup or teardown", false);
 					continue;
