@@ -394,7 +394,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 	public boolean removeMutantFile(long id) {
 		final String mutantPath = this.pathToJsFile + "." + id;
-		System.out.println("DELETING FILE: " + mutantPath);
 		final File mutantFile = new File(mutantPath);
 		return mutantFile.delete();
 	}

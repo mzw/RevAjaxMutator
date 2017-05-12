@@ -403,7 +403,8 @@ public class MutationTestConductor {
 
 				// Execute the test case with the mutated/patched file
 				LOGGER.info("Executing test(s) on {}", mutationFileInformation.getAbsolutePath());
-				if (testExecutor.execute()) { // This mutant cannot be killed
+				if (testExecutor.execute()) {
+					// This mutant cannot be killed
 					this.unkilledMutantsInfo.put(description, mutationFileInformation.toString());
 					LOGGER.info("mutant {} is not be killed", description);
 				} else {

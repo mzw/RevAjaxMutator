@@ -2,6 +2,7 @@ package jp.mzw.revajaxmutator.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -263,15 +264,16 @@ abstract public class WebAppTestBase {
 	 * @throws MalformedURLException
 	 * @throws URISyntaxException
 	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
 	 */
 	@Before
-	public void setUpBase() throws MalformedURLException, URISyntaxException, InterruptedException {
-		// Insert a cookie which uniquely identifies this test, so that the
-		// proxy knows which .js file to set
+	public void setUpBase()
+			throws MalformedURLException, URISyntaxException, InterruptedException, UnsupportedEncodingException {
+		// Insert a cookies with information for the proxy to run the test
 		if (!LocalEnv.shouldRunJSCoverProxy()) {
-			this.setSessionCookie();
-			// Upload file to the worker that will execute the test if
-			// using Selenium grid
+			this.setCookies();
+
+			// If using selenium grid, upload the mutant file to the worker
 			if (localenv.getSeleniumHubAddress() != null) {
 				this.sendMutantFileToSeleniumWorker();
 			}
@@ -281,26 +283,42 @@ abstract public class WebAppTestBase {
 		this.waitUntilShowWidgets();
 	}
 
-	private void sendMutantFileToSeleniumWorker() {
+	private void sendMutantFileToSeleniumWorker() throws MalformedURLException, UnsupportedEncodingException {
 		final WebElement upload = this.until(By.xpath("/html/body"));
-		final String mutantFilepath = config.pathToJsFile() + "." + mutationFileId.get();
+		final String absolutePath = config.getRecordedJsFile().getAbsolutePath();
+		final String mutantFilepath = (mutationFileId.get() == null || mutationFileId.get() == "") ? absolutePath
+				: absolutePath + "." + mutationFileId.get();
+		System.out.println("sending file: " + mutantFilepath);
 		upload.sendKeys(mutantFilepath);
 	}
 
 	/**
-	 * To add a cookie to the session, we first need to navigate to the domain.
-	 * Selenium does not allow setting cookies before going to any page.
+	 * Adds cookies with enough information for the proxy to fetch the correct
+	 * mutant .js file. To add a cookie to the session, we first need to
+	 * navigate to the domain. Selenium does not allow setting cookies before
+	 * going to any page.
+	 *
+	 * @throws UnsupportedEncodingException
 	 *
 	 * @see <a href=
 	 *      "http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies">Selenium
 	 *      docs</a>
 	 *
 	 */
-	private void setSessionCookie() throws MalformedURLException {
-		if (mutationFileId.get() != null && mutationFileId.get() != "") {
+	private void setCookies() throws MalformedURLException, UnsupportedEncodingException {
+		if (mutationFileId.get() != null) {
+			// When running in a multi-threaded environment, send the mutation
+			// id so the proxy knows which file to replace
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
-			getDriver().manage().addCookie(new Cookie("jsMutantFile", mutationFileId.get()));
+			getDriver().manage().addCookie(new Cookie("jsMutantId", mutationFileId.get()));
+
+			// If using selenium grid, we also need to send the file name, since
+			// the testrunner and proxy are not in the same JVM
+			if (localenv.getSeleniumHubAddress() != null) {
+				final String jsMutantFilename = config.getRecordedJsFile().getName();
+				getDriver().manage().addCookie(new Cookie("jsMutantFilename", jsMutantFilename));
+			}
 		}
 	}
 

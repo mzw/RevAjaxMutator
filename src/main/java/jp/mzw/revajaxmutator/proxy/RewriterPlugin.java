@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,39 +53,19 @@ public class RewriterPlugin extends ProxyPlugin {
 	 * @throws Exception
 	 */
 	protected synchronized void rewriteResponseContent(Request request, Response response) {
-		System.out.println(" -- RewriterPlugin.rewriteResponseContent()"); // TODO
-																			// DELETE
 		try {
-			final String filename = URLEncoder.encode(request.getURL().toString(), "utf-8");
-			System.out.println(" -- url: " + filename); // TODO DELETE
-			// Check if the url is for the .js file
-			boolean matched = false;
-			String regex = null;
-			for (final String _filename : this.mRewriteFiles) {
-				final Pattern pattern = Pattern.compile(_filename);
-				final Matcher matcher = pattern.matcher(filename);
-				if (matcher.find()) {
-					matched = true;
-					regex = _filename;
-					break;
-				}
-			}
-			if (!matched) {
+			final String filename = this.checkIfRequestIsForTargetJsFile(request);
+			if (filename == null || filename == "") {
 				return;
 			}
 
-			// Get cookie to know which mutated file to get
-			String mutantId = "";
-			final String[] cookies = request.getHeaders("Cookie");
-			final String jsMutantRegex = "jsMutantFile=[a-zA-Z0-9]*";
-			final Pattern jsMutantPattern = Pattern.compile(jsMutantRegex);
-			final Matcher jsMutantMatcher = jsMutantPattern.matcher(cookies[0]);
-			if (jsMutantMatcher.find()) {
-				mutantId = "." + jsMutantMatcher.group().split("=")[1];
+			String mutantId = this.getMutantFileIdentifier(request);
+			if (mutantId != "") {
+				mutantId = "." + mutantId;
 			}
-			System.out.println(" -- cookie: " + mutantId); // TODO DELETE
+
 			// Get the mutated file to replace in the response message
-			try (BufferedInputStream in = this.findMutantFile(request, regex, mutantId);
+			try (BufferedInputStream in = this.findMutantFile(request, filename, mutantId);
 					ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 				// Replace incoming server .js file with local, mutated .js file
 				final byte[] buf = new byte[1024 * 8];
@@ -101,22 +82,50 @@ public class RewriterPlugin extends ProxyPlugin {
 		}
 	}
 
-	protected BufferedInputStream findMutantFile(Request request, String regex, String mutantId)
+	protected String checkIfRequestIsForTargetJsFile(final Request request) throws UnsupportedEncodingException {
+		final String url = URLEncoder.encode(request.getURL().toString(), "utf-8");
+		for (final String _filename : this.mRewriteFiles) {
+			final Pattern pattern = Pattern.compile(_filename);
+			final Matcher matcher = pattern.matcher(url);
+			if (matcher.find()) {
+				return _filename;
+			}
+		}
+		return null;
+	}
+
+	private String getMutantFileIdentifier(Request request) {
+		final String[] cookies = request.getHeaders("Cookie");
+		final String jsMutantRegex = "jsMutantId=[^;]*";
+		final Pattern jsMutantPattern = Pattern.compile(jsMutantRegex);
+		final Matcher jsMutantMatcher = jsMutantPattern.matcher(cookies[0]);
+		if (jsMutantMatcher.find()) {
+			final String[] splits = jsMutantMatcher.group().split("=");
+			if (splits.length > 1) {
+				return splits[1];
+			}
+			return "";
+		}
+		return "";
+	}
+
+	protected BufferedInputStream findMutantFile(Request request, String jsFilename, String mutantExt)
 			throws FileNotFoundException {
 		if (request.getHeader(MUTANT_HEADER_NAME) == null) {
 			// Search for .js file
-			final Pattern pattern = Pattern.compile(regex);
+			final String mutantFilename = jsFilename + mutantExt;
+			final Pattern pattern = Pattern.compile(jsFilename);
 			for (File file : new File(this.mDirname).listFiles()) {
 				if (file.isFile()) {
 					final Matcher matcher = pattern.matcher(file.getName());
-					if (matcher.find()) {
-						return new BufferedInputStream(new FileInputStream(file + mutantId));
+					if (matcher.find() && file.getName().endsWith(mutantExt)) {
+						return new BufferedInputStream(new FileInputStream(mutantFilename));
 					}
 					// If file name is too big, it was split into a
 					// hierarchy of directories
 				} else if (file.isDirectory()) {
 					String name = file.getName();
-					while (0 < file.listFiles().length) {
+					while (file.listFiles().length > 0) {
 						file = file.listFiles()[0];
 						name += file.getName();
 						if (file.isFile()) {
@@ -124,8 +133,8 @@ public class RewriterPlugin extends ProxyPlugin {
 						}
 					}
 					final Matcher matcher = pattern.matcher(name);
-					if (matcher.find()) {
-						return new BufferedInputStream(new FileInputStream(file + mutantId));
+					if (matcher.find() && file.getName().endsWith(mutantExt)) {
+						return new BufferedInputStream(new FileInputStream(mutantFilename));
 					}
 				}
 			}
@@ -143,6 +152,7 @@ public class RewriterPlugin extends ProxyPlugin {
 			}
 			return new BufferedInputStream(new FileInputStream(this.mDirname + "/" + "tested" + "/" + testedFilename));
 		}
+		System.out.println("FILE NOT FOUND!!!!");
 		throw new FileNotFoundException();
 	}
 
@@ -155,7 +165,6 @@ public class RewriterPlugin extends ProxyPlugin {
 
 		@Override
 		public Response fetchResponse(Request request) throws IOException {
-			System.out.println(" -- RewriterPlugin.fetchResponse()");
 			// remove if-modified-since and if-none-match to avoid 304
 			request.deleteHeader("If-Modified-Since");
 			request.deleteHeader("If-None-Match");
