@@ -14,7 +14,7 @@ import org.owasp.webscarab.model.HttpUrl;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
 
-public class RewriterPluginTest {
+public class SeleniumGridRewriterPluginTest {
 
 	@Rule
 	public TemporaryFolder tmpDir = new TemporaryFolder();
@@ -35,7 +35,9 @@ public class RewriterPluginTest {
 		final String jsFilename = "salt.min.js";
 		final String dummyMutantContent = "window.$=function(e,t,l){var n={\"#\":\"getElementById\",\".\":\"getElementsByClassName\",\"@\":\"getElementsByName\",\"=\":\"getElementsByTagName\",\"*\":\"querySelectorAll\"}[e[0]],m=(t===l?document:t)[n](e.slice(1));return m.length<2?m[0]:m};\n";
 		this.tmpDir.create();
-		final File tmpFile = this.tmpDir.newFile(jsFilename + "." + mutantId);
+		final String mutantFilepath = "subfolder" + System.lineSeparator() + jsFilename + "." + mutantId;
+		this.tmpDir.newFolder("subfolder");
+		final File tmpFile = this.tmpDir.newFile(mutantFilepath);
 		try (PrintWriter out = new PrintWriter(tmpFile)) {
 			out.print(dummyMutantContent);
 		}
@@ -43,10 +45,11 @@ public class RewriterPluginTest {
 		// Fetch file from some website
 		final String getUrl = "http://example.org:80/" + jsFilename;
 		request.setURL(new HttpUrl(getUrl));
-		request.setHeader("Cookie", "jsMutantId=" + mutantId);
+		request.setHeader("Cookie", "jsMutantId=" + mutantId + ";jsMutantFilename=" + jsFilename);
 
 		// Verify if the content of the message response was modified
-		final RewriterPlugin plugin = new RewriterPlugin(this.tmpDir.getRoot().getAbsolutePath());
+		final SeleniumGridRewriterPlugin plugin = new SeleniumGridRewriterPlugin(
+				this.tmpDir.getRoot().getAbsolutePath());
 		plugin.setRewriteFile(jsFilename);
 
 		method.invoke(plugin, request, response);

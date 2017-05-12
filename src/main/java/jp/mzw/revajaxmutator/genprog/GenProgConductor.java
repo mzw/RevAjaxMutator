@@ -122,7 +122,7 @@ public class GenProgConductor {
 		ArrayList<Mutation> ret = new ArrayList<Mutation>();
 		
 		ArrayList<Statement> statements = new ArrayList<Statement>(setWeight(getStatements()));
-		// Create the half number of mutants
+		// Create the half number of mutants
 		for(int i = 0; i < (mutations.size()/2); i++) {
 			Mutation mutation = generateMutation(statements);
 			ret.add(mutation);
@@ -469,10 +469,10 @@ public class GenProgConductor {
 		return statements;
 	}
 	
-	private ArrayList<Mutation> generateMutations(Set<Statement> wighted_path) throws IOException, InterruptedException {
+	private ArrayList<Mutation> generateMutations(Set<Statement> weighted_path) throws IOException, InterruptedException {
 		ArrayList<Mutation> ret = new ArrayList<Mutation>();
 		for(int i = 0; i < sample_size; i++){
-			ret.add(generateMutation(new ArrayList<Statement>(wighted_path)));
+			ret.add(generateMutation(new ArrayList<Statement>(weighted_path)));
 		}
 		return ret;
 	}

@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.ServerSocket;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -203,5 +204,12 @@ public class Util {
 			}
 		}
 		return builder.toString();
+	}
+
+	public static Integer getFreePort() throws IOException {
+		try (ServerSocket socket = new ServerSocket(0)) {
+			socket.setReuseAddress(true);
+			return socket.getLocalPort();
+		}
 	}
 }

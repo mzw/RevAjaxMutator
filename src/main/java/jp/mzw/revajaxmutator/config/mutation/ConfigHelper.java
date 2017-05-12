@@ -15,10 +15,10 @@ import jp.mzw.revajaxmutator.parser.java.TestCaseParser;
 import jp.mzw.revajaxmutator.parser.javascript.JavaScriptParser;
 
 /**
- * Provides repair values from given Default, JavaScript, HTML, and test case 
- * 
+ * Provides repair values from given Default, JavaScript, HTML, and test case
+ *
  * TODO: Brush up
- * 
+ *
  * @author Yuta Maezawa
  *
  */
@@ -37,10 +37,12 @@ public class ConfigHelper {
 
 	/**
 	 * Parse given file as HTML to obtain parameters
-	 * 
-	 * @param file HTML file
+	 *
+	 * @param file
+	 *            HTML file
 	 * @return this ConfigHelper
-	 * @throws IOException causes if given file is not found
+	 * @throws IOException
+	 *             causes if given file is not found
 	 */
 	public ConfigHelper parseHtml(File file) throws IOException {
 		this.htmlParser = new HTMLParser(file);
@@ -49,10 +51,12 @@ public class ConfigHelper {
 
 	/**
 	 * Parse given file as test case to obtain parameters
-	 * 
-	 * @param file Java file
+	 *
+	 * @param file
+	 *            Java file
 	 * @return this ConfigHelper
-	 * @throws IOException causes if given file is not found
+	 * @throws IOException
+	 *             causes if given file is not found
 	 */
 	public ConfigHelper parseTestCase(File file) throws IOException {
 		this.testCaseParser = new TestCaseParser(file);
@@ -61,10 +65,12 @@ public class ConfigHelper {
 
 	/**
 	 * Parse given file as JavaScript to obtain parameters
-	 * 
-	 * @param file JavaScript file
+	 *
+	 * @param file
+	 *            JavaScript file
 	 * @return this ConfigHelper
-	 * @throws IOException causes if given file tis not found
+	 * @throws IOException
+	 *             causes if given file tis not found
 	 */
 	public ConfigHelper parseJavaScript(File file) throws IOException {
 		this.jsParser = new JavaScriptParser(file);
@@ -72,15 +78,15 @@ public class ConfigHelper {
 	}
 
 	/**
-	 * Get DOM selection attributes for repairing DOM manipulations with invalid attributes
-	 * 
-	 * Default   : attributes based on heuristics
-	 * JavaScript: TODO
-	 * HTML      : DOM element identifiers implemented in given HTML file
-	 * TestCase  : Selenium locators as target attributes
-	 * 
+	 * Get DOM selection attributes for repairing DOM manipulations with invalid
+	 * attributes
+	 *
+	 * Default : attributes based on heuristics JavaScript: TODO HTML : DOM
+	 * element identifiers implemented in given HTML file TestCase : Selenium
+	 * locators as target attributes
+	 *
 	 * Note that parameters at JavaScript file are available as default
-	 * 
+	 *
 	 * @return List of DOM selection attributes
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForDomSelectionAttributeFixer() {
@@ -112,12 +118,11 @@ public class ConfigHelper {
 
 	/**
 	 * Get DOM elements for repairing invalid target elements at event handlers
-	 * 
-	 * Default   : DOM elements based on heuristics
-	 * JavaScript: TODO
-	 * HTML      : DOM elements at which event handlers are implemented
-	 * TestCase  : Selenium locators as target elements
-	 * 
+	 *
+	 * Default : DOM elements based on heuristics JavaScript: TODO HTML : DOM
+	 * elements at which event handlers are implemented TestCase : Selenium
+	 * locators as target elements
+	 *
 	 * @return
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForEventTarget() {
@@ -148,12 +153,11 @@ public class ConfigHelper {
 
 	/**
 	 * Get event type for repairing invalid event types at event handlers
-	 * 
-	 * Default   : TODO
-	 * JavaScript: Event types of event handlers implemented in given JavaScript file and its similar event types
-	 * HTML      : Event types of event handlers implemented in given HTML file
-	 * TestCase  : TODO
-	 * 
+	 *
+	 * Default : TODO JavaScript: Event types of event handlers implemented in
+	 * given JavaScript file and its similar event types HTML : Event types of
+	 * event handlers implemented in given HTML file TestCase : TODO
+	 *
 	 * @return
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForEventType() {
@@ -167,10 +171,10 @@ public class ConfigHelper {
 		for (final String eventType : this.eventSet.getTypeSet()) {
 			htmlSet.add(eventType);
 		}
-
 		for (final String eventType : htmlSet) {
 			repairSources.add(new RepairSource(eventType, RepairSource.Type.HTML));
 		}
+
 		// From JavaScript
 		final Set<String> jsSet = Sets.newHashSet();
 		for (final String name : this.jsParser.getEventTypes()) {
@@ -189,7 +193,6 @@ public class ConfigHelper {
 				}
 			}
 		}
-
 		// Add new .js event types
 		jsSet.removeAll(htmlSet);
 		for (final String eventType : jsSet) {
@@ -201,12 +204,10 @@ public class ConfigHelper {
 
 	/**
 	 * Get functions for repairing invalid callback function of event handlers
-	 * 
-	 * Default:    TODO 
-	 * JavaScript: Functions declared
-	 * HTML:       Callback functions at event handlers
-	 * TestCase:   TODO 
-	 * 
+	 *
+	 * Default: TODO JavaScript: Functions declared HTML: Callback functions at
+	 * event handlers TestCase: TODO
+	 *
 	 * @return set of functions
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForEventCallback() {
@@ -234,13 +235,13 @@ public class ConfigHelper {
 	}
 
 	/**
-	 * Get attribute values for repairing DOM manipulation with invalid attribute values
-	 * 
-	 * Default:    TODO 
-	 * JavaScript: Values used in infix expressions implemented in given JavaScript file
-	 * HTML:       Values set at attributes of page elements implemented in given HTML file
-	 * TestCase:   TODO 
-	 * 
+	 * Get attribute values for repairing DOM manipulation with invalid
+	 * attribute values
+	 *
+	 * Default: TODO JavaScript: Values used in infix expressions implemented in
+	 * given JavaScript file HTML: Values set at attributes of page elements
+	 * implemented in given HTML file TestCase: TODO
+	 *
 	 * @return
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForAttributeValues() {
@@ -265,12 +266,10 @@ public class ConfigHelper {
 
 	/**
 	 * Get durations for repairing timer event handlers with invalid durations
-	 * 
-	 * Default:    Durations based on heuristics
-	 * JavaScript: TODO
-	 * HTML:       TODO
-	 * TestCase:   TODO 
-	 * 
+	 *
+	 * Default: Durations based on heuristics JavaScript: TODO HTML: TODO
+	 * TestCase: TODO
+	 *
 	 * @return
 	 */
 	public Collection<? extends RepairSource> getRepairSourcesForTimerEventDuration() {
@@ -282,5 +281,6 @@ public class ConfigHelper {
 		return repairSources;
 	}
 
-	// TODO Unimplemented getRepairSources, e.g., asynchronous communication destination, method, callback, etc.
+	// TODO Unimplemented getRepairSources, e.g., asynchronous communication
+	// destination, method, callback, etc.
 }
