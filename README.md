@@ -28,11 +28,19 @@ Then, RevAjaxMutator is available in a project under test.
 ### Configuration
 Deploy ``localenv.properties`` on the class path.
 ```
-firefox-bin=path/to/firefox-bin
-#phantomjs-bin=path/to/phantomjs-1.9.7-***/bin/phantomjs
-proxy_port=8080
-timeout=5
+chrome_bin=/path/to/chromedriver
+firefox_bin=/path/to/firefox
+geckodriver_bin=/path/to/geckodriver-0.15.0/geckodriver
+phantomjs_bin=/path/to/phantomjs-2.1.1-linux-x86_64/bin/phantomjs
+
+#selenium_hub_ip=http://localhost:5000
+
+proxy_ip = 127.0.0.1
+proxy_port = 8083
+
+timeout = 5
 ``` 
+RevAjaxMutator will use the driver in the order above.
 
 In addition, deploy another property file for an application under test.
 ```
@@ -45,6 +53,28 @@ failure_cov_file 		= jscover/quizzy/jscoverage.failure.json
 proxy					= ram
 #proxy					= ram record
 #proxy					= ram rewrite
+```
+
+### Setting up Selenium-grid (optional)
+To use Selenium-grid (distributed processing), uncomment ``selenium_hub_ip`` from ``localenv.properties`` and change the value as appropriate.
+Selenium-grid also requires a "hub" machine and the "worker" machines properly setup and configured.
+To setup the hub, input the following into an available machine:
+```
+$ docker pull selenium/hub
+$ docker run -d -p 5000:4444 --name selenium-hub -P selenium/hub
+```
+For each worker machine:
+```
+$ docker run -d --link selenium-hub:hub -P --name chrome selenium/node-chrome
+$ docker start chrome
+
+copy RevAjaxMutatorProxy into worker (TODO UPDATE THESE VALUES WITH REAL REPOSITORY):
+$ wget "https://mvn-repo.mzw.jp/service/local/artifact/maven/redirect?r=snapshots&g=jp.mzw.revajaxmutator&a=RevAjaxMutator&v=LATEST"
+$ sudo docker cp /RevAjaxMutator-LATEST.jar chrome:/home/seluser/
+
+attach bash to running container:
+$ sudo docker exec -i -t chrome /bin/bash
+container$ sudo java -cp /home/seluser/RevAjaxMutator-LATEST.jar jp.mzw.revajaxmutator.proxy.ProxyServer
 ```
 
 ### Test Case
