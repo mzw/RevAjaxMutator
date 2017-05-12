@@ -19,7 +19,7 @@ public class LocalEnv {
 	}
 
 	public static enum Param {
-		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
+		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, CHROMEDRIVER_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case FIREFOX_BIN:
@@ -29,6 +29,8 @@ public class LocalEnv {
 			case PHANTOMJS_BIN:
 				return null;
 			case CHROME_BIN:
+				return null;
+			case CHROMEDRIVER_BIN:
 				return null;
 			case PROXY_IP:
 				return "127.0.0.1";
@@ -70,6 +72,10 @@ public class LocalEnv {
 
 	public String getChromeBin() {
 		return this.getParam(Param.CHROME_BIN);
+	}
+
+	public String getChromedriverBin() {
+		return this.getParam(Param.CHROMEDRIVER_BIN);
 	}
 
 	public String getProxyIp() {
