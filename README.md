@@ -65,6 +65,7 @@ $ docker run -d -p 5000:4444 --name selenium-hub -P selenium/hub
 ```
 For each worker machine:
 ```
+(if not running in the same machine as the hub, remove --link option)
 $ docker run -d --link selenium-hub:hub -P --name chrome selenium/node-chrome
 $ docker start chrome
 
@@ -85,44 +86,31 @@ import jp.mzw.revajaxmutator.test.WebAppTestBase;
 public class YourAppTest extends WebAppTestBase {...
 ```
 
+Example test cases can be found at: <https://gitlab.mzw.jp/yuta/ram-test-2>
+
 ### Run
-We provide a typical Makefile working on a project under test.
+To run RevAjaxMutator against a particular project (in this case, Roundcubemail from ram-test-2) :
 ```
-ram				:= java -cp target/classes:target/test-classes:target/dependency/* jp.mzw.revajaxmutator.Main
-test-class		:= jp.mzw.revajaxmutator.test.quizzy.QuizzyTest
-config-class	:= jp.mzw.revajaxmutator.test.quizzy.QuizzyConfig
-config-file 	:= target/classes/quizzy.properties
+records webpage files locally -- needed for mutating files and testing the results:
+$ java -cp ${class-path} jp.mzw.revajaxmutator.CLI \
+    record \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailConfig \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailTest
 
-compile:
-	mvn clean compile test-compile dependency:copy-dependencies
-	
-rec:
-	echo "proxy=ram record" >> ${config-file}
-	${ram} test ${test-class}
-	
-mutation:
-	${ram} mutate ${config-class}\$$MutateConfiguration
-	
-testing:
-	echo "proxy=ram rewrite" >> ${config-file}
-	${ram} analysis ${config-class}\$$MutateConfiguration ${test-class}
-	
-automated:
-	${ram} mutate ${config-class}\$$RepairConfiguration
-	
-program:
-	${ram} search ${config-class}
-
-repair:
-	echo "proxy=ram rewrite" >> ${config-file}
-	${ram} analysis ${config-class}\$$RepairConfiguration ${test-class}
+generate test coverage -- speeds up mutation:
+$ java -cp ${class-path} jp.mzw.revajaxmutator.CLI \
+    test-each \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailConfig \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailTest
+    
+try to automatically find the correct mutation that fixes the failing test:
+$ java -cp ${class-path} jp.mzw.revajaxmutator.CLI \
+    validate-concurrently \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailConfig \
+    jp.mzw.revajaxmutator.test.roundcubemail.RoundcubemailTest
 ```
 
 Enjoy RevAjaxMutator!
-```
-$ make mutation testing
-$ make automated program repair
-```
 
 ## Contributors
 - Kazuki Nishiura (AjaxMutator)
