@@ -17,7 +17,7 @@ import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
 import jp.mzw.revajaxmutator.search.Sorter;
 
 public abstract class AppConfig implements IAppConfig {
-	protected Logger LOGGER = LoggerFactory.getLogger(AppConfig.class);
+	protected static Logger LOGGER = LoggerFactory.getLogger(AppConfig.class);
 
 	abstract public MutateConfiguration getMutationAnalysisConfig()
 			throws InstantiationException, IllegalAccessException, IOException;
@@ -131,7 +131,7 @@ public abstract class AppConfig implements IAppConfig {
 		final String param = this.getParam(Param.URL);
 		final URL url = new URL(param);
 		if (url.getPort() == -1) {
-			this.LOGGER.warn("Not specified port number: " + url.getPath());
+			LOGGER.warn("Not specified port number: " + url.getPath());
 		}
 		return url;
 	}
@@ -168,7 +168,7 @@ public abstract class AppConfig implements IAppConfig {
 			if (file.isFile() && !this.isMutantFile(file.getName())) {
 				final Matcher matcher = pattern.matcher(file.getName());
 				if (matcher.find()) {
-					this.LOGGER.info("Found target JavaScript file: {}", file.getPath());
+					LOGGER.info("Found target JavaScript file: {}", file.getPath());
 					return file;
 				}
 			} else if (file.isDirectory()) {
@@ -182,13 +182,13 @@ public abstract class AppConfig implements IAppConfig {
 				}
 				final Matcher matcher = pattern.matcher(name);
 				if (matcher.find()) {
-					this.LOGGER.info("Found target JavaScript file: {}", file.getPath());
+					LOGGER.info("Found target JavaScript file: {}", file.getPath());
 					return file;
 				}
 			}
 		}
 
-		this.LOGGER.warn("Not found target JavaScript file: {}", url.toString());
+		LOGGER.warn("Not found target JavaScript file: {}", url.toString());
 		return null;
 	}
 
@@ -248,7 +248,7 @@ public abstract class AppConfig implements IAppConfig {
 			if (file.isFile()) {
 				final Matcher matcher = pattern.matcher(file.getName());
 				if (matcher.find()) {
-					this.LOGGER.info("Found target HTML file: {}", file.getPath());
+					LOGGER.info("Found target HTML file: {}", file.getPath());
 					return file;
 				}
 			} else if (file.isDirectory()) {
@@ -262,13 +262,13 @@ public abstract class AppConfig implements IAppConfig {
 				}
 				final Matcher matcher = pattern.matcher(name);
 				if (matcher.find()) {
-					this.LOGGER.info("Found target HTML file: {}", file.getPath());
+					LOGGER.info("Found target HTML file: {}", file.getPath());
 					return file;
 				}
 			}
 		}
 
-		this.LOGGER.warn("Not found target HTML file: {}", url.toString());
+		LOGGER.warn("Not found target HTML file: {}", url.toString());
 		return null;
 	}
 

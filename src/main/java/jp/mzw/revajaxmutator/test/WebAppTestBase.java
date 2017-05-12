@@ -127,7 +127,8 @@ abstract public class WebAppTestBase {
 		final String firefoxBin = localenv.getFirefoxBin();
 		final String chromeBin = localenv.getChromeBin();
 		if (chromeBin != null) {
-			System.setProperty("webdriver.chrome.driver", chromeBin);
+			System.setProperty("chrome.binary", chromeBin);
+			System.setProperty("webdriver.chrome.driver", localenv.getChromedriverBin());
 
 			final ChromeOptions options = new ChromeOptions();
 			// options.addArguments("--headless");
