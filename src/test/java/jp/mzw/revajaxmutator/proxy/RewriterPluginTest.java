@@ -43,7 +43,7 @@ public class RewriterPluginTest {
 		// Fetch file from some website
 		final String getUrl = "http://example.org:80/" + jsFilename;
 		request.setURL(new HttpUrl(getUrl));
-		request.setHeader("Cookie", mutantId);
+		request.setHeader("Cookie", "jsMutantId=" + mutantId);
 
 		// Verify if the content of the message response was modified
 		final RewriterPlugin plugin = new RewriterPlugin(this.tmpDir.getRoot().getAbsolutePath());

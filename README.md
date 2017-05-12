@@ -28,7 +28,7 @@ Then, RevAjaxMutator is available in a project under test.
 ### Configuration
 Deploy ``localenv.properties`` on the class path.
 ```
-chrome_bin=/path/to/chromedriver
+chromedriver_bin=/path/to/chromedriver
 firefox_bin=/path/to/firefox
 geckodriver_bin=/path/to/geckodriver-0.15.0/geckodriver
 phantomjs_bin=/path/to/phantomjs-2.1.1-linux-x86_64/bin/phantomjs

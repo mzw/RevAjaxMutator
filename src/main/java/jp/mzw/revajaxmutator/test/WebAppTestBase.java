@@ -125,10 +125,10 @@ abstract public class WebAppTestBase {
 	@SuppressWarnings("deprecation")
 	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
 		final String firefoxBin = localenv.getFirefoxBin();
-		final String chromeBin = localenv.getChromeBin();
+		final String chromeBin = localenv.getChromeDriverBin();
 		if (chromeBin != null) {
 			System.setProperty("chrome.binary", chromeBin);
-			System.setProperty("webdriver.chrome.driver", localenv.getChromedriverBin());
+			System.setProperty("webdriver.chrome.driver", chromeBin);
 
 			final ChromeOptions options = new ChromeOptions();
 			// options.addArguments("--headless");

@@ -45,7 +45,7 @@ public class SeleniumGridRewriterPluginTest {
 		// Fetch file from some website
 		final String getUrl = "http://example.org:80/" + jsFilename;
 		request.setURL(new HttpUrl(getUrl));
-		request.setHeader("Cookie", mutantId);
+		request.setHeader("Cookie", "jsMutantId=" + mutantId + ";jsMutantFilename=" + jsFilename);
 
 		// Verify if the content of the message response was modified
 		final SeleniumGridRewriterPlugin plugin = new SeleniumGridRewriterPlugin(

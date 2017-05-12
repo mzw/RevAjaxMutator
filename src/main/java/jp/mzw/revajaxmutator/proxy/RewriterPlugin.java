@@ -113,13 +113,12 @@ public class RewriterPlugin extends ProxyPlugin {
 			throws FileNotFoundException {
 		if (request.getHeader(MUTANT_HEADER_NAME) == null) {
 			// Search for .js file
-			final String mutantFilename = jsFilename + mutantExt;
 			final Pattern pattern = Pattern.compile(jsFilename);
 			for (File file : new File(this.mDirname).listFiles()) {
 				if (file.isFile()) {
 					final Matcher matcher = pattern.matcher(file.getName());
 					if (matcher.find() && file.getName().endsWith(mutantExt)) {
-						return new BufferedInputStream(new FileInputStream(mutantFilename));
+						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
 					}
 					// If file name is too big, it was split into a
 					// hierarchy of directories
@@ -134,7 +133,7 @@ public class RewriterPlugin extends ProxyPlugin {
 					}
 					final Matcher matcher = pattern.matcher(name);
 					if (matcher.find() && file.getName().endsWith(mutantExt)) {
-						return new BufferedInputStream(new FileInputStream(mutantFilename));
+						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
 					}
 				}
 			}
