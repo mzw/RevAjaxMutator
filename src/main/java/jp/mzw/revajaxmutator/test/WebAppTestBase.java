@@ -141,6 +141,7 @@ abstract public class WebAppTestBase {
 			if (localenv.getSeleniumHubAddress() != null) {
 				options.addArguments("--proxy-server=" + "http://" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+
 				// Makes Selenium grid upload local files (i.e. mutant
 				// files) to the worker nodes
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
@@ -345,7 +346,7 @@ abstract public class WebAppTestBase {
 		return getDriver().findElement(locator);
 	}
 
-	public static WebElement clickable(final By locator) {
+	public WebElement clickable(final By locator) {
 		getWait().until(driver -> {
 			final WebElement element = driver.findElement(locator);
 			return element != null && element.isDisplayed() && element.isEnabled();

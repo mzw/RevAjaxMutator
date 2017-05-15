@@ -68,9 +68,6 @@ For each worker machine:
 (If not running in the same machine as the hub, remove --link option. Also remove the --add-host option if you are not using the examples from "ram-test".)
 $ docker run -d --link selenium-hub:hub -P --name selenium-worker \
   --add-host ram-test.mzw.jp:172.17.0.1 \
-  --env "NODE_MAX_OBJECTS=4"   \
-  --env "NODE_MAX_INSTANCES=4" \
-  --env "NODE_MAX_SESSIONS=4"  \
   filipeguerreiro/selenium-worker:latest
 $ docker exec -i -t selenium-worker /bin/bash
 seluser$ /home/seluser/start-proxy.sh
