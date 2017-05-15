@@ -65,17 +65,16 @@ $ docker run -d -p 5000:4444 --name selenium-hub -P selenium/hub
 ```
 For each worker machine:
 ```
-(if not running in the same machine as the hub, remove --link option)
-$ docker run -d --link selenium-hub:hub -P --name chrome selenium/node-chrome
-$ docker start chrome
-
-copy RevAjaxMutatorProxy into worker (TODO UPDATE THESE VALUES WITH REAL REPOSITORY):
-$ wget "https://mvn-repo.mzw.jp/service/local/artifact/maven/redirect?r=snapshots&g=jp.mzw.revajaxmutator&a=RevAjaxMutator&v=LATEST"
-$ sudo docker cp /RevAjaxMutator-LATEST.jar chrome:/home/seluser/
-
-attach bash to running container:
-$ sudo docker exec -i -t chrome /bin/bash
-container$ sudo java -cp /home/seluser/RevAjaxMutator-LATEST.jar jp.mzw.revajaxmutator.proxy.ProxyServer
+(If not running in the same machine as the hub, remove --link option. Also remove the --add-host option if you are not using the examples from "ram-test".)
+$ docker run -d --link selenium-hub:hub -P --name selenium-worker \
+  --add-host ram-test.mzw.jp:172.17.0.1 \
+  --env "NODE_MAX_OBJECTS=4"   \
+  --env "NODE_MAX_INSTANCES=4" \
+  --env "NODE_MAX_SESSIONS=4"  \
+  filipeguerreiro/selenium-worker:latest
+$ docker exec -i -t selenium-worker /bin/bash
+seluser$ /home/seluser/start-proxy.sh
+CTRL+P, CTRL+Q
 ```
 
 ### Test Case
