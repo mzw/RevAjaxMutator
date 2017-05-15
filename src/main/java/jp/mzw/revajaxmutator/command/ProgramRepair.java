@@ -162,12 +162,14 @@ public class ProgramRepair extends Command {
 
 			// Build Web-scarab plugin that will modify the .js file with the
 			// different mutations
-			final RewriterPlugin plugin = new RewriterPlugin(recordDir.getAbsolutePath());
-			plugin.setRewriteFile(recordedFilename);
-
-			// Start Web-scarab proxy with the plugin
 			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
-			ProxyServer.launch(Arrays.asList(plugin), localenv.getProxyAddress());
+			if (localenv.getSeleniumHubAddress() == null) {
+				final RewriterPlugin plugin = new RewriterPlugin(recordDir.getAbsolutePath());
+				plugin.setRewriteFile(recordedFilename);
+
+				// Start Web-scarab proxy with the plugin
+				ProxyServer.launch(Arrays.asList(plugin), localenv.getProxyAddress());
+			}
 
 			// Load the provided test-classes
 			final List<Class<?>> testClasses = new ArrayList<>();

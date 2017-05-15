@@ -211,6 +211,8 @@ public class MutationAnalysis extends Command {
 	 * Run test cases on mutants concurrently
 	 *
 	 * @param args
+	 * @throws InterruptedException
+	 * @throws StoreException
 	 * @throws InstantiationException
 	 * @throws IllegalAccessException
 	 * @throws ClassNotFoundException
@@ -226,6 +228,20 @@ public class MutationAnalysis extends Command {
 			final Class<?> configClass = getClass(configClassName);
 			final AppConfig config = (AppConfig) configClass.newInstance();
 
+			final File recordDir = config.getRecordDir();
+			final String recordedFilename = AppConfig.getRecordedFileName(config.getUrl(), config.pathToJsFile());
+
+			// Build Web-scarab plugin that will modify the .js file with the
+			// different mutations
+			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
+			if (localenv.getSeleniumHubAddress() == null) {
+				final RewriterPlugin plugin = new RewriterPlugin(recordDir.getAbsolutePath());
+				plugin.setRewriteFile(recordedFilename);
+
+				// Start Web-scarab proxy with the plugin
+				ProxyServer.launch(Arrays.asList(plugin), localenv.getProxyAddress());
+			}
+
 			final List<Class<?>> testClasses = new ArrayList<>();
 			for (int i = 1; i < args.length; i++) {
 				final String testClassName = args[i];
@@ -234,7 +250,8 @@ public class MutationAnalysis extends Command {
 			}
 
 			this.concurrently(config, testClasses.toArray(new Class<?>[testClasses.size()]));
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | IOException e) {
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | IOException | StoreException
+				| InterruptedException e) {
 			LOG.error(e.getMessage());
 		}
 	}

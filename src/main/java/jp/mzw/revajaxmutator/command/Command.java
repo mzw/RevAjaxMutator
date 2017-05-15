@@ -40,17 +40,18 @@ abstract public class Command implements ICommand {
 			new MutationAnalysis().concurrently(args);
 			System.exit(0);
 		}
-		// Program repair
+		// Program repair - record and generate mutants
 		if ("generate".equals(cmd)) {
 			new MutationAnalysis().record(args);
 			new ProgramRepair().generate(args);
 			System.exit(0);
 		}
-		// Program repair
+		// Program repair - generate mutants
 		if ("generate-only".equals(cmd)) {
 			new ProgramRepair().generate(args);
 			System.exit(0);
 		}
+		// Program repair - test generated mutants against test cases
 		if ("validate".equals(cmd)) {
 			new ProgramRepair().validate(args);
 			System.exit(0);
