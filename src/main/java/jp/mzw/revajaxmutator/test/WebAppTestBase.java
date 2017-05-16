@@ -319,7 +319,7 @@ abstract public class WebAppTestBase {
 			// the testrunner and proxy are not in the same JVM
 			if (localenv.getSeleniumHubAddress() != null) {
 				final String jsMutantFilename = config.getRecordedJsFile().getName();
-				getDriver().manage().addCookie(new Cookie("jsMutantFilename", jsMutantFilename));
+				getDriver().manage().addCookie(new Cookie("jsMutantFilename", jsMutantFilename, config.getUrl().getAuthority(), "/", null));
 			}
 		}
 	}
