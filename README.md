@@ -33,7 +33,7 @@ firefox_bin=/path/to/firefox
 geckodriver_bin=/path/to/geckodriver-0.15.0/geckodriver
 phantomjs_bin=/path/to/phantomjs-2.1.1-linux-x86_64/bin/phantomjs
 
-#selenium_hub_ip=http://localhost:5000
+ #selenium_hub_ip=http://localhost:5000
 
 proxy_ip = 127.0.0.1
 proxy_port = 8083
@@ -65,12 +65,12 @@ $ docker run -d -p 5000:4444 --name selenium-hub -P selenium/hub
 ```
 For each worker machine:
 ```
-(If not running in the same machine as the hub, remove --link option. Also remove the --add-host option if you are not using the examples from "ram-test".)
-$ docker run -d --link selenium-hub:hub -P --name selenium-worker \
+(Remove the --add-host option if you are not using the examples from "ram-test".)
+$ docker run -d -P --name selenium-worker \
   --add-host ram-test.mzw.jp:172.17.0.1 \
+  --env HUB_PORT_4444_TCP_ADDR=172.17.0.1 \
+  --env HUB_PORT_4444_TCP_PORT=5000 \
   filipeguerreiro/selenium-worker:latest
-$ docker exec -i -t selenium-worker /bin/bash
-seluser$ /home/seluser/start-proxy.sh
 CTRL+P, CTRL+Q
 ```
 
