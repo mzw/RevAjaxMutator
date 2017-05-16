@@ -65,11 +65,13 @@ $ docker run -d -p 5000:4444 --name selenium-hub -P selenium/hub
 ```
 For each worker machine:
 ```
-(Remove the --add-host option if you are not using the examples from "ram-test".)
+(Remove the "--env SE_OPTS" parameter if hub is on the same machine as the worker.)
+(Remove the "--add-host" parameter if you are not using the examples from "ram-test".)
 $ docker run -d -P --name selenium-worker \
   --add-host ram-test.mzw.jp:172.17.0.1 \
   --env HUB_PORT_4444_TCP_ADDR=172.17.0.1 \
   --env HUB_PORT_4444_TCP_PORT=5000 \
+  --env SE_OPTS="-host XX.XX.XX.XX -port YYYY"
   filipeguerreiro/selenium-worker:latest
 CTRL+P, CTRL+Q
 ```
