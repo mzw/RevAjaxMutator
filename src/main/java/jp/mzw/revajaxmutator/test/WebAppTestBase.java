@@ -312,7 +312,7 @@ abstract public class WebAppTestBase {
 			// id so the proxy knows which file to replace
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
-			getDriver().manage().addCookie(new Cookie("jsMutantId", mutationFileId.get()));
+			getDriver().manage().addCookie(new Cookie("jsMutantId", mutationFileId.get(), config.getUrl().getAuthority(), "/", null));
 
 			// If using selenium grid, we also need to send the file name, since
 			// the testrunner and proxy are not in the same JVM
