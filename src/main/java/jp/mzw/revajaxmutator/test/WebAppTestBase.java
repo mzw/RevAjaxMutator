@@ -140,15 +140,15 @@ abstract public class WebAppTestBase {
 
 			// Connect to Selenium grid if available
 			WebDriver driver = null;
-			if (localenv.getSeleniumHubAddress() != null) {
-				options.addArguments("--proxy-server=" + "http://" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
+			if (localenv.useSeleniumGrid()) {
+				options.addArguments("--proxy-server=" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
 
 				// Makes Selenium grid upload local files (i.e. mutant
 				// files) to the worker nodes
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
-				options.addArguments("--proxy-server=" + "http://" + localenv.getProxyAddress());
+				options.addArguments("--proxy-server=" + localenv.getProxyAddress());
 				driver = new ChromeDriver(cap);
 			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
@@ -188,13 +188,14 @@ abstract public class WebAppTestBase {
 			cap.setCapability("moz:firefoxOptions", options);
 			cap.setCapability("marionette", true);
 
-			final GeckoDriverService service = new GeckoDriverService.Builder(new FirefoxBinary(new File(localenv.getFirefoxBin())))
-					.usingDriverExecutable(new File(localenv.getGeckodriverBin())).usingAnyFreePort().usingAnyFreePort()
-					.build();
+			final GeckoDriverService service = new GeckoDriverService.Builder(
+					new FirefoxBinary(new File(localenv.getFirefoxBin())))
+							.usingDriverExecutable(new File(localenv.getGeckodriverBin())).usingAnyFreePort()
+							.usingAnyFreePort().build();
 			service.start();
 
 			WebDriver driver = null;
-			if (localenv.getSeleniumHubAddress() != null) {
+			if (localenv.useSeleniumGrid()) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
@@ -228,7 +229,7 @@ abstract public class WebAppTestBase {
 			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
 
 			WebDriver driver = null;
-			if (localenv.getSeleniumHubAddress() != null) {
+			if (localenv.useSeleniumGrid()) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
@@ -278,7 +279,7 @@ abstract public class WebAppTestBase {
 			this.setCookies();
 
 			// If using selenium grid, upload the mutant file to the worker
-			if (localenv.getSeleniumHubAddress() != null) {
+			if (localenv.useSeleniumGrid()) {
 				this.sendMutantFileToSeleniumWorker();
 			}
 		}
@@ -315,13 +316,15 @@ abstract public class WebAppTestBase {
 			// id so the proxy knows which file to replace
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
-			getDriver().manage().addCookie(new Cookie("jsMutantId", mutationFileId.get(), config.getUrl().getAuthority(), "/", null));
+			getDriver().manage().addCookie(
+					new Cookie("jsMutantId", mutationFileId.get(), config.getUrl().getAuthority(), "/", null));
 
 			// If using selenium grid, we also need to send the file name, since
 			// the testrunner and proxy are not in the same JVM
-			if (localenv.getSeleniumHubAddress() != null) {
+			if (localenv.useSeleniumGrid()) {
 				final String jsMutantFilename = config.getRecordedJsFile().getName();
-				getDriver().manage().addCookie(new Cookie("jsMutantFilename", jsMutantFilename, config.getUrl().getAuthority(), "/", null));
+				getDriver().manage().addCookie(
+						new Cookie("jsMutantFilename", jsMutantFilename, config.getUrl().getAuthority(), "/", null));
 			}
 		}
 	}

@@ -58,6 +58,7 @@ proxy					= ram
 ### Setting up Selenium-grid (optional)
 To use Selenium-grid (distributed processing), uncomment ``selenium_hub_ip`` from ``localenv.properties`` and change the value as appropriate.
 Selenium-grid also requires a "hub" machine and the "worker" machines properly setup and configured.
+
 To setup the hub, input the following into an available machine:
 ```
 $ docker pull selenium/hub

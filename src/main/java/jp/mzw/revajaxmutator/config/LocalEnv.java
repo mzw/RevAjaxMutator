@@ -89,7 +89,7 @@ public class LocalEnv {
 	}
 
 	public boolean getChromeHeadless() {
-		String flag = this.getParam(Param.CHROME_HEADLESS);
+		final String flag = this.getParam(Param.CHROME_HEADLESS);
 		return Boolean.parseBoolean(flag);
 	}
 
@@ -133,6 +133,10 @@ public class LocalEnv {
 
 	public String getSeleniumHubAddress() {
 		return this.getParam(Param.SELENIUM_HUB_IP);
+	}
+
+	public boolean useSeleniumGrid() {
+		return this.getSeleniumHubAddress() != null;
 	}
 
 	public String getJsCoverageDir() {
