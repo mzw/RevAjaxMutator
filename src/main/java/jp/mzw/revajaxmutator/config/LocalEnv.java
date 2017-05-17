@@ -19,7 +19,7 @@ public class LocalEnv {
 	}
 
 	public static enum Param {
-		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROMEDRIVER_BIN, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
+		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, CHROMEDRIVER_BIN, CHROME_HEADLESS, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case FIREFOX_BIN:
@@ -28,14 +28,18 @@ public class LocalEnv {
 				return null;
 			case PHANTOMJS_BIN:
 				return null;
+			case CHROME_BIN:
+				return null;
 			case CHROMEDRIVER_BIN:
 				return null;
+			case CHROME_HEADLESS:
+				return Boolean.toString(false);
 			case PROXY_IP:
 				return "127.0.0.1";
 			case PROXY_PORT:
-				return new Integer(8081).toString();
+				return Integer.toString(8081);
 			case TIMEOUT:
-				return new Long(3).toString();
+				return Long.toString(3);
 			case THREAD_NUM:
 				return new Integer(Runtime.getRuntime().availableProcessors()).toString();
 			case SELENIUM_HUB_IP:
@@ -45,7 +49,7 @@ public class LocalEnv {
 			case JSCOVER_IP:
 				return "127.0.0.1";
 			case JSCOVER_PORT:
-				return new Integer(3129).toString();
+				return Integer.toString(3129);
 			}
 			return "";
 		}
@@ -64,12 +68,33 @@ public class LocalEnv {
 		return this.getParam(Param.GECKODRIVER_BIN);
 	}
 
+	public boolean useFirefox() {
+		return this.getFirefoxBin() != null && this.getGeckodriverBin() != null;
+	}
+
 	public String getPhantomjsBin() {
 		return this.getParam(Param.PHANTOMJS_BIN);
 	}
 
-	public String getChromeDriverBin() {
+	public boolean usePhantomjs() {
+		return this.getPhantomjsBin() != null;
+	}
+
+	public String getChromeBin() {
+		return this.getParam(Param.CHROME_BIN);
+	}
+
+	public String getChromedriverBin() {
 		return this.getParam(Param.CHROMEDRIVER_BIN);
+	}
+
+	public boolean getChromeHeadless() {
+		String flag = this.getParam(Param.CHROME_HEADLESS);
+		return Boolean.parseBoolean(flag);
+	}
+
+	public boolean useChrome() {
+		return this.getChromeBin() != null && this.getChromedriverBin() != null;
 	}
 
 	public String getProxyIp() {

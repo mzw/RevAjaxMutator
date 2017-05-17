@@ -124,14 +124,16 @@ abstract public class WebAppTestBase {
 	 */
 	@SuppressWarnings("deprecation")
 	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
-		final String firefoxBin = localenv.getFirefoxBin();
-		final String chromeBin = localenv.getChromeDriverBin();
-		if (chromeBin != null) {
-			System.setProperty("chrome.binary", chromeBin);
-			System.setProperty("webdriver.chrome.driver", chromeBin);
+		if (localenv.useChrome()) {
+			System.setProperty("chrome.binary", localenv.getChromeBin());
+			System.setProperty("webdriver.chrome.driver", localenv.getChromedriverBin());
 
 			final ChromeOptions options = new ChromeOptions();
-			// options.addArguments("--headless");
+			if (localenv.getChromeHeadless()) {
+				options.addArguments("--headless");
+				options.addArguments("--disable-gpu");
+			}
+			options.setBinary(localenv.getChromeBin());
 
 			final DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setCapability(ChromeOptions.CAPABILITY, options);
@@ -155,7 +157,7 @@ abstract public class WebAppTestBase {
 			currentDriver.set(driver);
 			waits.set(wait);
 			actions.set(action);
-		} else if (firefoxBin != null) {
+		} else if (localenv.useFirefox()) {
 			final DesiredCapabilities cap = DesiredCapabilities.firefox();
 
 			final String proxyIp = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyIp()
@@ -182,11 +184,11 @@ abstract public class WebAppTestBase {
 
 			final JsonObject options = new JsonObject();
 			options.add("prefs", prefs);
-			options.addProperty("binary", firefoxBin);
+			options.addProperty("binary", localenv.getFirefoxBin());
 			cap.setCapability("moz:firefoxOptions", options);
 			cap.setCapability("marionette", true);
 
-			final GeckoDriverService service = new GeckoDriverService.Builder(new FirefoxBinary(new File(firefoxBin)))
+			final GeckoDriverService service = new GeckoDriverService.Builder(new FirefoxBinary(new File(localenv.getFirefoxBin())))
 					.usingDriverExecutable(new File(localenv.getGeckodriverBin())).usingAnyFreePort().usingAnyFreePort()
 					.build();
 			service.start();
@@ -204,7 +206,7 @@ abstract public class WebAppTestBase {
 			currentDriver.set(driver);
 			waits.set(wait);
 			actions.set(action);
-		} else if (localenv.getPhantomjsBin() != null) {
+		} else if (localenv.usePhantomjs()) {
 			final DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 
 			final ArrayList<String> cliArgsCap = new ArrayList<String>();

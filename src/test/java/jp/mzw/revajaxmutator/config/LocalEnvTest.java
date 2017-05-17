@@ -28,9 +28,41 @@ public class LocalEnvTest {
 	}
 
 	@Test
+	public void testUseFirefox() {
+		Assert.assertTrue(localenv.useFirefox());
+	}
+
+	@Test
 	public void testGetPhantomjsBin() {
 		String actual = localenv.getPhantomjsBin();
 		Assert.assertArrayEquals("path/to/bin/phantomjs".toCharArray(), actual.toCharArray());
+	}
+
+	@Test
+	public void testUsePhantomjs() {
+		Assert.assertTrue(localenv.usePhantomjs());
+	}
+
+	@Test
+	public void testGetChromeBin() {
+		String actual = localenv.getChromeBin();
+		Assert.assertArrayEquals("path/to/google-chrome".toCharArray(), actual.toCharArray());
+	}
+
+	@Test
+	public void testGetChromedriverBin() {
+		String actual = localenv.getChromedriverBin();
+		Assert.assertArrayEquals("path/to/chromedriver".toCharArray(), actual.toCharArray());
+	}
+
+	@Test
+	public void testGetChromeHeadless() {
+		Assert.assertTrue(localenv.getChromeHeadless());
+	}
+
+	@Test
+	public void testUseChrome() {
+		Assert.assertTrue(localenv.useChrome());
 	}
 
 	@Test
