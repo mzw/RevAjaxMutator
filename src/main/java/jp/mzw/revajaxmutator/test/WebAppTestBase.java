@@ -134,10 +134,12 @@ abstract public class WebAppTestBase {
 				options.addArguments("--no-sandbox");
 				options.addArguments("--disable-gpu");
 			}
+			options.addArguments("--test-type");
 			options.setBinary(localenv.getChromeBin());
 
 			final DesiredCapabilities cap = DesiredCapabilities.chrome();
 			cap.setCapability(ChromeOptions.CAPABILITY, options);
+			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
 
 			// Connect to Selenium grid if available
 			WebDriver driver = null;
