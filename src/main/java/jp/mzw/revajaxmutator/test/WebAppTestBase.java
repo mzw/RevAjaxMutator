@@ -131,6 +131,7 @@ abstract public class WebAppTestBase {
 			final ChromeOptions options = new ChromeOptions();
 			if (localenv.getChromeHeadless()) {
 				options.addArguments("--headless");
+				options.addArguments("--no-sandbox");
 				options.addArguments("--disable-gpu");
 			}
 			options.setBinary(localenv.getChromeBin());
