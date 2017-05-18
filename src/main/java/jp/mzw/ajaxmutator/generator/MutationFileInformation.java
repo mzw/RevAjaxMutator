@@ -25,8 +25,7 @@ public class MutationFileInformation {
 	private int numOfFailedTest = 0;
 
 	public enum State {
-		NON_EQUIVALENT_LIVE("non-equivalent live"), EQUIVALENT("equivalent"), KILLED(
-				"killed");
+		NON_EQUIVALENT_LIVE("non-equivalent live"), EQUIVALENT("equivalent"), KILLED("killed"), SKIPPED_BY_COVERAGE("skipped by coverage");
 
 		private final String stringExpression;
 

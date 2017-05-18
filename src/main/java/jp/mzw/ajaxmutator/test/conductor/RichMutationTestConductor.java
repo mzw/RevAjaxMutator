@@ -77,8 +77,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 * @param visitor
 	 * @param coverages
 	 */
-	public void setup(final String pathToJSFile, final String targetURL, final MutateVisitor visitor,
-			final Map<File, boolean[]> coverages) {
+	public void setup(final String pathToJSFile, final String targetURL, final MutateVisitor visitor, final Map<File, boolean[]> coverages) {
 		super.setup(pathToJSFile, targetURL, visitor);
 		if (coverages != null) {
 			this.coverages = coverages;
@@ -179,8 +178,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
 		for (final String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
-			for (final MutationFileInformation mutant : this.mutationListManager
-					.getMutationFileInformationList(description)) {
+			for (final MutationFileInformation mutant : this.mutationListManager.getMutationFileInformationList(description)) {
 				// execution can be canceled from outside.
 				if (!this.conducting) {
 					executor.shutdownNow();
@@ -188,16 +186,13 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				}
 				// When mutant is not "live non-equivalent", skip to run test
 				// cases on it.
-				if (mutant.canBeSkipped() // ||
-											// !this.applyMutationFile(original,
-											// mutant)
-				) {
+				if (mutant.canBeSkipped()) {
 					continue;
 				}
 
 				// Skip test cases that do not cover mutated locations
-				if (!this.coverages.isEmpty()
-						&& !Coverage.isCovered(this.coverages, mutant.getStartLine(), mutant.getEndLine())) {
+				if (!this.coverages.isEmpty() && !Coverage.isCovered(this.coverages, mutant.getStartLine(), mutant.getEndLine())) {
+					mutant.setState(MutationFileInformation.State.SKIPPED_BY_COVERAGE);
 					LOGGER.info(mutant.getFileName() + " is skipped by coverage");
 					continue;
 				}
@@ -211,8 +206,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 				// Backup the results every "n" mutations
 				numberOfAppliedMutation++;
-				if (numberOfAppliedMutation >= this.saveInformationInterval
-						& (numberOfAppliedMutation % this.saveInformationInterval == 0)) {
+				if (numberOfAppliedMutation >= this.saveInformationInterval & (numberOfAppliedMutation % this.saveInformationInterval == 0)) {
 					this.mutationListManager.generateMutationListFile();
 				}
 				LOGGER.info("Executing test(s) on {}", mutant.getAbsolutePath());
@@ -226,8 +220,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 				// Execute the test case
 				final TestExecutor targetTestExecutor = this.prioritizer.getTestExecutor(mutant, testExecutors);
-				final TestCallable task = new TestCallable(targetTestExecutor, mutant, description,
-						numberOfAppliedMutation, numberOfMaxMutants);
+				final TestCallable task = new TestCallable(targetTestExecutor, mutant, description, numberOfAppliedMutation, numberOfMaxMutants);
 				final Future<Boolean> future = executor.submit(task);
 				futures.add(future);
 
@@ -255,8 +248,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		}
 
 		for (final String description : nameOfMutations) {
-			for (final MutationFileInformation mutationFileInformation : this.mutationListManager
-					.getMutationFileInformationList(description)) {
+			for (final MutationFileInformation mutationFileInformation : this.mutationListManager.getMutationFileInformationList(description)) {
 				LOGGER.info(mutationFileInformation.getState().toString());
 			}
 		}
@@ -283,8 +275,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		private final int numberOfAppliedMutation;
 		private final int numberOfMaxMutants;
 
-		public TestCallable(TestExecutor executor, MutationFileInformation mutant, String description,
-				int numberOfAppliedMutation, int numberOfMaxMutants) {
+		public TestCallable(TestExecutor executor, MutationFileInformation mutant, String description, int numberOfAppliedMutation, int numberOfMaxMutants) {
 			this.executor = executor;
 			this.mutant = mutant;
 			this.description = description;
@@ -329,43 +320,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		}
 	}
 
-	// public void tryToKillSpecificMutant(String mutationFileName, TestExecutor
-	// testExecutor) {
-	// mutationListManager = new
-	// MutationListManager(mutationFileWriter.getDestinationDirectory());
-	// mutationListManager.readExistingMutationListFile();
-	// checkIfSetuped();
-	//
-	// for (String description : mutationListManager.getListOfMutationName()) {
-	// for (MutationFileInformation mutationFileInformation :
-	// mutationListManager.getMutationFileInformationList(description)) {
-	// if (mutationFileInformation.getFileName().equals(mutationFileName)) {
-	// List<String> original = Util.readFromFile(pathToJsFile);
-	// if (!applyMutationFile(original, mutationFileInformation)) {
-	// return;
-	// }
-	// if (testExecutor.execute()) { // This mutants cannot be killed
-	// LOGGER.info("mutant {} is not be killed", description);
-	// } else {
-	// mutationFileInformation.setState(MutationFileInformation.State.KILLED);
-	// LOGGER.info("mutant {} is killed", description);
-	// }
-	// String message = testExecutor.getMessageOnLastExecution();
-	// if (message != null) {
-	// LOGGER.info(message);
-	// }
-	//
-	// mutationListManager.generateMutationListFile();
-	//
-	// LOGGER.info("restoring backup file...");
-	// Util.copyFile(pathToBackupFile(), context.getJsPath());
-	// return;
-	// }
-	// }
-	// }
-	// LOGGER.error("No mutant found for name " + mutationFileName);
-	// }
-
 	/**
 	 * Create a new file with the applied mutation/patch in the format:
 	 * <filename>.<mutation_id>
@@ -382,9 +336,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
 		try {
 			@SuppressWarnings("unused")
-			final List<?> mutated = patch.<String>applyTo(original);
-			Util.writeToFile(this.pathToJsFile + "." + id,
-					Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
+			final List<?> mutated = patch.<String> applyTo(original);
+			Util.writeToFile(this.pathToJsFile + "." + id, Util.join(mutated.toArray(new String[0]), System.lineSeparator()));
 		} catch (final PatchFailedException e) {
 			LOGGER.error("Applying mutation file '{}' failed.", fileInfo.getFileName(), e);
 			return false;
@@ -408,7 +361,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
 		try {
 			@SuppressWarnings("unused")
-			final List<?> mutated = patch.<String>applyTo(original);
+			final List<?> mutated = patch.<String> applyTo(original);
 			final String[] pathHierarchyOfJsFile = this.pathToJsFile.split("/", 0);
 			String newPathToJsFile = pathHierarchyOfJsFile[0];
 			if (pathHierarchyOfJsFile.length != 0) {
