@@ -1,6 +1,8 @@
 # To run RevAjaxMutator, modify the parameters as needed and rename/create file "localenv.properties" 
 
+chrome_bin=/usr/bin/google-chrome-beta
 chromedriver_bin=/usr/local/bin/chromedriver
+chrome_headless=true
 firefox_bin=/usr/bin/firefox
 geckodriver_bin=/home/filipe/geckodriver-0.15.0/geckodriver
 phantomjs_bin=/home/filipe/phantomjs-2.1.1-linux-x86_64/bin/phantomjs
