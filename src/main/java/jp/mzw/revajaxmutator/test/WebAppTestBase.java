@@ -127,6 +127,7 @@ abstract public class WebAppTestBase {
 		if (localenv.useChrome()) {
 			System.setProperty("chrome.binary", localenv.getChromeBin());
 			System.setProperty("webdriver.chrome.driver", localenv.getChromedriverBin());
+			System.setProperty("webdriver.chrome.silentOutput", "true");
 
 			final ChromeOptions options = new ChromeOptions();
 			if (localenv.getChromeHeadless()) {
