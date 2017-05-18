@@ -19,7 +19,7 @@
 	<repositories>
 		<repository>
 			<id>jp.mzw.mvn-repo</id>
-			<url>https://mvn-repo.mzw.jp</url>
+			<url>http://mvn-repo.mzw.jp</url>
 		</repository>
 	</repositories>
 
