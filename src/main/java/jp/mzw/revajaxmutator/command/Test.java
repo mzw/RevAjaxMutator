@@ -116,7 +116,7 @@ public class Test extends Command {
 				// TODO Remove or backup previous results
 
 				for (final Method method : testClass.getMethods()) {
-					if (isTestMethod(method)) {
+					if (isTestMethod(method) && !isTestMethodToIgnore(method)) {
 						// TODO run with Theory?
 						final Result result = (new JUnitCore()).run(new EachJUnitTestRunner(testClass, true, method));
 						showTestResult(result);

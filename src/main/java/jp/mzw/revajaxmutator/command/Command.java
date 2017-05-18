@@ -123,6 +123,15 @@ abstract public class Command implements ICommand {
 		return false;
 	}
 
+	public static boolean isTestMethodToIgnore(Method method) {
+		for (final Annotation annotation : method.getAnnotations()) {
+			if (annotation.annotationType().equals(org.junit.Ignore.class)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/**
 	 *
 	 * @param className
