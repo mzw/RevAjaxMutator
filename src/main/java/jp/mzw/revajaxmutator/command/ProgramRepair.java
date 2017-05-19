@@ -212,7 +212,6 @@ public class ProgramRepair extends Command {
 		conductor.setPrioritizeStrategy(
 				Prioritizer.getPrioritizer(Prioritizer.Strategy.Coverage).setParameters(failureCoverages));
 
-		// TODO
 		final List<TestExecutor> executors = Lists.newArrayList();
 		for (final Mutator<?> mutator : mutateConfig.mutators()) {
 			final TestExecutor e = new JUnitExecutor(true, testClasses);

@@ -79,14 +79,6 @@ public class MutationAnalysis extends Command {
 			System.out.println("RECORDING SOURCE CODE FILES");
 			this.runTests(args);
 
-			// Start JSCover proxy to record coverage results
-			// JSCoverProxyServer.launch(localenv.getJsCoverageDir(),
-			// localenv.getJsCoveragePort());
-			// localenv.setShouldRunJSCoverProxy(true);
-			// System.out.println("RUNNING COVERAGE REPORT");
-			// this.runTests(args);
-			// localenv.setShouldRunJSCoverProxy(false);
-
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | InitializationError
 				| InterruptedException | IOException | StoreException e) {
 			LOG.error(e.getMessage());
@@ -287,122 +279,14 @@ public class MutationAnalysis extends Command {
 		conductor.setPrioritizeStrategy(
 				Prioritizer.getPrioritizer(Prioritizer.Strategy.Coverage).setParameters(failureCoverages));
 
-		// TODO
 		final List<TestExecutor> executors = Lists.newArrayList();
 		for (final Mutator<?> mutator : mutateConfig.mutators()) {
-			executors.add(new JUnitExecutor(false, testClasses));
+			final TestExecutor e = new JUnitExecutor(true, testClasses);
+			final String mutationName = mutator.mutationName();
+			e.setMutationFixAssignment(mutationName);
+			executors.add(e);
 		}
 
 		conductor.mutationAnalysisUsingExistingMutations(executors);
 	}
-
-	//
-	// for (Method method : testClass.getMethods()) {
-	// if (isTestMethod(method)) {
-	// File file = new File(
-	// failureCoverageFile.getParentFile().getPath() + File.separator +
-	// method.getName() + File.separator + failureCoverageFile.getName());
-	// failureCoverageFiles.put(method.getName(), file);
-	// }
-	// }
-
-	// MutationTestConductor conductor =
-	// config.getMutationAnalysisConfig().mutationTestConductor();
-	// conductor.mutationAnalysisUsingExistingMutations(executors,
-	// failureCoverageFiles);
-
-	// public static void createfile(String[] args) {
-	// String configFileName = args[0];
-	//
-	// String testFilePath = getPropertyValue(configFileName,
-	// "path_to_test_case_file");
-	//
-	// List<String> mutantNames = getMutantNames(configFileName);
-	//
-	// createMutantTestFile(new File(testFilePath), mutantNames);
-	// }
-	//
-	// private static List<String> getMutantNames(String configFileName) {
-	// Properties propaties = new Properties();
-	// try {
-	// propaties.load(AppConfigBase.class.getClassLoader().getResourceAsStream(new
-	// File(configFileName).getName()));
-	// } catch (IOException e) {
-	// e.printStackTrace();
-	// }
-	// File mutantsDir = new File(propaties.getProperty("ram_record_dir") +
-	// File.separator + MutationFileWriter.DEFAULT_FOLDER_NAME);
-	//
-	// List<String> list = new ArrayList<String>();
-	//
-	// for (File file : mutantsDir.listFiles()) {
-	// if
-	// (file.getName().startsWith(MutationFileWriter.DEFAULT_FILE_NAME_PREFIX)
-	// && file.getName().endsWith(MutationFileWriter.EXTENSION)) {
-	// list.add(Util.getFileNameWithoutExtension(file.getName()));
-	// }
-	// }
-	// return list;
-	// }
-	//
-	// private static void createMutantTestFile(File testFile, List<String>
-	// mutantNames) {
-	//
-	// String originalfilename = testFile.getName();
-	//
-	// List<String> original = Util.readFromFile(testFile.getPath());
-	//
-	// File testCodeDir = testFile.getParentFile();
-	//
-	// for (File file : testCodeDir.listFiles()) {
-	// if
-	// (file.getName().startsWith(MutationFileWriter.DEFAULT_FILE_NAME_PREFIX)
-	// && file.getName().endsWith(MutationFileWriter.EXTENSION)) {
-	// file.delete();
-	// }
-	// }
-	//
-	// for (String mutantname : mutantNames) {
-	//
-	// String content = applyMutantNameToTestCode(original,
-	// Util.getFileNameWithoutExtension(originalfilename), mutantname);
-	//
-	// String newfilepath = testFile.getParent() + File.separator + mutantname +
-	// originalfilename;
-	//
-	// Util.writeToFile(newfilepath, content);
-	// }
-	// }
-	//
-	// private static List<TestExecutor> createJUnitExecuterList(String
-	// testClassName, List<String> mutantNames) throws ClassNotFoundException {
-	// List<TestExecutor> executors = new ArrayList<TestExecutor>();
-	// String[] splitedTestClassName = testClassName.split("\\.");
-	// for (String mutantname : mutantNames) {
-	// String[] name = splitedTestClassName.clone();
-	// name[name.length - 1] = mutantname + name[name.length - 1];
-	// String newTestClassName = Util.join(name, ".");
-	// executors.add(new JUnitExecutor(false, Class.forName(newTestClassName)));
-	// }
-	// return executors;
-	// }
-	//
-	// private static String applyMutantNameToTestCode(List<String> original,
-	// String originalfilename, String mutantname) {
-	//
-	// List<String> clone = new ArrayList<String>(original);
-	//
-	// for (int i = 0; i < clone.size(); i++) {
-	// if (clone.get(i).contains("class " + originalfilename)) {
-	// clone.set(i, clone.get(i).replaceFirst(originalfilename, mutantname +
-	// originalfilename));
-	// }
-	// if (clone.get(i).contains(WebAppTestBase.class.getSimpleName() + ".")) {
-	// clone.set(i, clone.get(i).replaceFirst("\\);", ",\"" + mutantname +
-	// "\");"));
-	// }
-	// }
-	//
-	// return Util.join(clone.toArray(new String[0]), System.lineSeparator());
-	// }
 }
