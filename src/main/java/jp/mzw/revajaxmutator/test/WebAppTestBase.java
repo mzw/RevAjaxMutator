@@ -162,6 +162,8 @@ abstract public class WebAppTestBase {
 			waits.set(wait);
 			actions.set(action);
 		} else if (localenv.useFirefox()) {
+			System.setProperty("webdriver.gecko.driver", localenv.getGeckodriverBin());
+
 			final DesiredCapabilities cap = DesiredCapabilities.firefox();
 
 			final String proxyIp = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyIp()
