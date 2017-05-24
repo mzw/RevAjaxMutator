@@ -263,8 +263,14 @@ abstract public class WebAppTestBase {
 	 */
 	@AfterClass
 	public static void tearDownAfterClassBase() throws InterruptedException {
-		JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
-		getDriver().quit();
+		try  {
+			JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
+		} catch (org.openqa.selenium.WebDriverException e) {
+			throw e;
+		} finally {
+			getDriver().close();
+			getDriver().quit();
+		}
 	}
 
 	/**
