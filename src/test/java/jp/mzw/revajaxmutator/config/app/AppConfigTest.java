@@ -99,6 +99,12 @@ public class AppConfigTest {
 		Assert.assertArrayEquals("path/to/app-test.js".toCharArray(), actual.toCharArray());
 	}
 
+	@Test
+	public void testGetJsUrl() throws MalformedURLException, UnsupportedEncodingException {
+		URL actual = config.getJsUrl();
+		Assert.assertArrayEquals("http://www.example.org:8080/path/to/path/to/app-test.js".toCharArray(), actual.toString().toCharArray());
+	}
+
 	private static class AppTestConfig extends AppConfig {
 		private AppTestConfig() throws IOException {
 			super("app-test.properties");

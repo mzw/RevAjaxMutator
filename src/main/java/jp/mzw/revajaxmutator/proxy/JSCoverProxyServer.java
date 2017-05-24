@@ -31,6 +31,31 @@ public class JSCoverProxyServer {
 		}
 	}
 
+	public static void launch(final String dir, final String port, String[] insr) throws InterruptedException {
+		final File cov_result = new File(dir, JSCOVER_REPORT_FILE);
+		if (cov_result.exists()) {
+			cov_result.delete();
+		}
+
+		if (server == null) {
+			final ArrayList<String> _args = new ArrayList<String>();
+			_args.add("-ws");
+			_args.add("--port=" + port);
+			_args.add("--proxy");
+			_args.add("--local-storage");
+			_args.add("--report-dir=" + dir);
+			for (final String regx : insr) {
+				if ("".equals(regx)) {
+					continue;
+				}
+				_args.add("--only-instrument-reg=" + regx);
+			}
+			server = new Thread(() -> jscover.Main.main(_args.toArray(new String[_args.size()])));
+			server.start();
+			Thread.sleep(300); // wait for launching proxy server
+		}
+	}
+
 	public static void launch(final String dir, final String port, String[] insr, String[] no_instr)
 			throws InterruptedException {
 		final File cov_result = new File(dir, JSCOVER_REPORT_FILE);

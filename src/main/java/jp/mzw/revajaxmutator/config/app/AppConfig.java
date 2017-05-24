@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import flex.messaging.util.URLDecoder;
 import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
 import jp.mzw.revajaxmutator.search.Sorter;
 
@@ -270,6 +271,27 @@ public abstract class AppConfig implements IAppConfig {
 
 		LOGGER.warn("Not found target HTML file: {}", url.toString());
 		return null;
+	}
+
+	/**
+	 * 
+	 * 
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws UnsupportedEncodingException
+	 */
+	public URL getJsUrl() throws MalformedURLException, UnsupportedEncodingException {
+		final URL url = new URL(this.getUrl(), this.pathToJsFile());
+		final String[] splits = url.toString().split("<regex>|</regex>");
+		final StringBuilder regex = new StringBuilder();
+		for (int i = 0; i < splits.length; i++) {
+			if (i % 2 == 0) {
+				regex.append(URLEncoder.encode(splits[i], "utf-8"));
+			} else {
+				regex.append(splits[i]);
+			}
+		}
+		return new URL(URLDecoder.decode(regex.toString(), "utf-8"));
 	}
 
 	/**
