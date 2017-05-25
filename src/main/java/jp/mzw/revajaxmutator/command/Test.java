@@ -103,7 +103,7 @@ public class Test extends Command {
 			final AppConfig config = (AppConfig) configClass.newInstance();
 
 			final File dir = config.getJscoverReportDir();
-			JSCoverProxyServer.launch(dir.getAbsolutePath(), localenv.getJsCoveragePort(), new String[] { config.getJsUrl().toString() });
+			JSCoverProxyServer.launch(dir.getAbsolutePath(), localenv.getJsCoveragePort(), new String[] { config.getJsUrl().getPath() });
 			localenv.setShouldRunJSCoverProxy(true);
 
 			final List<TestResult> results = new ArrayList<>();
