@@ -20,9 +20,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.GeckoDriverService;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
@@ -33,8 +33,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.gson.JsonObject;
 
 import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
@@ -122,7 +120,6 @@ abstract public class WebAppTestBase {
 	 * @param config
 	 * @throws IOException
 	 */
-	@SuppressWarnings("deprecation")
 	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
 		if (localenv.useChrome()) {
 			System.setProperty("chrome.binary", localenv.getChromeBin());
@@ -164,48 +161,36 @@ abstract public class WebAppTestBase {
 		} else if (localenv.useFirefox()) {
 			System.setProperty("webdriver.gecko.driver", localenv.getGeckodriverBin());
 
-			final DesiredCapabilities cap = DesiredCapabilities.firefox();
-
-			final String proxyIp = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyIp()
+			final String proxyIp = (localenv.getSeleniumHubAddress() == null) ? localenv.getProxyIp()
 					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_IP;
-			final String proxyPort = (localenv.getSeleniumHubAddress() != null)
+			final String proxyPort = (localenv.getSeleniumHubAddress() == null)
 					? new Integer(localenv.getProxyPort()).toString() : SeleniumGridRewriterPlugin.SEL_GRID_PROXY_PORT;
 
-			final JsonObject json = new JsonObject();
-			json.addProperty("proxyType", "MANUAL");
-			json.addProperty("httpProxy", proxyIp);
-			json.addProperty("httpProxyPort", proxyPort);
-			json.addProperty("sslProxy", proxyIp);
-			json.addProperty("sslProxyPort", proxyPort);
-			cap.setCapability(CapabilityType.PROXY, json);
-
-			final JsonObject prefs = new JsonObject();
-			prefs.addProperty("network.proxy.type", 1);
-			prefs.addProperty("network.proxy.http", proxyIp);
-			prefs.addProperty("network.proxy.http_port", proxyPort);
-			prefs.addProperty("network.proxy.ssl", proxyIp);
-			prefs.addProperty("network.proxy.ssl_port", proxyPort);
-			prefs.addProperty("network.proxy.share_proxy_settings", Boolean.TRUE);
-			prefs.addProperty("network.proxy.no_proxies_on", "");
-
-			final JsonObject options = new JsonObject();
-			options.add("prefs", prefs);
-			options.addProperty("binary", localenv.getFirefoxBin());
-			cap.setCapability("moz:firefoxOptions", options);
+			final DesiredCapabilities cap = DesiredCapabilities.firefox();
 			cap.setCapability("marionette", true);
+			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
 
-			final GeckoDriverService service = new GeckoDriverService.Builder(
-					new FirefoxBinary(new File(localenv.getFirefoxBin())))
-							.usingDriverExecutable(new File(localenv.getGeckodriverBin())).usingAnyFreePort()
-							.usingAnyFreePort().build();
-			service.start();
+			final FirefoxProfile profile = new FirefoxProfile();
+			profile.setPreference("network.proxy.type", 1);
+			profile.setPreference("network.proxy.http", proxyIp);
+			profile.setPreference("network.proxy.http_port", Integer.parseInt(proxyPort));
+			profile.setPreference("network.proxy.ssl", proxyIp);
+			profile.setPreference("network.proxy.ssl_port", Integer.parseInt(proxyPort));
+			profile.setPreference("network.proxy.share_proxy_settings", Boolean.TRUE);
+			profile.setPreference("network.proxy.no_proxies_on", "");
+			profile.setAcceptUntrustedCertificates(true);
+			cap.setCapability(FirefoxDriver.PROFILE, profile);
+
+			final FirefoxOptions options = new FirefoxOptions();
+			options.setBinary(localenv.getFirefoxBin());
+			options.addCapabilities(cap);
 
 			WebDriver driver = null;
 			if (localenv.useSeleniumGrid()) {
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
 				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
 			} else {
-				driver = new FirefoxDriver(service, cap, cap);
+				driver = new FirefoxDriver(options);
 			}
 			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
 			final Actions action = new Actions(driver);
