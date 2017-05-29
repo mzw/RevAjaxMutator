@@ -37,15 +37,13 @@ public class EventTypeTSFixer extends AbstractReplacingAmongFixer<EventAttachmen
 	 */
 	@Override
 	protected String formatAccordingTo(AstNode mutatingNode, AstNode mutatedNode) {
-		if ((mutatedNode instanceof StringLiteral) && !(mutatingNode instanceof StringLiteral)) {
-			final String mutatingEventType = mutatingNode instanceof Name ? ((Name) mutatingNode).getIdentifier()
-					: ((StringLiteral) mutatingNode).getValue();
+		if ((mutatedNode instanceof StringLiteral) && (mutatingNode instanceof Name)) {
+			final String mutatingEventType = ((Name) mutatingNode).getIdentifier();
 			final String mutatedEventType = mutatedNode.toSource();
 			return '"' + this.manipulateOnPrefix(mutatingEventType, mutatedEventType) + '"';
-		} else if (!(mutatedNode instanceof StringLiteral) && (mutatingNode instanceof StringLiteral)) {
+		} else if ((mutatedNode instanceof Name) && (mutatingNode instanceof StringLiteral)) {
 			final String mutatingEventType = mutatingNode.toSource();
-			final String mutatedEventType = mutatedNode instanceof Name ? ((Name) mutatedNode).getIdentifier()
-					: ((StringLiteral) mutatedNode).getValue();
+			final String mutatedEventType = ((Name) mutatedNode).getIdentifier();
 			return this.manipulateOnPrefix(mutatingEventType, mutatedEventType);
 		} else if ((mutatedNode instanceof StringLiteral) && (mutatingNode instanceof StringLiteral)) {
 			final String mutatingEventType = ((StringLiteral) mutatingNode).getValue();
