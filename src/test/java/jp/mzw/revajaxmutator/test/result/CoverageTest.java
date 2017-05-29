@@ -14,12 +14,16 @@ import org.junit.Test;
 public class CoverageTest {
 
 	protected static File jscoverReportDir;
+	protected static String recordedJsFileName;
+	protected static File recordDir;
 	protected static File recordedJsFile;
 
 	@BeforeClass
 	public static void setUpBeforeClass() {
 		jscoverReportDir = new File("src/test/resources/jscover-test/quizzy");
-		recordedJsFile = new File("jscover/quizzy/http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fbefore%2Finitial%2Fquizzy%2Fquizzy%2Fquizzy.js");
+		recordedJsFileName = "http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fbefore%2Finitial%2Fquizzy%2Fquizzy%2Fquizzy.js";
+		recordDir = new File("src/test/resources/record-test/quizzy");
+		recordedJsFile = new File(recordDir, "http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fbefore%2Finitial%2Fquizzy%2Fquizzy%2Fquizzy.js");
 	}
 
 	@Test
@@ -46,7 +50,7 @@ public class CoverageTest {
 	@Test
 	public void testGetTargetCoverageResults() throws JSONException, IOException {
 		List<File> files = Coverage.getCoverageResults(jscoverReportDir);
-		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile);
+		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile, recordDir);
 		Assert.assertEquals(2, results.size());
 	}
 
@@ -69,7 +73,7 @@ public class CoverageTest {
 	@Test
 	public void testIsCovered() throws JSONException, IOException {
 		List<File> files = Coverage.getCoverageResults(jscoverReportDir);
-		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile);
+		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile, recordDir);
 		Assert.assertFalse(Coverage.isCovered(results, 0, 3));
 		Assert.assertTrue(Coverage.isCovered(results, 4, 6));
 	}
@@ -77,7 +81,7 @@ public class CoverageTest {
 	@Test
 	public void testIsCovetedWithTestMethodName() throws JSONException, IOException {
 		List<File> files = Coverage.getCoverageResults(jscoverReportDir);
-		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile);
+		Map<File, boolean[]> results = Coverage.getTargetCoverageResults(files, recordedJsFile, recordDir);
 		Assert.assertFalse(Coverage.isCovered(results, 0, 3, "jp.mzw.revajaxmutator.test.quizzy.QuizzyTest#clickQuizLabel"));
 		Assert.assertTrue(Coverage.isCovered(results, 4, 6, "jp.mzw.revajaxmutator.test.quizzy.QuizzyTest#clickQuizLabel"));
 	}
@@ -87,5 +91,13 @@ public class CoverageTest {
 		File file = new File("src/test/resources/jscover-test/quizzy/jp.mzw.revajaxmutator.test.quizzy.QuizzyTest#clickQuizLabel/jscoverage.json");
 		String actual = Coverage.getTestMethodName(file);
 		Assert.assertArrayEquals("jp.mzw.revajaxmutator.test.quizzy.QuizzyTest#clickQuizLabel".toCharArray(), actual.toCharArray());
+	}
+
+	@Test
+	public void testGetNameRepresentingUrl() {
+		File recordDir = new File("src/test/resources/record-test/app-test");
+		File recordedJsFile = new File(recordDir, "too/long/url/file.js");
+		String actual = Coverage.getNameRepresentingUrl(recordedJsFile, recordDir);
+		Assert.assertArrayEquals("toolongurlfile.js".toCharArray(), actual.toCharArray());
 	}
 }

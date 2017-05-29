@@ -17,8 +17,12 @@ import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RewriterPlugin extends ProxyPlugin {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(RewriterPlugin.class);
+	
 	protected final String mDirname;
 	protected final List<String> mRewriteFiles;
 
@@ -131,8 +135,12 @@ public class RewriterPlugin extends ProxyPlugin {
 							break;
 						}
 					}
-					final Matcher matcher = pattern.matcher(name);
-					if (matcher.find() && file.getName().endsWith(mutantExt)) {
+					if (pattern.matcher(name).find() && name.endsWith(mutantExt)) {
+						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
+					}
+					final Pattern _pattern = Pattern.compile(".*\\.[0-9]*");
+					if (pattern.matcher(name).find() && _pattern.matcher(name).find()) {
+						LOGGER.warn("#mutant might not match: {} for {}", mutantExt, name);
 						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
 					}
 				}

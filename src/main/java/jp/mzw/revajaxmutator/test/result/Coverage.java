@@ -97,12 +97,12 @@ public class Coverage {
 	 * @throws JSONException
 	 * @throws IOException
 	 */
-	public static Map<File, boolean[]> getTargetCoverageResults(List<File> files, File recordedJsFile) throws JSONException, IOException {
+	public static Map<File, boolean[]> getTargetCoverageResults(final List<File> files, final File recordedJsFile, final File recordDir) throws JSONException, IOException {
 		Map<File, boolean[]> ret = Maps.newHashMap();
-		for (File file : files) {
+		for (final File file : files) {
 			JSONObject json = Coverage.parse(file);
 			
-			String encoded_url = recordedJsFile.getName();
+			String encoded_url = getNameRepresentingUrl(recordedJsFile, recordDir);
 			String decoded_url = URLDecoder.decode(encoded_url, "utf-8");
 			URL url = new URL(decoded_url);
 			String path_to_js_file = URLDecoder.decode(url.getPath(), "utf-8");
@@ -126,6 +126,20 @@ public class Coverage {
 			ret.put(file, coverages);
 		}
 		return ret;
+	}
+
+	public static String getNameRepresentingUrl(final File recordedJsFile, final File recordDir) {
+		if (recordedJsFile.getParentFile().equals(recordDir)) {
+			return recordedJsFile.getName();
+		}
+		// For too-long URL problem
+		StringBuilder url = new StringBuilder();
+		File focus = recordedJsFile;
+		while (!focus.equals(recordDir)) {
+			url.insert(0, focus.getName());
+			focus = focus.getParentFile();
+		}
+		return url.toString();
 	}
 
 	/**

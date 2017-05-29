@@ -265,11 +265,11 @@ public class MutationAnalysis extends Command {
 
 		final List<File> coverageFiles = Coverage.getCoverageResults(config.getJscoverReportDir());
 		final Map<File, boolean[]> coverages = Coverage.getTargetCoverageResults(coverageFiles,
-				config.getRecordedJsFile());
+				config.getRecordedJsFile(), config.getRecordDir());
 
 		final List<File> failureCoverageFiles = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
 		final Map<File, boolean[]> failureCoverages = Coverage.getTargetCoverageResults(failureCoverageFiles,
-				config.getRecordedJsFile());
+				config.getRecordedJsFile(), config.getRecordDir());
 
 		final RichMutationTestConductor conductor = new RichMutationTestConductor();
 		conductor.setup(config.getMutationAnalysisConfig().mutationTestConductor(), coverages);
