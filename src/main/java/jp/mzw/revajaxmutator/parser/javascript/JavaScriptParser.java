@@ -244,32 +244,22 @@ public class JavaScriptParser {
 	 * @param functionCall
 	 * @return
 	 */
-	// private static Name getFunctionCallName(FunctionCall functionCall) {
-	// if (functionCall.getTarget() instanceof Name) {
-	// return (Name) functionCall.getTarget();
-	// } else if (functionCall.getTarget() instanceof PropertyGet) {
-	// return ((PropertyGet) functionCall.getTarget()).getProperty();
-	// }
-	// LOGGER.warn("Unknown type: {}",
-	// functionCall.getTarget().getClass().getName());
-	// return null;
-	// }
-
 	private Name parseFunctionCall(FunctionCall functionCall) {
-		// System.out.println(functionCall.getTarget().getClass() + " " +
-		// functionCall.getTarget().getLineno());
 		if (functionCall.getTarget() instanceof FunctionCall) {
 			return functionCall.getTarget().getEnclosingFunction().getFunctionName();
 		} else if (functionCall.getTarget() instanceof Name || functionCall.getTarget() instanceof FunctionCall) {
 			return (Name) functionCall.getTarget();
+		} else if (functionCall.getTarget() instanceof PropertyGet) {
+			return ((PropertyGet) functionCall.getTarget()).getProperty();
 		}
-		// Ignore edge cases such as, ElementGet calls, e.g.,
-		// "this.onloads[n]();"
+		// Ignore edge cases such as, ElementGet calls, e.g., "this.onloads[n]();"
 		else if (functionCall.getTarget() instanceof ElementGet
 				|| functionCall.getTarget() instanceof ParenthesizedExpression) {
+			LOGGER.warn("Ignore due to edge case: {}", functionCall.getTarget().getClass().getName());
 			return null;
 		} else {
-			return ((PropertyGet) functionCall.getTarget()).getProperty();
+			LOGGER.warn("Unknown type: {}", functionCall.getTarget().getClass().getName());
+			return null;
 		}
 	}
 }
