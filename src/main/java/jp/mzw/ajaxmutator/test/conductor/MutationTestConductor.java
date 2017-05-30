@@ -379,7 +379,7 @@ public class MutationTestConductor {
 		// Start thread that listens for an external "kill" command
 		final Thread commandReceiver = new Thread(new CommandReceiver());
 		commandReceiver.start();
-		final Thread timeout = new Thread(new Timeout(8 * 60));
+		final Thread timeout = new Thread(new Timeout(this.timeoutMin));
 		timeout.start();
 
 		// Run the test-cases for each mutant
