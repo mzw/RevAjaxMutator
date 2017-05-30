@@ -122,7 +122,7 @@ public class ProgramRepair extends Command {
 				testClasses.add(testClass);
 			}
 
-			this.validate(config, testClasses.toArray(new Class<?>[testClasses.size()]));
+			this.validate(localenv, config, testClasses.toArray(new Class<?>[testClasses.size()]));
 
 			ProxyServer.interrupt();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | StoreException
@@ -142,9 +142,10 @@ public class ProgramRepair extends Command {
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 */
-	private void validate(AppConfig config, Class<?>[] testClasses)
+	private void validate(LocalEnv localenv, AppConfig config, Class<?>[] testClasses)
 			throws InstantiationException, IllegalAccessException, IOException {
 		final MutationTestConductor conductor = config.getMutationAnalysisConfig().mutationTestConductor();
+		conductor.setTimeoutMin(localenv.getLimitedTimeMin());
 		final JUnitExecutor executor = new JUnitExecutor(false, testClasses);
 		conductor.mutationAnalysisUsingExistingMutations(executor);
 	}
@@ -207,6 +208,7 @@ public class ProgramRepair extends Command {
 
 		final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 		conductor.setThreadNum(localenv.getThreadNum());
+		conductor.setTimeoutMin(localenv.getLimitedTimeMin());
 
 		conductor.setSamplingStrategy(Sampling.getSampling(Sampling.Strategy.EventHandler));
 		conductor.setPrioritizeStrategy(

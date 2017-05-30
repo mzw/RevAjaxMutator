@@ -95,4 +95,11 @@ public class LocalEnvTest {
 		int actual = localenv.getThreadNum();
 		Assert.assertEquals(expected, actual);
 	}
+
+	@Test
+	public void testGetLimitedTimeMin() {
+		long expected = Long.MAX_VALUE;
+		long actual = localenv.getLimitedTimeMin();
+		Assert.assertEquals(expected, actual);
+	}
 }

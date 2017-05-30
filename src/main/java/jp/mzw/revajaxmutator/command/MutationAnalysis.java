@@ -173,7 +173,7 @@ public class MutationAnalysis extends Command {
 				testClasses.add(testClass);
 			}
 
-			this.analyze(config, testClasses.toArray(new Class<?>[testClasses.size()]));
+			this.analyze(localenv, config, testClasses.toArray(new Class<?>[testClasses.size()]));
 
 			ProxyServer.interrupt();
 		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException | StoreException
@@ -192,9 +192,10 @@ public class MutationAnalysis extends Command {
 	 * @throws IllegalAccessException
 	 * @throws InstantiationException
 	 */
-	public void analyze(AppConfig config, Class<?>... testClasses)
+	public void analyze(LocalEnv localenv, AppConfig config, Class<?>... testClasses)
 			throws InstantiationException, IllegalAccessException, IOException {
 		final MutationTestConductor conductor = config.getMutationAnalysisConfig().mutationTestConductor();
+		conductor.setTimeoutMin(localenv.getLimitedTimeMin());
 		final JUnitExecutor executor = new JUnitExecutor(false, testClasses);
 		conductor.mutationAnalysisUsingExistingMutations(executor);
 	}
@@ -274,6 +275,7 @@ public class MutationAnalysis extends Command {
 		final RichMutationTestConductor conductor = new RichMutationTestConductor();
 		conductor.setup(config.getMutationAnalysisConfig().mutationTestConductor(), coverages);
 		conductor.setThreadNum(localenv.getThreadNum());
+		conductor.setTimeoutMin(localenv.getLimitedTimeMin());
 
 		conductor.setSamplingStrategy(Sampling.getSampling(Sampling.Strategy.EventHandler));
 		conductor.setPrioritizeStrategy(

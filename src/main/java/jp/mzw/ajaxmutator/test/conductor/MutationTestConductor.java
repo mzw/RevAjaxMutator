@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -81,6 +83,7 @@ public class MutationTestConductor {
 	protected String pathToJsFile;
 	protected String targetURL;
 	protected Map<Mutator<?>, Integer> numOfMutation;
+	protected long timeoutMin;
 
 	/**
 	 * Setting information required for mutation testing. This method MUST be
@@ -97,6 +100,7 @@ public class MutationTestConductor {
 		Util.normalizeLineBreak(jsFile);
 		this.mutationFileWriter = new MutationFileWriter(jsFile);
 		Util.copyFile(pathToJSFile, this.pathToBackupFile());
+		this.timeoutMin = Long.MAX_VALUE;
 
 		this.targetURL = targetURL;
 		this.parser = ParserWithBrowser.getParser();
@@ -375,6 +379,8 @@ public class MutationTestConductor {
 		// Start thread that listens for an external "kill" command
 		final Thread commandReceiver = new Thread(new CommandReceiver());
 		commandReceiver.start();
+		final Thread timeout = new Thread(new Timeout(8 * 60));
+		timeout.start();
 
 		// Run the test-cases for each mutant
 		final List<String> original = Util.readFromFile(this.pathToJsFile);
@@ -429,6 +435,7 @@ public class MutationTestConductor {
 		}
 		if (this.conducting) {
 			commandReceiver.interrupt();
+			timeout.interrupt();
 			this.conducting = false;
 		}
 		return numberOfAppliedMutation;
@@ -553,6 +560,40 @@ public class MutationTestConductor {
 			LOGGER.info(command);
 			return false;
 		}
+	}
+
+	protected class Timeout implements Runnable {
+		private long min = Long.MAX_VALUE;
+		public Timeout(long min) {
+			this.min = min;
+		}
+		@Override
+		public void run() {
+			System.out.println("Limited time: " + this.min + " min (started from: " + (new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date())) + ")");
+			Stopwatch stopwatch = Stopwatch.createStarted();
+			while (true) {
+				try {
+					Thread.sleep(1000);
+					long elapsed = stopwatch.elapsed(TimeUnit.MINUTES);
+					if (!MutationTestConductor.this.conducting || this.overLimitedTime(elapsed)) {
+						stopwatch.stop();
+						break;
+					}
+				} catch (InterruptedException e) {
+					LOGGER.info("I/O thread (timeout) interrupt, " + "which may mean program successfully finished");
+					break;
+				}
+			}
+			MutationTestConductor.this.conducting = false;
+			LOGGER.info("thread (timeout) finish");
+		}
+		private boolean overLimitedTime(long elapsed) {
+			return this.min <= elapsed ? true : false;
+		}
+	}
+
+	public void setTimeoutMin(long min) {
+		this.timeoutMin = min;
 	}
 
 	/*

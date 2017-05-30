@@ -165,6 +165,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final int numberOfMaxMutants = this.mutationListManager.getNumberOfUnkilledMutants();
 		final Thread commandReceiver = new Thread(new CommandReceiver());
 		commandReceiver.start();
+		final Thread timeout = new Thread(new Timeout(this.timeoutMin));
+		timeout.start();
 		final List<String> original = Util.readFromFile(this.pathToJsFile);
 		final List<String> nameOfMutations = this.mutationListManager.getListOfMutationName();
 
@@ -257,6 +259,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 
 		if (this.conducting) {
 			commandReceiver.interrupt();
+			timeout.interrupt();
 			this.conducting = false;
 		}
 		return numberOfAppliedMutation;

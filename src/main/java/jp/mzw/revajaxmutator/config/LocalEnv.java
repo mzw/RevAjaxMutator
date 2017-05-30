@@ -19,7 +19,7 @@ public class LocalEnv {
 	}
 
 	public static enum Param {
-		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, CHROMEDRIVER_BIN, CHROME_HEADLESS, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT;
+		FIREFOX_BIN, GECKODRIVER_BIN, PHANTOMJS_BIN, CHROME_BIN, CHROMEDRIVER_BIN, CHROME_HEADLESS, PROXY_IP, PROXY_PORT, TIMEOUT, THREAD_NUM, SELENIUM_HUB_IP, JSCOVER_REPORT_DIR, JSCOVER_IP, JSCOVER_PORT, LIMITED_TIME_MIN;
 		public static String getDefault(Param param) {
 			switch (param) {
 			case FIREFOX_BIN:
@@ -50,6 +50,8 @@ public class LocalEnv {
 				return "127.0.0.1";
 			case JSCOVER_PORT:
 				return Integer.toString(3129);
+			case LIMITED_TIME_MIN:
+				return Long.toString(Long.MAX_VALUE); // i.e., not limit
 			}
 			return "";
 		}
@@ -153,5 +155,10 @@ public class LocalEnv {
 
 	public void setShouldRunJSCoverProxy(boolean shouldRunJSCoverProxy) {
 		LocalEnv.shouldRunJSCoverProxy = shouldRunJSCoverProxy;
+	}
+
+	public long getLimitedTimeMin() {
+		String param = this.getParam(Param.LIMITED_TIME_MIN);
+		return Long.parseLong(param);
 	}
 }
