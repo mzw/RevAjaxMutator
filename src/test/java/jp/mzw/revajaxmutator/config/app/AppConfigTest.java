@@ -105,6 +105,14 @@ public class AppConfigTest {
 		Assert.assertArrayEquals("http://www.example.org:8080/path/to/path/to/app-test.js".toCharArray(), actual.toString().toCharArray());
 	}
 
+	@Test
+	public void testGetTooLongUrlName() {
+		File dir = new File("src/test/resources/record-test/app-test");
+		File file = new File(dir, "too/long/url/file.js");
+		String actual = AppConfig.getTooLongUrlName(dir, file);
+		Assert.assertArrayEquals("toolongurlfile.js".toCharArray(), actual.toCharArray());
+	}
+
 	private static class AppTestConfig extends AppConfig {
 		private AppTestConfig() throws IOException {
 			super("app-test.properties");

@@ -10,6 +10,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,29 +170,39 @@ public abstract class AppConfig implements IAppConfig {
 		for (File file : this.getRecordDir().listFiles()) {
 			if (file.isFile() && !this.isMutantFile(file.getName())) {
 				final Matcher matcher = pattern.matcher(file.getName());
-				if (matcher.find()) {
+				if (matcher.find() && !file.getName().endsWith(".backup")) {
 					LOGGER.info("Found target JavaScript file: {}", file.getPath());
 					return file;
 				}
 			} else if (file.isDirectory()) {
-				String name = file.getName();
-				while (0 < file.listFiles().length) {
-					file = file.listFiles()[0];
-					name += file.getName();
-					if (file.isFile()) {
-						break;
+				for (File candidate : FileUtils.listFiles(file, FileFilterUtils.fileFileFilter(), FileFilterUtils.trueFileFilter())) {
+					String name = getTooLongUrlName(this.getRecordDir(), candidate);
+					if (pattern.matcher(name).find() && !name.endsWith(".backup") && !name.contains("mutants")) {
+						LOGGER.info("Found target JavaScript file: {}", candidate.getPath());
+						return candidate;
 					}
-				}
-				final Matcher matcher = pattern.matcher(name);
-				if (matcher.find()) {
-					LOGGER.info("Found target JavaScript file: {}", file.getPath());
-					return file;
 				}
 			}
 		}
 
 		LOGGER.warn("Not found target JavaScript file: {}", url.toString());
 		return null;
+	}
+
+	/**
+	 * Get too-long URL name
+	 * @param dir where RevAjaxMutator records files
+	 * @param file under the record directory
+	 * @return too-long URL name
+	 */
+	public static String getTooLongUrlName(File dir, File file) {
+		StringBuilder name = new StringBuilder();
+		File focus = file;
+		while (!focus.equals(dir)) {
+			name.insert(0, focus.getName());
+			focus = focus.getParentFile();
+		}
+		return name.toString();
 	}
 
 	/**

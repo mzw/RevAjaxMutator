@@ -13,12 +13,16 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
 import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jp.mzw.revajaxmutator.config.app.AppConfig;
 
 public class RewriterPlugin extends ProxyPlugin {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(RewriterPlugin.class);
@@ -127,21 +131,11 @@ public class RewriterPlugin extends ProxyPlugin {
 					// If file name is too big, it was split into a
 					// hierarchy of directories
 				} else if (file.isDirectory()) {
-					String name = file.getName();
-					while (file.listFiles().length > 0) {
-						file = file.listFiles()[0];
-						name += file.getName();
-						if (file.isFile()) {
-							break;
+					for (File candidate : FileUtils.listFiles(file, FileFilterUtils.fileFileFilter(), FileFilterUtils.trueFileFilter())) {
+						String name = AppConfig.getTooLongUrlName(new File(mDirname), candidate);
+						if (pattern.matcher(name).find() && name.endsWith(mutantExt)) {
+							return new BufferedInputStream(new FileInputStream(candidate.getAbsolutePath()));
 						}
-					}
-					if (pattern.matcher(name).find() && name.endsWith(mutantExt)) {
-						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
-					}
-					final Pattern _pattern = Pattern.compile(".*\\.[0-9]*");
-					if (pattern.matcher(name).find() && _pattern.matcher(name).find()) {
-						LOGGER.warn("#mutant might not match: {} for {}", mutantExt, name);
-						return new BufferedInputStream(new FileInputStream(file.getAbsolutePath()));
 					}
 				}
 			}
