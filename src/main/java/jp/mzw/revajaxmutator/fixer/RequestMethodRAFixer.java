@@ -47,6 +47,9 @@ public class RequestMethodRAFixer extends AbstractReplacingAmongFixer<Request> {
 	 */
 	@Override
 	public AstNode getDefaultReplacingNode(final AstNode focusedNode) {
+		if (focusedNode == null) {
+			return super.getDefaultReplacingNode(focusedNode);
+		}
 		if (focusedNode.toSource().contains("get")) {
 			return StringToAst.parseAsStringLiteral("'post'");
 		} else if (focusedNode.toSource().contains("post")) {
