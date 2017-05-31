@@ -174,7 +174,11 @@ public class RewriterPlugin extends ProxyPlugin {
 				final Response response = this.mClient.fetchResponse(request);
 
 				if ("200".equals(response.getStatus())) {
-					RewriterPlugin.this.rewriteResponseContent(request, response);
+					if (request.getURL().getPath().endsWith(".png")) {
+						// skip
+					} else {
+						RewriterPlugin.this.rewriteResponseContent(request, response);
+					}
 				}
 				return response;
 			}
