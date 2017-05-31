@@ -322,13 +322,24 @@ public abstract class AppConfig implements IAppConfig {
 		return new File(this.pathToTestcaseFile());
 	}
 
-	private boolean isMutantFile(String filename) {
+	private boolean isMutantFile(final String filename) {
 		final int i = filename.lastIndexOf('.');
 		if (i > 0 && filename.substring(i + 1).matches("[0-9]+")) {
+			// handling special case
+			if (isVersion(filename)) {
+				return false;
+			}
 			return true;
 		} else {
 			return false;
 		}
+	}
+
+	private boolean isVersion(final String filename) {
+		if (filename.endsWith("ver%3D3.6")) { // TODO
+			return true;
+		}
+		return false;
 	}
 
 	/**
