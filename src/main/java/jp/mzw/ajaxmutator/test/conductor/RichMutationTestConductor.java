@@ -1,6 +1,7 @@
 package jp.mzw.ajaxmutator.test.conductor;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import jp.mzw.ajaxmutator.prioritizer.Prioritizer;
 import jp.mzw.ajaxmutator.sampling.Sampling;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Util;
+import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.test.result.Coverage;
 
 /**
@@ -229,7 +231,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// Wait until all old tasks complete before issuing more
 				try {
 					this.newTaskSemaphore.acquire();
-				} catch (final InterruptedException e) {
+					ProxyServer.removeConversationDir();
+				} catch (final InterruptedException | IOException e) {
 					LOGGER.error(e.getMessage());
 				}
 			}
