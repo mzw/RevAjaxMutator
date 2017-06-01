@@ -338,6 +338,12 @@ public abstract class AppConfig implements IAppConfig {
 	private boolean isVersion(final String filename) {
 		if (filename.endsWith("ver%3D3.6")) { // TODO
 			return true;
+		} else if (filename.endsWith("ver%3D1.3.0")) { // TODO
+			return true;
+		} else if (filename.endsWith("ver%3D1.4.1")) { // TODO
+			return true;
+		} else if (filename.endsWith("ver%3D1.0")) { // TODO
+			return true;
 		}
 		return false;
 	}

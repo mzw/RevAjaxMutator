@@ -3,6 +3,8 @@ package jp.mzw.revajaxmutator.config.app;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -111,6 +113,14 @@ public class AppConfigTest {
 		File file = new File(dir, "too/long/url/file.js");
 		String actual = AppConfig.getTooLongUrlName(dir, file);
 		Assert.assertArrayEquals("toolongurlfile.js".toCharArray(), actual.toCharArray());
+	}
+
+	@Test
+	public void testIsVersion() throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Method method = AppConfig.class.getDeclaredMethod("isVersion", String.class);
+		method.setAccessible(true);
+		Assert.assertTrue((boolean) method.invoke(config, "http%3A%2F%2Fram-test.mzw.jp%3A28084%2F3.6%2Fwp-content%2Fplugins%2Fhero-maps-pro%2Fassets%2Fjs%2Ffrontend_script.js%3Fver%3D3.6"));
+		Assert.assertFalse((boolean) method.invoke(config, "http%3A%2F%2Fram-test.mzw.jp%3A28084%2F3.6%2Fwp-content%2Fplugins%2Fhero-maps-pro%2Fassets%2Fjs%2Ffrontend_script.js"));
 	}
 
 	private static class AppTestConfig extends AppConfig {
