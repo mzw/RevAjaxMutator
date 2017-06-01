@@ -55,7 +55,7 @@ public class ProxyServer {
 
 	public static void removeConversationDir() throws IOException {
 		if (conversationDir.exists()) {
-			FileUtils.forceDeleteOnExit(conversationDir);
+			FileUtils.deleteDirectory(conversationDir);
 		}
 	}
 
