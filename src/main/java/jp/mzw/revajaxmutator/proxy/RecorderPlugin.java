@@ -64,12 +64,14 @@ public class RecorderPlugin extends ProxyPlugin {
 			request.deleteHeader("If-Modified-Since");
 			request.deleteHeader("If-None-Match");
 
-			Response response = mClient.fetchResponse(request);
-
-			if ("200".equals(response.getStatus())) {
-				recordResponseContent(request, response);
+			if (request.getURL() != null) {
+				Response response = mClient.fetchResponse(request);
+				if ("200".equals(response.getStatus())) {
+					recordResponseContent(request, response);
+				}
+				return response;
 			}
-			return response;
+			return null;
 		}
 
 	}
