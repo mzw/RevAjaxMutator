@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableSet;
 public enum AjaxFeature {
 
 	/** Three types of Ajax features */
-	EVENT_DRIVEN_MODEL(0), ASYNCHRONOUS_COMMUNICATION(1), DOM_MANIPULATION(2);
+	EVENT_DRIVEN_MODEL(0), ASYNCHRONOUS_COMMUNICATION(1), DOM_MANIPULATION(2), UNKNOWN(3);
 
 	/**
 	 * Integer value representing each Ajax feature. (0, 1, 2) = (Event_Driven_Model, ASYNCHRONOUS_COMMUNICATION, DOM_MANIPULATION)
@@ -56,7 +56,7 @@ public enum AjaxFeature {
 		} else if (domManipulation.contains(name)) {
 			return values()[2]; // dom
 		} else {
-			return null;
+			return UNKNOWN;
 		}
 	}
 }

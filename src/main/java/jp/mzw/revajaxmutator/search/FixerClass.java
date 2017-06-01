@@ -20,7 +20,8 @@ public enum FixerClass {
 	DOM_SELECTION_SELECT_NEARBY(0, "DOMSelectionSelectNearbyFixer"),
 	DOM_SELECTION_ATTRIBUTE(1, "DOMSelectionAtrributeFixer"),
 	ATTRIBUTE_MODIFICATION_TARGET(0, "AttributeModificationTargetVIFixer"),
-	ATTRIBUTE_MODIFICATION_VALUE(1, "AttributeModificationValueERFixer");
+	ATTRIBUTE_MODIFICATION_VALUE(1, "AttributeModificationValueERFixer"),
+	UNKNOWN(0, "Unknown");
 
 	/** Weight to apply repair operators */
 	private int value;
@@ -60,6 +61,6 @@ public enum FixerClass {
 				return fixer;
 			}
 		}
-		return null;
+		return UNKNOWN;
 	}
 }

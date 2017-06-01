@@ -23,10 +23,6 @@ public class StatementSwapMutatorRA extends AbstractReplacingAmongMutator<Statem
 
 	@Override
 	public List<Mutation> generateMutationList(Statement stmt) {
-    	if(stmt.getWeight() == 0) {
-    		return null;
-    	}
-    	
         AstNode focusedNode = getFocusedNode(stmt);
         List<Mutation> mutationList = new ArrayList<Mutation>();
         for(AstNode candidate : candidates) {

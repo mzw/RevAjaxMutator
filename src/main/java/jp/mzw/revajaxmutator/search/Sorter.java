@@ -64,7 +64,7 @@ public class Sorter {
 	 */
 	public static SortType getSortType(final String type) {
 		for (SortType _type : SortType.values()) {
-			if (_type.name().equals(type)) {
+			if (_type.name().compareToIgnoreCase(type) == 0) {
 				return _type;
 			}
 		}

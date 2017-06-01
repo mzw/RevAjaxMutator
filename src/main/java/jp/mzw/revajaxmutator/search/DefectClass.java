@@ -28,7 +28,9 @@ public enum DefectClass {
 	DOM_SELECTIONS(1, "DOMSelection"),
 
 	/** AjaxFeature:DOM */
-	ATTRIBUTE_MODIFICATIONS(2, "AttributeModification");
+	ATTRIBUTE_MODIFICATIONS(2, "AttributeModification"),
+
+	UNKNOWN(0, "Unknown");
 
 	/** Set of mutable names relevant to DOM modification */
 	static Set<String> domModificationSet = ImmutableSet.of("DOMAppending", "DOMCloning", "DOMCreation", "DOMNormalization", "DOMRemoval", "DOMReplacement");
@@ -65,7 +67,7 @@ public enum DefectClass {
 				return defect;
 			}
 		}
-		return null;
+		return UNKNOWN;
 	}
 
 	/**
