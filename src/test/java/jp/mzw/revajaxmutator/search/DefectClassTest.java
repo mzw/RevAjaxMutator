@@ -14,7 +14,7 @@ public class DefectClassTest {
 	@Test
 	public void testDefectClass() {
 		DefectClass[] defects = DefectClass.values();
-		Assert.assertEquals(6, defects.length);
+		Assert.assertEquals(7, defects.length);
 	}
 
 	@Test
@@ -55,6 +55,6 @@ public class DefectClassTest {
 	@Test
 	public void testFromInvalidMutableName() {
 		DefectClass actual = DefectClass.fromMutableName("invalid");
-		Assert.assertNull(actual);
+		Assert.assertEquals(DefectClass.UNKNOWN, actual);
 	}
 }

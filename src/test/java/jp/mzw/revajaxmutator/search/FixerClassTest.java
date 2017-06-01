@@ -28,7 +28,7 @@ public class FixerClassTest {
 	@Test
 	public void testFixerClass() {
 		FixerClass[] fixers = FixerClass.values();
-		Assert.assertEquals(19, fixers.length);
+		Assert.assertEquals(20, fixers.length);
 	}
 
 	@Test
@@ -167,6 +167,6 @@ public class FixerClassTest {
 	@Test
 	public void voidTestInvalidFixerName() {
 		FixerClass fixer = FixerClass.fromFixerName("invalid");
-		Assert.assertNull(fixer);
+		Assert.assertEquals(FixerClass.UNKNOWN, fixer);
 	}
 }

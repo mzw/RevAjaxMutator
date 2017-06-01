@@ -12,7 +12,7 @@ public class AjaxFeatureTest {
 	@Test
 	public void testAjaxFeature() {
 		AjaxFeature[] features = AjaxFeature.values();
-		Assert.assertEquals(3, features.length);
+		Assert.assertEquals(4, features.length);
 	}
 
 	@Test
@@ -42,6 +42,6 @@ public class AjaxFeatureTest {
 	@Test
 	public void testFormMutableNameInvalid() {
 		AjaxFeature feature = AjaxFeature.fromMutatableName("foo");
-		Assert.assertNull(feature);
+		Assert.assertEquals(AjaxFeature.UNKNOWN, feature);
 	}
 }
