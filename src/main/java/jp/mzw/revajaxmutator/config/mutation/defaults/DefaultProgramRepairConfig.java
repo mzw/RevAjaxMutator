@@ -18,6 +18,7 @@ import jp.mzw.ajaxmutator.detector.dom.SetAttributeDetector;
 import jp.mzw.ajaxmutator.detector.event.AddEventListenerDetector;
 import jp.mzw.ajaxmutator.detector.event.AttachEventDetector;
 import jp.mzw.ajaxmutator.detector.event.TimerEventDetector;
+import jp.mzw.ajaxmutator.detector.genprog.StatementDetector;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryAppendDetector;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryAttributeModificationDetector;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryCloneDetector;
@@ -27,6 +28,9 @@ import jp.mzw.ajaxmutator.detector.jquery.JQueryRemoveDetector;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryReplaceWithDetector;
 import jp.mzw.ajaxmutator.detector.jquery.JQueryRequestDetector;
 import jp.mzw.ajaxmutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.mutator.genprog.StatementDeleteMutatorToNoOp;
+import jp.mzw.ajaxmutator.mutator.genprog.StatementInsertMutatorRA;
+import jp.mzw.ajaxmutator.mutator.genprog.StatementSwapMutatorRA;
 import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
 import jp.mzw.revajaxmutator.config.app.AppConfig;
 import jp.mzw.revajaxmutator.config.mutation.ConfigHelper;
@@ -50,10 +54,26 @@ import jp.mzw.revajaxmutator.fixer.RequestResponseBodyVIFixer;
 import jp.mzw.revajaxmutator.fixer.RequestURLVIFixer;
 import jp.mzw.revajaxmutator.fixer.TimerEventCallbackERFixer;
 import jp.mzw.revajaxmutator.fixer.TimerEventDurationVIFixer;
+import jp.mzw.revajaxmutator.search.Sorter.SortType;
 
 public class DefaultProgramRepairConfig extends MutateConfigurationBase {
 
 	public DefaultProgramRepairConfig(AppConfig config) throws IOException {
+		if (Boolean.parseBoolean(config.getParam("genprog")) && config.getSortType().equals(SortType.RANDOM)) {
+			MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
+			builder.setStatementDetectors(ImmutableSet.of(new StatementDetector()));
+			MutateVisitor visitor = builder.build();
+
+	        conductor = new MutationTestConductor();
+			conductor.setup(config.getRecordedJsFile().getPath(), "", visitor);
+			conductor.setSaveInformationInterval(1);
+
+			mutators = ImmutableSet.<Mutator<?>> of(
+					new StatementSwapMutatorRA(visitor.getStatements()),
+					new StatementInsertMutatorRA(visitor.getStatements()),
+					new StatementDeleteMutatorToNoOp());
+			return;
+		}
 
 		MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
 		builder.setAttributeModificationDetectors(ImmutableSet.of(
