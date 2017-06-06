@@ -319,7 +319,7 @@ public class MutationTestConductor {
 					continue;
 				}
 				for (final Mutation mutation : mutations) {
-					if (mutation == null) {
+					if (mutation == null || mutation.getOriginalNode() == null) {
 						LOGGER.info("Cannot create mutation for {} by using {}", mutatable, mutator.mutationName());
 						continue;
 					}

@@ -13,8 +13,16 @@ import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 public class ReplaceArithmeticOperatorsVariableDecMutator extends
 		AbstractMutator<VariableDec> {
 
+	private boolean random;
+
 	public ReplaceArithmeticOperatorsVariableDecMutator() {
 		super(VariableDec.class);
+		this.random = true;
+	}
+
+	public ReplaceArithmeticOperatorsVariableDecMutator choose(final boolean random) {
+		this.random = random;
+		return this;
 	}
 
 	@Override
@@ -59,20 +67,41 @@ public class ReplaceArithmeticOperatorsVariableDecMutator extends
 						continue;
 					}
 
-					int k = x.nextInt(trueoperators.size());
-					int op1 = trueoperators.get(k), op2 = -1;
-					while (op1 == op2 || op2 == -1) {
-						op2 = x.nextInt(4);
+					if (this.random) {
+						int k = x.nextInt(trueoperators.size());
+						int op1 = trueoperators.get(k), op2 = -1;
+						while (op1 == op2 || op2 == -1) {
+							op2 = x.nextInt(4);
+						}
+
+						str = str.replace(operators[op1], interval);
+						str = str.replace(operators[op2], operators[op1]);
+						str = str.replace(interval, operators[op2]);
+
+						ret.add(new Mutation(initializer, str));
+						return ret;
+					} else {
+						for (final String op1 : operators) {
+							for (final String op2 : operators) {
+								if (op1.equals(op2)) {
+									continue;
+								}
+								String cond = initializer.toSource();
+								cond = cond.replace(op1, interval);
+								cond = cond.replace(op2, op1);
+								cond = cond.replace(interval, op2);
+								if (initializer.toSource().equals(cond)) {
+									continue;
+								}
+								ret.add(new Mutation(initializer, cond));
+							}
+						}
 					}
-
-					str = str.replace(operators[op1], interval);
-					str = str.replace(operators[op2], operators[op1]);
-					str = str.replace(interval, operators[op2]);
-
-					ret.add(new Mutation(initializer, str));
-					return ret;
 				}
 			}
+		}
+		if (0 < ret.size()) {
+			return ret;
 		}
 		return null;
 	}

@@ -15,8 +15,16 @@ import jp.mzw.ajaxmutator.mutator.AbstractMutator;
 public class ReplaceArithmeticOperatorsForLoopMutator extends
 		AbstractMutator<For> {
 
+	private boolean _random;
+
 	public ReplaceArithmeticOperatorsForLoopMutator() {
 		super(For.class);
+		this._random = true;
+	}
+
+	public ReplaceArithmeticOperatorsForLoopMutator choose(final boolean random) {
+		this._random = random;
+		return this;
 	}
 
 	@Override
@@ -60,18 +68,36 @@ public class ReplaceArithmeticOperatorsForLoopMutator extends
 					return null;
 				}
 
-				random = x.nextInt(trueoperators2.size());
-				op1 = trueoperators2.get(random);
-				op2 = -1;
-				while (op1 == op2 || op2 == -1) {
-					op2 = x.nextInt(4);
+				if (this._random) {
+					random = x.nextInt(trueoperators2.size());
+					op1 = trueoperators2.get(random);
+					op2 = -1;
+					while (op1 == op2 || op2 == -1) {
+						op2 = x.nextInt(4);
+					}
+
+					str2 = str2.replace(operators2[op1], interval);
+					str2 = str2.replace(operators2[op2], operators2[op1]);
+					str2 = str2.replace(interval, operators2[op2]);
+
+					ret.add(new Mutation(right2, str2));
+				} else {
+					for (final String _op1 : operators2) {
+						for (final String _op2 : operators2) {
+							if (_op1.equals(_op2)) {
+								continue;
+							}
+							String cond = right2.toSource();
+							cond = cond.replace(_op1, interval);
+							cond = cond.replace(_op2, _op1);
+							cond = cond.replace(interval, _op2);
+							if (right2.toSource().equals(cond)) {
+								continue;
+							}
+							ret.add(new Mutation(right2, cond));
+						}
+					}
 				}
-
-				str2 = str2.replace(operators2[op1], interval);
-				str2 = str2.replace(operators2[op2], operators2[op1]);
-				str2 = str2.replace(interval, operators2[op2]);
-
-				ret.add(new Mutation(right2, str2));
 				return ret;
 			}
 
@@ -87,32 +113,65 @@ public class ReplaceArithmeticOperatorsForLoopMutator extends
 				return null;
 			}
 
-			random = x.nextInt(trueoperators.size());
-			op1 = trueoperators.get(random);
-			op2 = -1;
-			int ram_number = x.nextInt(100);
-			String ram_number_str = "";
-			while (op1 == op2 || op2 == -1) {
-				op2 = x.nextInt(4);
-			}
-			if ((op1 == 0 || op1 == 1) && (op2 == 2 || op2 == 3)) {
-				ram_number_str = "" + ram_number;
-				condition = condition.replace(operators[op1], operators[op2]
-						+ ram_number_str);
-			} else if ((op1 == 2 || op1 == 3) && (op2 == 0 || op2 == 1)) {
-				if (condition.indexOf(operators[op1]) != -1) {
-					condition = condition.substring(0,
-							condition.indexOf(operators[op1]) + 2);
-					condition = condition.replace(operators[op1],
-							operators[op2]);
-				} else {
-					return null;
+			if (this._random) {
+				random = x.nextInt(trueoperators.size());
+				op1 = trueoperators.get(random);
+				op2 = -1;
+				int ram_number = x.nextInt(100);
+				String ram_number_str = "";
+				while (op1 == op2 || op2 == -1) {
+					op2 = x.nextInt(4);
 				}
-			} else {
-				condition = condition.replace(operators[op1], operators[op2]);
-			}
+				if ((op1 == 0 || op1 == 1) && (op2 == 2 || op2 == 3)) {
+					ram_number_str = "" + ram_number;
+					condition = condition.replace(operators[op1], operators[op2]
+							+ ram_number_str);
+				} else if ((op1 == 2 || op1 == 3) && (op2 == 0 || op2 == 1)) {
+					if (condition.indexOf(operators[op1]) != -1) {
+						condition = condition.substring(0,
+								condition.indexOf(operators[op1]) + 2);
+						condition = condition.replace(operators[op1],
+								operators[op2]);
+					} else {
+						return null;
+					}
+				} else {
+					condition = condition.replace(operators[op1], operators[op2]);
+				}
 
-			ret.add(new Mutation(originalNode.getIncrement(), condition));
+				ret.add(new Mutation(originalNode.getIncrement(), condition));
+			} else {
+				for (final String _op1 : new String[] {"++", "--"}) {
+					for (final String _op2 : new String[] {"++", "--"}) {
+						if (_op1.equals(_op2)) {
+							continue;
+						}
+						String cond = originalNode.getIncrement().toSource();
+						cond = cond.replace(_op1, interval);
+						cond = cond.replace(_op2, _op1);
+						cond = cond.replace(interval, _op2);
+						if (originalNode.getIncrement().toSource().equals(cond)) {
+							continue;
+						}
+						ret.add(new Mutation(originalNode.getIncrement(), cond));
+					}
+				}
+				for (final String _op1 : new String[] {"+=", "-="}) {
+					for (final String _op2 : new String[] {"+=", "-="}) {
+						if (_op1.equals(_op2)) {
+							continue;
+						}
+						String cond = originalNode.getIncrement().toSource();
+						cond = cond.replace(_op1, interval);
+						cond = cond.replace(_op2, _op1);
+						cond = cond.replace(interval, _op2);
+						if (originalNode.getIncrement().toSource().equals(cond)) {
+							continue;
+						}
+						ret.add(new Mutation(originalNode.getIncrement(), cond));
+					}
+				}
+			}
 			return ret;
 		}
 	}
