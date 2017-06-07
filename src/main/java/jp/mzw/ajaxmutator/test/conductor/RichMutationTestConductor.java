@@ -2,6 +2,8 @@ package jp.mzw.ajaxmutator.test.conductor;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -232,6 +234,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				try {
 					this.newTaskSemaphore.acquire();
 					ProxyServer.removeConversationDir();
+					sleepWhenHighLoadAverage();
 				} catch (final InterruptedException | IOException e) {
 					LOGGER.error(e.getMessage());
 				}
@@ -387,5 +390,16 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			return false;
 		}
 		return true;
+	}
+
+	protected static final OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
+	protected static void sleepWhenHighLoadAverage() throws InterruptedException {
+		int cpu = OS.getAvailableProcessors();
+		double load = OS.getSystemLoadAverage();
+		while (((double) cpu * 2) < load) {
+			LOGGER.warn("Sleep due to increasing load average: {} for #CPU={}", String.format("%.2f", load), cpu);
+			Thread.sleep(1000);
+			load = OS.getSystemLoadAverage();
+		}
 	}
 }
