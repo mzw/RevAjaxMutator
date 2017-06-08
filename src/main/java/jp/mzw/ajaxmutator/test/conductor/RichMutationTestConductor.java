@@ -203,6 +203,15 @@ public class RichMutationTestConductor extends MutationTestConductor {
 					continue;
 				}
 
+				// Wait for load average becoming healthy
+				try {
+					this.newTaskSemaphore.acquire();
+					waitForHealthyLoadAverage();
+					this.newTaskSemaphore.release();
+				} catch (final InterruptedException e) {
+					LOGGER.error(e.getMessage());
+				}
+
 				// TODO Apply mutation sampling
 				// if (!this.sampling.isSampled(mutant)) {
 				// LOGGER.info(mutant.getFileName() + " is skipped by
@@ -234,7 +243,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				try {
 					this.newTaskSemaphore.acquire();
 					ProxyServer.removeConversationDir();
-					sleepWhenHighLoadAverage();
 				} catch (final InterruptedException | IOException e) {
 					LOGGER.error(e.getMessage());
 				}
@@ -393,13 +401,22 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	}
 
 	protected static final OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
-	protected static void sleepWhenHighLoadAverage() throws InterruptedException {
-		int cpu = OS.getAvailableProcessors();
+	protected static boolean waitForHealthyLoadAverage() {
+		final int cpu = OS.getAvailableProcessors();
 		double load = OS.getSystemLoadAverage();
-		while (((double) cpu * 2) < load) {
-			LOGGER.warn("Sleep due to increasing load average: {} for #CPU={}", String.format("%.2f", load), cpu);
-			Thread.sleep(1000);
-			load = OS.getSystemLoadAverage();
+
+		Thread lock = Thread.currentThread();
+		synchronized (lock) {
+			while (cpu < load) {
+				LOGGER.warn("Waiting for healthy load average: {} for #CPU={}", String.format("%.2f", load), cpu);
+				try {
+					lock.wait(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				load = OS.getSystemLoadAverage(); // update load average
+			}
 		}
+		return true;
 	}
 }
