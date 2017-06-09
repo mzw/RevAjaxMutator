@@ -207,8 +207,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				try {
 					this.newTaskSemaphore.acquire();
 					waitForHealthyLoadAverage();
+					waitForHealthyDiskSpace();
 					this.newTaskSemaphore.release();
-				} catch (final InterruptedException e) {
+				} catch (final InterruptedException | IOException e) {
 					LOGGER.error(e.getMessage());
 				}
 
@@ -242,8 +243,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// Wait until all old tasks complete before issuing more
 				try {
 					this.newTaskSemaphore.acquire();
-					ProxyServer.removeConversationDir();
-				} catch (final InterruptedException | IOException e) {
+				} catch (final InterruptedException e) {
 					LOGGER.error(e.getMessage());
 				}
 			}
@@ -401,20 +401,37 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	}
 
 	protected static final OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
-	protected static boolean waitForHealthyLoadAverage() {
+	protected static boolean waitForHealthyLoadAverage() throws IOException, InterruptedException {
 		final int cpu = OS.getAvailableProcessors();
 		double load = OS.getSystemLoadAverage();
 
 		Thread lock = Thread.currentThread();
 		synchronized (lock) {
+			boolean restarted = false;
 			while (cpu < load) {
 				LOGGER.warn("Waiting for healthy load average: {} for #CPU={}", String.format("%.2f", load), cpu);
-				try {
-					lock.wait(1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				if (!restarted) {
+					LOGGER.warn("Restart proxy server");
+					ProxyServer.restart();
+					restarted = true;
 				}
+				lock.wait(1000);
 				load = OS.getSystemLoadAverage(); // update load average
+			}
+		}
+
+		return true;
+	}
+
+	protected static boolean waitForHealthyDiskSpace() throws IOException, InterruptedException {
+		Thread lock = Thread.currentThread();
+		synchronized (lock) {
+			File file = new File("/");
+			if (file.getFreeSpace() < 1 * 1000 * 1000 * 1000) {
+				LOGGER.warn("Waiting for freeing disk space: {}", file.getFreeSpace());
+				ProxyServer.removeConversationDir();
+				LOGGER.warn("Freed disk space: {}", file.getFreeSpace());
+				lock.wait(1000);
 			}
 		}
 		return true;
