@@ -28,31 +28,33 @@ Then, RevAjaxMutator is available in a project under test.
 ### Configuration
 Deploy ``localenv.properties`` on the class path.
 ```
-chromedriver_bin=/path/to/chromedriver
-firefox_bin=/path/to/firefox
-geckodriver_bin=/path/to/geckodriver-0.15.0/geckodriver
-phantomjs_bin=/path/to/phantomjs-2.1.1-linux-x86_64/bin/phantomjs
+chrome_bin       = /path/to/google-chrome-stable
+chromedriver_bin = /path/to/chromedriver
+
+firefox_bin      = /path/to/firefox
+geckodriver_bin  = /path/to/geckodriver-0.15.0/geckodriver
+
+phantomjs_bin    = /path/to/phantomjs-2.1.1-linux-x86_64/bin/phantomjs
 
  #selenium_hub_ip=http://localhost:5000
 
-proxy_ip = 127.0.0.1
-proxy_port = 8083
+proxy_ip         = 127.0.0.1
+proxy_port       = 8080
 
-timeout = 5
+timeout          = 5
 ``` 
 RevAjaxMutator will use the driver in the order above.
 
 In addition, deploy another property file for an application under test.
 ```
-url 					= http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php
-path_to_js_file 		= quizzy/quizzy.js
+url 			    	  	  = http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php
+
+path_to_js_file 		  = quizzy/quizzy.js
 path_to_html_file 		= main.php
-path_to_test_case_file 	= src/main/java/jp/mzw/revajaxmutator/test/quizzy/QuizzyTest.java
-ram_record_dir			= record/quizzy
-failure_cov_file 		= jscover/quizzy/jscoverage.failure.json
-proxy					= ram
-#proxy					= ram record
-#proxy					= ram rewrite
+path_to_testcase_file = src/main/java/jp/mzw/revajaxmutator/test/quizzy/QuizzyTest.java
+
+ram_record_dir        = jscover/quizzy
+jscover_report_dir    = record/quizzy
 ```
 
 ### Setting up Selenium-grid (optional)
@@ -115,8 +117,9 @@ Enjoy RevAjaxMutator!
 - Kazuki Nishiura (AjaxMutator)
 - Kohsuke Yatoh (Proxy functionality)
 - Junto Nakaoka (Space-search functionality)
-- Shumpei Itho (Do-fewer, do-smarter, and do-faster approaches)
-- Filipe Guerreiro (OnelineAjaxFixMiner)
+- Tomoya Katagi (Generic mutation operators)
+- Shumpei Itho (Do-fewer, do-smarter, and do-faster approaches in draft)
+- Filipe Guerreiro (OnelineAjaxFixMiner, concurrently and distributed test exection)
 - Many graduate students in computer science (Test case implementation)
 
 ## License
