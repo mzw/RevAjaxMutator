@@ -564,12 +564,18 @@ public class MutationTestConductor {
 
 	protected class Timeout implements Runnable {
 		private long min = Long.MAX_VALUE;
+		private boolean limited = false;
 		public Timeout(long min) {
 			this.min = min;
+			this.limited = (min == Long.MAX_VALUE ? false : true);
 		}
 		@Override
 		public void run() {
-			System.out.println("Limited time: " + this.min + " min (started from: " + (new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date())) + ")");
+			if (!this.limited) {
+				return;
+			}
+			final String start = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss").format(new Date());
+			System.out.println("Limited time: " + this.min + " min (started from: " + start + ")");
 			Stopwatch stopwatch = Stopwatch.createStarted();
 			while (true) {
 				try {
