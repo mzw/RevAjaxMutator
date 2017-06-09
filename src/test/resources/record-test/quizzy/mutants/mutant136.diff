@@ -1,0 +1,101 @@
+--- http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:24.000000000 
++++ http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:27.089300000 
+@@ -216,65 +216,33 @@
+-	$.get('quizzy/serveExplanation.php',  {quizFile: quizFile, quizIndex: quizIndex, questNo: curQuestion, selOpt: selOpt}, function(data) {
+-		
+-		//have the data returned by that ajax query, set the proper div info
+-		$('#quizzy_q' + curQuestion + '_exp').html(data);
+-		//that should have set the correctOpt and addScore variables
+-		
+-		//add to score
+-		score += addScore;
+-		
+-		//determine if this question has partial credit
+-		var partialCredit = false;
+-		for(var i in optValues)
+-			if(optValues[i] != 0 && optValues[i] != bestScore)
+-				partialCredit = true;
+-			
+-		//show the values
+-		for( i in optValues ) {
+-			
+-			//if the question no partial credit, use an X or a ✓ to indicate correctness
+-			var toWrite = optValues[i];
+-			if(!partialCredit)
+-				toWrite = (optValues[i] == bestScore) ? '✓' : 'X';
+-			
+-			//if it was best score, use quizzy_opt_best
+-			//in between best and worst, use quizzy_opt_mid
+-			//or the worst, use quizzy_opt_worst
+-			var useClass = 'quizzy_opt_worst';
+-			if(optValues[i] == bestScore)
+-				useClass = 'quizzy_opt_best';
+-			if(optValues[i] > 0 && optValues[i] < bestScore)
+-				useClass = 'quizzy_opt_mid';
+-			
+-			$('#quizzy_q' + curQuestion + '_opt' + i + '_val').html('<span class="' + useClass + '">' + toWrite + '</span>');
+-		}
+-		$('.quizzy_q_opt_val').fadeIn(fadeSpeed);
+-		
+-		
+-		//wait slideUpWait millisec
+-		setTimeout(function() {
+-			//scroll up all but the selected answer and the best answer
+-			var correctSel = '[id!=quizzy_q' + curQuestion + '_opt' + correctOpt + ']';
+-			var pickedSel = '[id!=quizzy_q' + curQuestion + '_opt' + selOpt + ']';
+-			if(addScore == bestScore)
+-				correctSel = '';
+-			$('.quizzy_q_opt' + correctSel + pickedSel).slideUp(slideSpeed);
+-			
+-			//wait expFadeInWait millisec
+-			setTimeout(function() {
+-				
+-				//fade in explanation
+-				$('#quizzy_q' + curQuestion + '_exp').fadeIn(fadeSpeed);
+-				
+-				//wait nextFadeInWait millisec
+-				setTimeout(function() {
+-					
+-					//fade in next button
+-					$('#quizzy_q' + curQuestion + '_foot_nxt').attr('disabled', false).fadeIn(fadeSpeed);
+-					
+-				}, nextFadeInWait); //wait nextFadeInWait ms to fade in the next button
+-				
+-			}, expFadeInWait); 		//wait expFadeInWait ms to fade in explanation
+-			
+-		}, slideUpWait); 			//wait scrollupwait ms to scroll up all but best answer
+-		
+-	});
++	$.get('quizzy/serveExplanation.php',  {quizFile: quizFile, quizIndex: quizIndex, questNo: curQuestion, selOpt: selOpt}, function(data, textStatus, jqXHR) {(function(data) {
++  $('#quizzy_q' + curQuestion + '_exp').html(data);
++  score += addScore;
++  var partialCredit = false;
++  for (var i in optValues) 
++    if (optValues[i] != 0 && optValues[i] != bestScore) 
++      partialCredit = true;
++  for (i in optValues) {
++    var toWrite = optValues[i];
++    if (!partialCredit) 
++      toWrite = (optValues[i] == bestScore) ? '\u2713' : 'X';
++    var useClass = 'quizzy_opt_worst';
++    if (optValues[i] == bestScore) 
++      useClass = 'quizzy_opt_best';
++    if (optValues[i] > 0 && optValues[i] < bestScore) 
++      useClass = 'quizzy_opt_mid';
++    $('#quizzy_q' + curQuestion + '_opt' + i + '_val').html('<span class="' + useClass + '">' + toWrite + '</span>');
++  }
++  $('.quizzy_q_opt_val').fadeIn(fadeSpeed);
++  setTimeout(function() {
++  var correctSel = '[id!=quizzy_q' + curQuestion + '_opt' + correctOpt + ']';
++  var pickedSel = '[id!=quizzy_q' + curQuestion + '_opt' + selOpt + ']';
++  if (addScore == bestScore) 
++    correctSel = '';
++  $('.quizzy_q_opt' + correctSel + pickedSel).slideUp(slideSpeed);
++  setTimeout(function() {
++  $('#quizzy_q' + curQuestion + '_exp').fadeIn(fadeSpeed);
++  setTimeout(function() {
++  $('#quizzy_q' + curQuestion + '_foot_nxt').attr('disabled', false).fadeIn(fadeSpeed);
++}, nextFadeInWait);
++}, expFadeInWait);
++}, slideUpWait);
++}).apply(this, [/* blank response mutation */'', textStatus, jqXHR]);});

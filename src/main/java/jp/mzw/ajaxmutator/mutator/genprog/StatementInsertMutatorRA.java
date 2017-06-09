@@ -23,10 +23,6 @@ public class StatementInsertMutatorRA extends AbstractReplacingAmongMutator<Stat
 	
 	@Override
 	public List<Mutation> generateMutationList(Statement stmt) {
-    	if(stmt.getWeight() == 0) {
-    		return null;
-    	}
-    	
         AstNode focusedNode = getFocusedNode(stmt);
         List<Mutation> mutationList = new ArrayList<Mutation>();
         for(AstNode candidate : candidates) {
@@ -46,7 +42,7 @@ public class StatementInsertMutatorRA extends AbstractReplacingAmongMutator<Stat
 	 * Original implementation is @jp.mzw.ajaxmutator.mutator.replacing_among.AbstractReplacingAmongMutator
 	 */
     protected String formatAccordingTo(AstNode mutatingNode, AstNode mutatedNode) {
-    	StringBuilder builder = new StringBuilder("/* [Insert by AjaxGenProg] */");
+    	StringBuilder builder = new StringBuilder();
     	// another statement is inserted "after" it
     	builder.append(mutatedNode.toSource()).append(mutatingNode.toSource());
         return builder.toString();

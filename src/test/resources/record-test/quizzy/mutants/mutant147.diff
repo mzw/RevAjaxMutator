@@ -1,0 +1,25 @@
+--- http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:24.000000000 
++++ http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:30.062000000 
+@@ -110,15 +110,7 @@
+-	$.get('quizzy/serveQuiz.php', {quizFile: quizFile, quizIndex: quizIndex}, function(data){
+-		//put up throbber
+-		$('#quizzy').loading(true);
+-		
+-		//we got our quiz datas, just dump them into the correct div
+-		$('#quizzy_quiz').html(data);
+-		
+-		//we also got a numQuestions set, need to resize a few divs.
+-		$('#quizzy_c').width((numQuestions + 3) * quizWidth);
+-		$('#quizzy_quiz').width((numQuestions + 2) * quizWidth);
+-		$('.quizzy_title').width(quizWidth);
+-		
+-		//now request the next question
+-		requestNextQuestion();
+-	});
++	$.get('quizzy/serveQuiz.php', {quizFile: quizFile, quizIndex: quizIndex}, function(data) {
++  $('#quizzy_load').html(data);
++  $('.quizzy_quiz_desc').hide();
++  $('.quizzy_quiz_lbl').click(clickQuizzyQuizOpt);
++  $('.quizzy_quiz_opt').click(clickQuizzyQuizOpt);
++  $('#quizzy_start_b').click(startQuiz);
++});

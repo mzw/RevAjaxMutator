@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -11,10 +13,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import jp.mzw.ajaxmutator.JUnitExecutor;
 import jp.mzw.ajaxmutator.MutateVisitor;
 import jp.mzw.ajaxmutator.MutateVisitorBuilder;
-import jp.mzw.ajaxmutator.MutationTestConductor;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationFileWriter;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
@@ -23,9 +23,12 @@ import jp.mzw.ajaxmutator.mutatable.genprog.Statement;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementDeleteMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementInsertMutator;
 import jp.mzw.ajaxmutator.mutator.genprog.StatementSwapMutator;
-import jp.mzw.revajaxmutator.config.AppConfigBase;
-import jp.mzw.revajaxmutator.search.Coverage;
+import jp.mzw.ajaxmutator.test.conductor.MutationTestConductor;
+import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.test.result.Coverage;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,39 +41,43 @@ import com.google.common.collect.ImmutableSet;
 public class GenProgConductor {
 	protected static Logger LOGGER = LoggerFactory.getLogger(GenProgConductor.class);
 
-	static String COMBINEDIFF;
-	public static double Wpath;
-	public static double Wmut;
-	public static int SampleSize;
-	public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException, JSONException, InterruptedException {
-		Properties localenv = new Properties();
-		localenv.load(GenProgConductor.class.getClassLoader().getResourceAsStream("localenv.properties"));
+	static String COMBINEDIFF = "/usr/local/bin/combinediff";
 
-		COMBINEDIFF = localenv.getProperty("combinediff") != null ? localenv.getProperty("combinediff") : "/usr/local/bin/combinediff";
-		Wpath = localenv.getProperty("w_path") != null ? Double.parseDouble(localenv.getProperty("w_path")) : 0.01;
-		Wmut = localenv.getProperty("w_mut") != null ? Double.parseDouble(localenv.getProperty("w_mut")) : 0.06;
-		SampleSize = localenv.getProperty("sample_size") != null ? Integer.parseInt(localenv.getProperty("sample_size")) : 80;
-
-		String subject_config_class = localenv.getProperty("genprog_subject_config") != null ? localenv.getProperty("genprog_subject_config") : "";
-		String subject_test_class = localenv.getProperty("genprog_subject_test") != null ? localenv.getProperty("genprog_subject_test") : "";
-		int num_gen = localenv.getProperty("genprog_generation_num") != null ? Integer.parseInt(localenv.getProperty("genprog_generation_num")) : 10;
-		GenProgConductor conductor = new GenProgConductor(Class.forName(subject_config_class));
-		conductor.search(num_gen, Class.forName(subject_test_class));
-		
-	}
-
-	AppConfigBase config;
+	double w_path = 0.01;
+	double w_mut = 0.06;
+	int sample_size = 80;
+	int num_gen = 10;
+	
+	AppConfig config;
 	MutationFileWriter mutationFileWriter;
 	MutationListManager mutationListManager;
 	MutationTestConductor conductor;
-	
+	boolean skipTest;
 	
 	public GenProgConductor(Class<?> config) throws InstantiationException, IllegalAccessException, IOException {
-		this.config = (AppConfigBase) config.newInstance();
+		this.config = (AppConfig) config.newInstance();
 		
 		this.mutationFileWriter = new MutationFileWriter(this.config.getRecordedJsFile());
 		this.mutationListManager = new MutationListManager(mutationFileWriter.getDestinationDirectory());
 		
+		setup();
+	}
+	
+	private void setup() throws IOException {
+		Properties localenv = new Properties();
+		localenv.load(GenProgConductor.class.getClassLoader().getResourceAsStream("localenv.properties"));
+		
+		COMBINEDIFF = localenv.getProperty("combinediff") != null ? localenv.getProperty("combinediff") : "/usr/local/bin/combinediff";
+		w_path = localenv.getProperty("w_path") != null ? Double.parseDouble(localenv.getProperty("w_path")) : 0.01;
+		w_mut = localenv.getProperty("w_mut") != null ? Double.parseDouble(localenv.getProperty("w_mut")) : 0.06;
+		sample_size = localenv.getProperty("sample_size") != null ? Integer.parseInt(localenv.getProperty("sample_size")) : 80;
+		num_gen = localenv.getProperty("num_gen") != null ? Integer.parseInt(localenv.getProperty("num_gen")) : 10;
+		
+		skipTest = localenv.getProperty("skip_test") != null ? Boolean.parseBoolean(localenv.getProperty("skip_test")) : false;
+	}
+	
+	public void search(Class<?> testClass) throws IOException, InterruptedException, JSONException {
+		search(num_gen, testClass);
 	}
 	
 	public void search(int generations, Class<?> testClass) throws IOException, InterruptedException, JSONException {
@@ -84,10 +91,10 @@ public class GenProgConductor {
 		for(int g = 1; g < generations; g++) {
 			LOGGER.info("The " + g + " th(st/nd) generation");
 			
-			ArrayList<Mutation> samples = sample(cur_mutations, SampleSize);
+			ArrayList<Mutation> samples = sample(cur_mutations, sample_size);
 			// Fitness
 			for(Mutation mutation : samples) {
-				measureFitness(mutation, testClass);
+				measureFitness(mutation, testClass, g);
 			}
 			Collections.sort(samples, new MutationComparator());
 
@@ -105,9 +112,9 @@ public class GenProgConductor {
 		}
 		// Examine whether mutation succeed to repair program at final generation
 		for(Mutation mutation : cur_mutations) {
-			measureFitness(mutation, testClass);
+			measureFitness(mutation, testClass, generations);
 		}
-		
+		mutationListManager.generateMutationListFile();
 	}
 
 	//----------------------------------------------------------------------------------------------------
@@ -115,7 +122,7 @@ public class GenProgConductor {
 		ArrayList<Mutation> ret = new ArrayList<Mutation>();
 		
 		ArrayList<Statement> statements = new ArrayList<Statement>(setWeight(getStatements()));
-		// Create the half number of mutants
+		// Create the half number of mutants
 		for(int i = 0; i < (mutations.size()/2); i++) {
 			Mutation mutation = generateMutation(statements);
 			ret.add(mutation);
@@ -138,7 +145,7 @@ public class GenProgConductor {
 			double probi = stmti.getWeight();
 			double rand2 = Math.random();
 			
-			if(rand1 <= probi && rand2 <= Wmut) {
+			if(rand1 <= probi && rand2 <= w_mut) {
 
 				// 3. let op = choose({insert, swap, delete})
 				double rand3 = Math.random();
@@ -161,8 +168,10 @@ public class GenProgConductor {
 					if(mutations != null && mutations.size() == 1) {
 						jp.mzw.ajaxmutator.generator.Mutation mutation = mutations.get(0);
 						File file = mutationFileWriter.writeToFile(mutation);
-						MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
-						originList.add(origin);
+						if(file != null) {
+							MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
+							originList.add(origin);
+						}
 					}
 				}
 				
@@ -176,8 +185,10 @@ public class GenProgConductor {
 					if(mutations != null && mutations.size() == 1) {
 						jp.mzw.ajaxmutator.generator.Mutation mutation = mutations.get(0);
 						File file = mutationFileWriter.writeToFile(mutation);
-						MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
-						originList.add(origin);
+						if(file != null) {
+							MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
+							originList.add(origin);
+						}
 					}
 				}
 				
@@ -188,8 +199,10 @@ public class GenProgConductor {
 					if(mutations != null && mutations.size() == 1) {
 						jp.mzw.ajaxmutator.generator.Mutation mutation = mutations.get(0);
 						File file = mutationFileWriter.writeToFile(mutation);
-						MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
-						originList.add(origin);
+						if(file != null) {
+							MutationFileInformation origin = new MutationFileInformation(file.getName(), file.getAbsolutePath());
+							originList.add(origin);
+						}
 					}
 					
 				}
@@ -278,17 +291,54 @@ public class GenProgConductor {
 			MutationFileInformation mut_base = mutations.get(0);
 			ArrayList<MutationFileInformation> originList = new ArrayList<MutationFileInformation>();
 			originList.add(mut_base);
+			List<String> mut_base_content = FileUtils.readLines(new File(mut_base.getAbsolutePath()));
 			for(int i = 1; i < mutations.size(); i++) {
 				MutationFileInformation mut_combine = mutations.get(i);
+				
+				List<String> mut_combine_content = FileUtils.readLines(new File(mut_combine.getAbsolutePath()));
+				
+				List<String> mut_base_locations = new ArrayList<>();
+				for(String line : mut_base_content) {
+					if(line.startsWith("@@")) {
+						mut_base_locations.add(line);
+					}
+				}
+				List<String> mut_combine_locations = new ArrayList<>();
+				for(String line : mut_combine_content) {
+					if(line.startsWith("@@")) {
+						mut_combine_locations.add(line);
+					}
+				}
+				boolean same = false;
+				for(String line : mut_base_locations) {
+					boolean _same = false;
+					for(String _line : mut_combine_locations) {
+						System.out.println(line + ", " + _line);
+						if(line.equals(_line)) {
+							_same = true;
+							break;
+						}
+					}
+					if(_same) {
+						same = true;
+						break;
+					}
+				}
+				if(same) {
+					continue;
+				}
 
 				String content = CombineDiff.combinediff(COMBINEDIFF, ".", mut_base.getAbsolutePath(), mut_combine.getAbsolutePath());
 				
 				if(content == null) {
-					LOGGER.warn("Fail to comfine: " + mut_base.getFileName() + " + " + mut_combine.getFileName());
+					LOGGER.warn("Fail to combine: " + mut_base.getFileName() + " + " + mut_combine.getFileName());
 					continue;
 				}
 				
 				File file = mutationFileWriter.writeToFile(content);
+				if(file == null) {
+					continue;
+				}
 				MutationFileInformation combined = new MutationFileInformation(file.getName(), file.getAbsolutePath());
 				originList.add(mut_combine);
 				
@@ -302,9 +352,14 @@ public class GenProgConductor {
 		return null;
 	}
 	
-	private boolean measureFitness(Mutation mutation, Class<?> testClass) {
+	private boolean measureFitness(Mutation mutation, Class<?> testClass, int generation) {
 		int fitness = 0;
 		int failure = 0;
+		
+		if(this.skipTest) {
+			this.mutationListManager.addMutationFileInformation(generation+"_generation", mutation.getMutationFileInformation());
+			return false;
+		}
 
 		List<Result> results = conductor.testSpecificMutation(mutation.getMutationFileInformation(), new JUnitExecutor(true, testClass));
 		if(results == null) { // fail to mutation
@@ -364,7 +419,7 @@ public class GenProgConductor {
 	}
 	
 	private Set<Statement> getStatements() throws MalformedURLException, UnsupportedEncodingException {
-		String path_to_js_file = config.pathToJsFile();
+		String path_to_js_file = config.getRecordedJsFile().toString();
 		
 		MutateVisitorBuilder builder = MutateVisitor.emptyBuilder();
         builder.setStatementDetectors(ImmutableSet.of(
@@ -373,54 +428,51 @@ public class GenProgConductor {
         MutateVisitor visitor = builder.build();
         conductor = new MutationTestConductor();
         conductor.setup(path_to_js_file, "", visitor);
-        
         return visitor.getStatements();
 	}
 	
-	private Set<Statement> setWeight(Set<Statement> statements) throws IOException, JSONException {
-		JSONObject success_coverage_json = Coverage.parse(config.getSuccessCoverageFile());
-		JSONObject failure_coverage_json = Coverage.parse(config.getFailureCoverageFile());
-		
-		//path for parsing coverage
-        String url_path_to_js_file = config.pathToJsFile();
-		
-        JSONArray success = Coverage.getCoverageData(success_coverage_json, url_path_to_js_file);
-        JSONArray failure = Coverage.getCoverageData(failure_coverage_json, url_path_to_js_file);
+	private Set<Statement> setWeight(Set<Statement> statements) throws JSONException {
+		try {
+			List<File> files = Coverage.getFailureCoverageResults(config.getJscoverReportDir());
+			for (File file : files) {
+				JSONObject failure_coverage_json = Coverage.parse(file);
+				String encoded_url = config.getRecordedJsFile().getName();
+				String decoded_url = URLDecoder.decode(encoded_url, "utf-8");
+				URL url = new URL(decoded_url);
+				String url_path_to_js_file = URLDecoder.decode(url.getPath(), "utf-8");
+				JSONArray failure = Coverage.getCoverageResults(failure_coverage_json, url_path_to_js_file);
+				
+				List<String> jsfile = FileUtils.readLines(config.getRecordedJsFile());
 
-        int line_num = success.length(); // same: failure.length()
-        double[] weighted_path = new double[line_num];
-        for(int i = 1; i < line_num; i++) {
-        	Object success_line = success.get(i);
-        	Object failure_line = failure.get(i);
-
-        	int success_cover_freq = Coverage.getCoverFreq(success_line);
-        	int failure_cover_freq = Coverage.getCoverFreq(failure_line);
-        	
-        	if(0 < success_cover_freq && 0 < failure_cover_freq) {
-            	weighted_path[i] = Wpath;
-        	} else if (success_cover_freq == 0 && 0 < failure_cover_freq) {
-            	weighted_path[i] = 1;
-        	} else {
-            	weighted_path[i] = 0;
-        	}
-        }
-
-		for(Statement statement : statements) {
-        	int lineno = statement.getAstNode().getLineno();
-        	statement.setWeight(weighted_path[lineno]);
-        }
-		
-		for(Statement statement : statements) {
-			statement.setWeight(1.0);
+		        int line_num = failure.length();
+		        double[] weighted_path = new double[jsfile.size()+1];
+		        for(int i = 1; i < line_num; i++) {
+		        	Object failure_line = failure.get(i);
+		        	int failure_cover_freq = Coverage.getCoverFreq(failure_line);
+		        	if(0 < failure_cover_freq) {
+		            	weighted_path[i] = w_path;
+		        	} else {
+		            	weighted_path[i] = 0;
+		        	}
+		        }
+				for(Statement statement : statements) {
+		        	int lineno = statement.getAstNode().getLineno();
+		        	statement.setWeight(weighted_path[lineno]);
+		        }
+			}
+		} catch (IOException e) {
+			for(Statement statement : statements) {
+	        	statement.setWeight(1.0);
+	        }
+			return statements;
 		}
-		
 		return statements;
 	}
 	
-	private ArrayList<Mutation> generateMutations(Set<Statement> wighted_path) throws IOException, InterruptedException {
+	private ArrayList<Mutation> generateMutations(Set<Statement> weighted_path) throws IOException, InterruptedException {
 		ArrayList<Mutation> ret = new ArrayList<Mutation>();
-		for(int i = 0; i < SampleSize; i++){
-			ret.add(generateMutation(new ArrayList<Statement>(wighted_path)));
+		for(int i = 0; i < sample_size; i++){
+			ret.add(generateMutation(new ArrayList<Statement>(weighted_path)));
 		}
 		return ret;
 	}

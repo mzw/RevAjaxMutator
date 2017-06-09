@@ -1,56 +1,52 @@
 package jp.mzw.revajaxmutator.search;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Properties;
 
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
-import jp.mzw.revajaxmutator.config.AppConfigBase;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONException;
+import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SearcherTest {
 
+	AppConfig config;
 	Searcher searcher;
 	MutationListManager manager;
 
 	@Before
-	public void setup() throws InstantiationException, IllegalAccessException,
-			JSONException, IOException {
-		searcher = new Searcher(AppConfig.class);
-		manager = searcher.getMutationListManager();
+	public void setup() throws InstantiationException, IllegalAccessException, JSONException, IOException {
+		config = new AppTestConfig();
+		manager = Searcher.getMutationListManager(config.getRecordedJsFile());
+		searcher = new Searcher(manager, Sorter.SortType.REPAIR_SOURCE_DFS);
 	}
 
 	@Test
 	public void fixerNames() {
-		assertEquals(Arrays.asList("EventCallbackERFixer",
-				"EventTargetTSFixer", "TimerEventDurationVIFixer",
-				"RequestResponseBodyVIFixer", "RequestURLVIFixer",
-				"RequestOnSuccessHandlerERFixer", "RequestMethodRAFixer",
-				"DOMSelectionSelectNearbyFixer", "DOMSelectionAtrributeFixer",
-				"AttributeModificationTargetVIFixer",
-				"AttributeModificationValueERFixer"),
-				manager.getListOfMutationName());
+		Assert.assertEquals(Arrays.asList("EventCallbackERFixer", "EventTargetTSFixer", "TimerEventDurationVIFixer", "RequestResponseBodyVIFixer",
+				"RequestURLVIFixer", "RequestOnSuccessHandlerERFixer", "RequestMethodRAFixer", "DOMSelectionSelectNearbyFixer", "DOMSelectionAtrributeFixer",
+				"AttributeModificationTargetVIFixer", "AttributeModificationValueERFixer"), manager.getListOfMutationName());
 	}
 
+	@Ignore // TODO Debug spectrum-based fault localization
 	@Test
 	public void setWeight() {
 		boolean isWeightedInfo = false;
 		for (String name : manager.getListOfMutationName()) {
-			for (MutationFileInformation info : manager
-					.getMutationFileInformationList(name)) {
+			for (MutationFileInformation info : manager.getMutationFileInformationList(name)) {
 				if (info.getWeight() != 0)
 					isWeightedInfo = true;
 			}
 		}
-		assertTrue(isWeightedInfo);
+		Assert.assertTrue(isWeightedInfo);
 	}
 
 	@Test
@@ -61,28 +57,56 @@ public class SearcherTest {
 		File file = new File(path);
 		File backupFile = new File(path + ".bak");
 
-		assertTrue(backupFile.exists());
+		Assert.assertTrue(backupFile.exists());
 
 		file.delete();
 		FileUtils.copyFile(backupFile, file);
 		backupFile.delete();
 	}
+	
+	@Test
+	public void testSortType() throws IOException {
+		Assert.assertEquals(Sorter.SortType.REPAIR_SOURCE_DFS, config.getSortType());
+		Assert.assertEquals(Sorter.SortType.RANDOM, new AppTestConfigRandomSortType().getSortType());
+	}
 
-	static class AppConfig extends AppConfigBase {
-		AppConfig() {
-			super(getConfig());
+	private static class AppTestConfig extends AppConfig {
+		protected AppTestConfig() throws IOException {
+			super("app-test.properties");
 		}
-	}
 
-	private static Properties getConfig() {
-		Properties config = new Properties();
-		config.put("ram_record_dir", "target/test-classes/record/quizzy/");
-		config.put("failure_cov_file",
-				"target/test-classes/jscover/quizzy/jscoverage.failure.json");
-		config.put("path_to_js_file", "quizzy/quizzy.js");
-		config.put("url",
-				"http://mzw.jp:80/yuta/research/ram/example/after/faulty/quizzy/main.php");
-		return config;
-	}
+		@Override
+		public MutateConfiguration getMutationAnalysisConfig() throws InstantiationException, IllegalAccessException, IOException {
+			return null;
+		}
 
+		@Override
+		public MutateConfiguration getProgramRepairConfig() throws IOException {
+			return null;
+		}
+
+	}
+	
+	private static class AppTestConfigRandomSortType extends AppConfig {
+		
+		protected AppTestConfigRandomSortType() throws IOException {
+			super("app-test.properties"); // TODO create new config file containing 'SORT_TYPE = RANDOM'
+		}
+		
+		@Override
+		public Sorter.SortType getSortType() {
+			return Sorter.SortType.RANDOM;
+		}
+
+		@Override
+		public MutateConfiguration getMutationAnalysisConfig() throws InstantiationException, IllegalAccessException, IOException {
+			return null;
+		}
+
+		@Override
+		public MutateConfiguration getProgramRepairConfig() throws IOException {
+			return null;
+		}
+
+	}
 }

@@ -11,14 +11,22 @@ import jp.mzw.ajaxmutator.detector.event.AttachEventDetector;
 import jp.mzw.ajaxmutator.detector.event.TimerEventDetector;
 import jp.mzw.ajaxmutator.detector.jquery.*;
 import jp.mzw.ajaxmutator.mutatable.*;
+import jp.mzw.ajaxmutator.mutatable.generic.*;
 import jp.mzw.ajaxmutator.mutatable.genprog.*;
 
 import org.mozilla.javascript.ast.Assignment;
 import org.mozilla.javascript.ast.AstNode;
+import org.mozilla.javascript.ast.BreakStatement;
+import org.mozilla.javascript.ast.ContinueStatement;
+import org.mozilla.javascript.ast.ForLoop;
 import org.mozilla.javascript.ast.FunctionCall;
+import org.mozilla.javascript.ast.FunctionNode;
 import org.mozilla.javascript.ast.NodeVisitor;
 import org.mozilla.javascript.ast.IfStatement;
 import org.mozilla.javascript.ast.ReturnStatement;
+import org.mozilla.javascript.ast.SwitchStatement;
+import org.mozilla.javascript.ast.VariableDeclaration;
+import org.mozilla.javascript.ast.WhileLoop;
 import org.mozilla.javascript.ast.Loop;
 
 import java.util.Set;
@@ -43,6 +51,16 @@ public class MutateVisitor implements NodeVisitor {
     private final ImmutableSet<? extends AbstractDetector<DOMSelection>> domSelectionDetectors;
     private final ImmutableSet<? extends AbstractDetector<Request>> requestDetectors;
     private final ImmutableSet<? extends AbstractDetector<Statement>> statementDetectors;
+    private final ImmutableSet<? extends AbstractDetector<AssignmentExpression>> assignmentDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Break>> breakDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Continue>> continueDetectors;
+    private final ImmutableSet<? extends AbstractDetector<For>> forDetectors;
+    private final ImmutableSet<? extends AbstractDetector<FuncNode>> funcNodeDetectors;
+    private final ImmutableSet<? extends AbstractDetector<If>> ifDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Return>> returnDetectors;
+    private final ImmutableSet<? extends AbstractDetector<Switch>> switchDetectors;
+    private final ImmutableSet<? extends AbstractDetector<VariableDec>> variableDeclarationDetectors;
+    private final ImmutableSet<? extends AbstractDetector<While>> whileDetectors;
 
     private final Set<EventAttachment> eventAttachments
         = new TreeSet<EventAttachment>();
@@ -59,6 +77,17 @@ public class MutateVisitor implements NodeVisitor {
     private final Set<DOMSelection> domSelections = new TreeSet<DOMSelection>();
     private final Set<Request> requests = new TreeSet<Request>();
     private final Set<Statement> statements = new TreeSet<Statement>();
+    private final Set<AssignmentExpression> assignmentExpressions = new TreeSet<AssignmentExpression>();
+    private final Set<Break> breaks = new TreeSet<Break>();
+    private final Set<Continue> continues = new TreeSet<Continue>();
+    private final Set<For> fors = new TreeSet<For>();
+    private final Set<FuncNode> funcNodes = new TreeSet<FuncNode>();
+    private final Set<If> ifs = new TreeSet<If>();
+    private final Set<Return> returns = new TreeSet<Return>();
+    private final Set<Switch> switches = new TreeSet<Switch>();
+    private final Set<VariableDec> variableDecs = new TreeSet<VariableDec>();
+    private final Set<While> whiles = new TreeSet<While>();
+    
 
     public MutateVisitor(
             Set<EventAttacherDetector> eventAttacherDetectors,
@@ -72,7 +101,18 @@ public class MutateVisitor implements NodeVisitor {
             Set<? extends AbstractDetector<DOMRemoval>> domRemovalDetectors,
             Set<? extends AbstractDetector<DOMSelection>> domSelectionDetectors,
             Set<? extends AbstractDetector<Request>> requestDetectors,
-            Set<? extends AbstractDetector<Statement>> statementDetectors) {
+            Set<? extends AbstractDetector<Statement>> statementDetectors,
+            Set<? extends AbstractDetector<AssignmentExpression>> assignmentDetectors,
+            Set<? extends AbstractDetector<Break>> breakDetectors,
+            Set<? extends AbstractDetector<Continue>> continueDetectors,
+            Set<? extends AbstractDetector<For>> forDetectors,
+            Set<? extends AbstractDetector<FuncNode>> funcNodeDetectors,
+            Set<? extends AbstractDetector<If>> ifDetectors,
+            Set<? extends AbstractDetector<Return>> returnDetectors,
+            Set<? extends AbstractDetector<Switch>> switchDetectors,
+            Set<? extends AbstractDetector<VariableDec>> variableDeclarationDetectors,
+            Set<? extends AbstractDetector<While>> whileDetectors
+            		) {
         this.eventAttacherDetectors = immutableCopyOf(eventAttacherDetectors);
         this.timerEventDetectors = immutableCopyOf(timerEventDetectors);
         this.domCreationDetectors = immutableCopyOf(domCreationDetectors);
@@ -85,6 +125,17 @@ public class MutateVisitor implements NodeVisitor {
         this.domSelectionDetectors = immutableCopyOf(domSelectionDetectors);
         this.requestDetectors = immutableCopyOf(requestDetectors);
         this.statementDetectors = immutableCopyOf(statementDetectors);
+        this.assignmentDetectors = immutableCopyOf(assignmentDetectors);
+        this.breakDetectors = immutableCopyOf(breakDetectors);
+        this.continueDetectors = immutableCopyOf(continueDetectors);
+        this.forDetectors = immutableCopyOf(forDetectors);
+        this.funcNodeDetectors = immutableCopyOf(funcNodeDetectors);
+        this.ifDetectors = immutableCopyOf(ifDetectors);
+        this.returnDetectors = immutableCopyOf(returnDetectors);
+        this.switchDetectors = immutableCopyOf(switchDetectors);
+        this.variableDeclarationDetectors = immutableCopyOf(variableDeclarationDetectors);
+        this.whileDetectors = immutableCopyOf(whileDetectors);
+        		
     }
 
     private <T> ImmutableSet<T> immutableCopyOf(Set<T> original) {
@@ -108,15 +159,44 @@ public class MutateVisitor implements NodeVisitor {
         } else if (node instanceof Assignment) {
             for (AbstractDetector<AttributeModification> detector : attributeModificationDetectors)
                 detectAndAdd(detector, node, attributeModifications);
-        }
-        
-        else if (node instanceof IfStatement
-        		|| node instanceof ReturnStatement
-        		|| node instanceof Loop) {
+            for (AbstractDetector<AssignmentExpression> detector : assignmentDetectors)
+            	detectAndAdd(detector, node, assignmentExpressions);
+        } else if (node instanceof Loop){
         	for (AbstractDetector<Statement> detector : statementDetectors)
         		detectAndAdd(detector, node, statements);
-        }
-        
+        } else if(node instanceof BreakStatement){
+        	for (AbstractDetector<Break> detector : breakDetectors)
+            	detectAndAdd(detector, node, breaks);
+        } else if(node instanceof ContinueStatement){
+        	for (AbstractDetector<Continue> detector : continueDetectors)
+            	detectAndAdd(detector, node, continues);
+        } else if(node instanceof ForLoop){
+        	for (AbstractDetector<For> detector : forDetectors)
+            	detectAndAdd(detector, node, fors);
+        } else if(node instanceof FunctionNode){
+            for (AbstractDetector<FuncNode> detector : funcNodeDetectors)
+            	detectAndAdd(detector, node, funcNodes);
+        } else if (node instanceof IfStatement){
+        	for (AbstractDetector<Statement> detector : statementDetectors)
+        		detectAndAdd(detector, node, statements);
+        	for (AbstractDetector<If> detector : ifDetectors)
+            	detectAndAdd(detector, node, ifs);
+        } else if (node instanceof ReturnStatement){
+        	for (AbstractDetector<Statement> detector : statementDetectors)
+        		detectAndAdd(detector, node, statements);
+        	for (AbstractDetector<Return> detector : returnDetectors)
+            	detectAndAdd(detector, node, returns);
+        } else if (node instanceof SwitchStatement){
+        	for (AbstractDetector<Switch> detector : switchDetectors)
+            	detectAndAdd(detector, node, switches);
+        } else if(node instanceof VariableDeclaration){
+        	for (AbstractDetector<VariableDec> detector : variableDeclarationDetectors)
+            	detectAndAdd(detector, node, variableDecs);
+        } else if(node instanceof WhileLoop){
+        	for (AbstractDetector<While> detector : whileDetectors)
+            	detectAndAdd(detector, node, whiles);
+        } 
+       
         return true;
     }
 
@@ -143,9 +223,24 @@ public class MutateVisitor implements NodeVisitor {
             detectAndAdd(detector, call, requests);
         for (AbstractDetector<AttributeModification> detector : attributeModificationDetectors)
             detectAndAdd(detector, call, attributeModifications);
-        
         for (AbstractDetector<Statement> detector : statementDetectors)
         	detectAndAdd(detector, call, statements);
+        for (AbstractDetector<Break> detector : breakDetectors)
+        	detectAndAdd(detector, call, breaks);
+        for (AbstractDetector<Continue> detector : continueDetectors)
+        	detectAndAdd(detector, call, continues);
+        for (AbstractDetector<For> detector : forDetectors)
+        	detectAndAdd(detector, call, fors);
+        for (AbstractDetector<If> detector : ifDetectors)
+        	detectAndAdd(detector, call, ifs);
+        for (AbstractDetector<Return> detector : returnDetectors)
+        	detectAndAdd(detector, call, returns);
+        for (AbstractDetector<Switch> detector : switchDetectors)
+        	detectAndAdd(detector, call, switches);
+        for (AbstractDetector<VariableDec> detector : variableDeclarationDetectors)
+        	detectAndAdd(detector, call, variableDecs);
+        for (AbstractDetector<While> detector : whileDetectors)
+        	detectAndAdd(detector, call, whiles);
         
         return true;
     }
@@ -197,6 +292,46 @@ public class MutateVisitor implements NodeVisitor {
     public Set<Statement> getStatements() {
     	return statements;
     }
+    
+    public Set<AssignmentExpression> getAssignmentExpressions() {
+    	return assignmentExpressions;
+    }
+    
+    public Set<Break> getBreaks() {
+    	return breaks;
+    }
+    
+    public Set<Continue> getContinues() {
+    	return continues;
+    }
+    
+    public Set<For> getFors() {
+    	return fors;
+    }
+    
+    public Set<FuncNode> getFuncnodes() {
+    	return funcNodes;
+    }
+    
+    public Set<If> getIfs() {
+    	return ifs;
+    }
+    public Set<Return> getReturns() {
+    	return returns;
+    }
+    
+    public Set<Switch> getSwitches() {
+    	return switches;
+    }
+    
+    public Set<VariableDec> getVariableDecss() {
+    	return variableDecs;
+    }
+    
+    public Set<While> getWhiles() {
+    	return whiles;
+    }
+    
 
     /**
      * @return Information about mutatables found by visiting AST.
@@ -229,7 +364,19 @@ public class MutateVisitor implements NodeVisitor {
 
         builder.append("=== Statement ===").append(System.lineSeparator());
         appendMutatablesInfo("Statements", builder, statements, detailed);
-
+        
+        builder.append("=== General ===").append(System.lineSeparator());
+        appendMutatablesInfo("AssignmentExpressions", builder, assignmentExpressions, detailed);
+        appendMutatablesInfo("Breaks", builder, breaks, detailed);
+        appendMutatablesInfo("Continues", builder, continues, detailed);
+        appendMutatablesInfo("Fors", builder, fors, detailed);
+        appendMutatablesInfo("FuncNodes", builder, funcNodes, detailed);
+        appendMutatablesInfo("Ifs", builder, ifs, detailed);
+        appendMutatablesInfo("Returns", builder, returns, detailed);
+        appendMutatablesInfo("Switches", builder, switches, detailed);
+        appendMutatablesInfo("VariableDecs", builder, variableDecs, detailed);
+        appendMutatablesInfo("Whiles", builder, whiles, detailed);
+        
         return builder.toString();
     }
 

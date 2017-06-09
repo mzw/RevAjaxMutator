@@ -1,0 +1,54 @@
+--- http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:24.000000000 
++++ http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:30.089500000 
+@@ -139,49 +139,2 @@
+-	$.get('quizzy/serveQuestion.php', {quizFile: quizFile, quizIndex: quizIndex, questNo: (curQuestion + 1), score: score}, function(data){
+-		//we are now on the next question
+-		curQuestion++;
+-		
+-		//set necessary styles
+-		$('.quizzy_q').width(quizWidth);
+-		
+-		//dump the recieved data into the correct question div
+-		$("#quizzy_q" + curQuestion).html(data);
+-	
+-		//hide and disable the check and next buttons, the explanation div, and the value spans
+-		$('#quizzy_q' + curQuestion + '_foot_chk').attr('disabled', true).hide();
+-		$('#quizzy_q' + curQuestion + '_foot_nxt').attr('disabled', true).hide();
+-		$('#quizzy_q' + curQuestion + '_exp').hide();
+-		$('.quizzy_q_opt_val').hide();
+-		
+-		//add click handlers so that when a user clicks on any first option, it sets selOpt to 0
+-		//and if they click on any 2nd option, it sets selOpt to 1, etc.
+-		$('.quizzy_q_opt').click(function (){
+-			//the user clicked on one of the options
+-			//get the id
+-			var thisId = $(this).attr('id');
+-			
+-			//hack out the index and set selOpt to it
+-			selOpt = thisId.substring(thisId.lastIndexOf("opt") + 3) * 1;
+-			
+-			//make sure that the radio button is selected
+-			$('#quizzy_q'+curQuestion+'_opt'+selOpt+'_b').attr("checked", "checked");
+-		});
+-		
+-		//add the click event to the check and next buttons
+-		$('#quizzy_q' + curQuestion + '_foot_chk').click(checkQuestion);
+-		$('#quizzy_q' + curQuestion + '_foot_nxt').click(function (){
+-			$('#quizzy').loading(true);   
+-			$(this).unbind();
+-			requestNextQuestion();
+-		});
+-		
+-		//slide quizzy_c to the right if we're on question 0, quizzy_q_c otherwise
+-		var scrollSel = (curQuestion == 0) ? '#quizzy_c' : '#quizzy_q_c';
+-		var scrollAmt = (curQuestion == 0) ? (-quizWidth * (curQuestion + 1)) : (-quizWidth * (curQuestion));
+-		$(scrollSel).animate({left: scrollAmt + "px"}, slideSpeed, animateStyle, function(){
+-			//uncheck the last question's buttons
+-			$('.quizzy_q_opt_b').attr('checked', false);
+-			
+-			//fade in the check button
+-			$('#quizzy_q' + curQuestion + '_foot_chk').attr('disabled', false).fadeIn(fadeSpeed);
+-		});
+-	});
++	$.get('quizzy/serveQuestion.php', {quizFile: quizFile, quizIndex: quizIndex, questNo: (curQuestion + 1), score: score}, function() {
++});

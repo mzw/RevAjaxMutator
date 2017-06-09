@@ -1,0 +1,11 @@
+EventCallbackERFixer,0
+EventTargetTSFixer,0
+TimerEventDurationVIFixer,0
+RequestResponseBodyVIFixer,0
+RequestURLVIFixer,0
+RequestOnSuccessHandlerERFixer,0
+RequestMethodRAFixer,0
+DOMSelectionSelectNearbyFixer,0
+DOMSelectionAtrributeFixer,0
+AttributeModificationTargetVIFixer,0
+AttributeModificationValueERFixer,0

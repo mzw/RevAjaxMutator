@@ -1,6 +1,7 @@
 package jp.mzw.revajaxmutator.fixer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import jp.mzw.ajaxmutator.mutatable.TimerEventAttachment;
@@ -16,11 +17,10 @@ import org.mozilla.javascript.ast.AstNode;
  * @author Junto Nakaoka
  *
  */
-public class TimerEventDurationVIFixer extends
-		AbstractMutator<TimerEventAttachment> {
-	private List<RepairSource> repairSources;
+public class TimerEventDurationVIFixer extends AbstractMutator<TimerEventAttachment> {
+	private Collection<? extends RepairSource> repairSources;
 
-	public TimerEventDurationVIFixer(List<RepairSource> repairSources) {
+	public TimerEventDurationVIFixer(Collection<? extends RepairSource> repairSources) {
 		super(TimerEventAttachment.class);
 		this.repairSources = repairSources;
 	}
@@ -30,8 +30,7 @@ public class TimerEventDurationVIFixer extends
 		AstNode focusedNode = getFocusedNode(originalNode);
 		List<Mutation> mutationList = new ArrayList<Mutation>();
 		for (RepairSource repairSource : repairSources) {
-			mutationList.add(new Mutation(focusedNode, repairSource
-					.getValue(), new RepairValue(repairSource)));
+			mutationList.add(new Mutation(focusedNode, repairSource.getValue(), new RepairValue(repairSource)));
 		}
 		return mutationList;
 	}

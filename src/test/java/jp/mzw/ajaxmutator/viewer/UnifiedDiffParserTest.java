@@ -20,17 +20,17 @@ public class UnifiedDiffParserTest {
         assertEquals(
                 Arrays.asList(new String[] {
                         "\t\t$('.quizzy_quiz_lbl').click(function () {",
-                        "\t\t\t// ユーザがある選択肢をクリックした場合",
                         "\t\t\t//the user clicked on one of the options",
-                        "\t\t\t// IDの取得",
+                        "\t\t\t//the user clicked on one of the options",
+                        "\t\t\t//get the id",
                         "\t\t\t//get the id",
                         "\t\t\tvar thisId = $(this).attr('id');",
                         "\t\t\t",
-                        "\t\t\t// IDからそのインデックスを習得(計算)し，selOpt変数にインデックスを代入",
+                        "\t\t\t//hack out the index and set selOpt to it",
                         "\t\t\t//hack out the index and set selOpt to it",
                         "\t\t\tvar selQuiz = thisId.substring(thisId.lastIndexOf(\"lbl\") + 3) * 1;",
                         "\t\t\t",
-                        "\t\t\t// ラジオボタンが選択されている状態にする",
+                        "\t\t\t//make sure that the radio button is selected",
                         "\t\t\t//make sure that the radio button is selected",
                         "\t\t\t$('#quizzy_quiz_opt'+selQuiz).click();",
                         "\t\t});"

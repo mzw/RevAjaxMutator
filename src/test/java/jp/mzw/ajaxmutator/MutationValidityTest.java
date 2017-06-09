@@ -14,6 +14,29 @@ import jp.mzw.ajaxmutator.generator.*;
 import jp.mzw.ajaxmutator.mutatable.Mutatable;
 import jp.mzw.ajaxmutator.mutator.DOMSelectionSelectNearbyMutator;
 import jp.mzw.ajaxmutator.mutator.Mutator;
+import jp.mzw.ajaxmutator.mutator.generic.ChangeConditionSwitchStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ChangeValueVariableDecMutator;
+import jp.mzw.ajaxmutator.mutator.generic.IfStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakContinueForLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakContinueWhileLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveBreakFromSwitchStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveElseIfStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveParamsFromFuncNodeMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveReturnStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.RemoveVariableDeclarationMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceArithmeticOperatorsAssignmentMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceArithmeticOperatorsForLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceArithmeticOperatorsVariableDecMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceLogicalOperatorsForLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceLogicalOperatorsIfStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceLogicalOperatorsWhileLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceNumToStrVariableDecMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplacePlusMinusOperatorForLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceRelationalOperatorsForLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceRelationalOperatorsIfStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceRelationalOperatorsWhileLoopMutator;
+import jp.mzw.ajaxmutator.mutator.generic.ReplaceReturnStatementMutator;
+import jp.mzw.ajaxmutator.mutator.generic.SwapFuncParamsMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.*;
 import jp.mzw.ajaxmutator.util.Util;
 
@@ -74,7 +97,32 @@ public class MutationValidityTest {
 				new DOMSelectionSelectNearbyMutator(),
 				new RequestOnSuccessHandlerRAMutator(visitor.getRequests()),
 				new RequestMethodRAMutator(visitor.getRequests()),
-				new RequestUrlRAMutator(visitor.getRequests()));
+				new RequestUrlRAMutator(visitor.getRequests()),
+				new ChangeConditionSwitchStatementMutator(),
+				new ChangeValueVariableDecMutator(),
+				new IfStatementMutator(),
+				new RemoveBreakContinueForLoopMutator(),
+				new RemoveBreakContinueWhileLoopMutator(),
+				new RemoveBreakFromSwitchStatementMutator(),
+				new RemoveElseIfStatementMutator(),
+				new RemoveParamsFromFuncNodeMutator(),
+				new RemoveReturnStatementMutator(),
+				new RemoveVariableDeclarationMutator(),
+				new ReplaceArithmeticOperatorsAssignmentMutator(),
+				new ReplaceArithmeticOperatorsForLoopMutator(),
+				new ReplaceArithmeticOperatorsVariableDecMutator(),
+				new ReplaceLogicalOperatorsForLoopMutator(),
+				new ReplaceLogicalOperatorsIfStatementMutator(),
+				new ReplaceLogicalOperatorsWhileLoopMutator(),
+				new ReplaceNumToStrVariableDecMutator(),
+				new ReplacePlusMinusOperatorForLoopMutator(),
+				new ReplaceRelationalOperatorsForLoopMutator(),
+				new ReplaceRelationalOperatorsIfStatementMutator(),
+				new ReplaceRelationalOperatorsWhileLoopMutator(),
+				new ReplaceReturnStatementMutator(),
+				new SwapFuncParamsMutator()
+				);
+				
 
 		// Events
 		generateMutationAndParse(visitor.getEventAttachments(), mutators);
@@ -87,6 +135,17 @@ public class MutationValidityTest {
 		generateMutationAndParse(visitor.getDomAppendings(), mutators);
 		generateMutationAndParse(visitor.getDomSelections(), mutators);
 		generateMutationAndParse(visitor.getDomRemovals(), mutators);
+		// Generic
+		generateMutationAndParse(visitor.getAssignmentExpressions(), mutators);
+		generateMutationAndParse(visitor.getBreaks(), mutators);
+		generateMutationAndParse(visitor.getContinues(), mutators);
+		generateMutationAndParse(visitor.getFors(), mutators);
+		generateMutationAndParse(visitor.getFuncnodes(), mutators);
+		generateMutationAndParse(visitor.getIfs(), mutators);
+		generateMutationAndParse(visitor.getReturns(), mutators);
+		generateMutationAndParse(visitor.getSwitches(), mutators);
+		generateMutationAndParse(visitor.getVariableDecss(), mutators);
+		generateMutationAndParse(visitor.getWhiles(), mutators);
 	}
 
 	private String readResource(String resource) {

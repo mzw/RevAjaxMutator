@@ -1,0 +1,15 @@
+--- http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:24.000000000 
++++ http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-24 01:09:27.075100000 
+@@ -157,11 +157 @@
+-		$('.quizzy_q_opt').click(function (){
+-			//the user clicked on one of the options
+-			//get the id
+-			var thisId = $(this).attr('id');
+-			
+-			//hack out the index and set selOpt to it
+-			selOpt = thisId.substring(thisId.lastIndexOf("opt") + 3) * 1;
+-			
+-			//make sure that the radio button is selected
+-			$('#quizzy_q'+curQuestion+'_opt'+selOpt+'_b').attr("checked", "checked");
+-		});
++		$('.quizzy_q_opt').click(requestNextQuestion);

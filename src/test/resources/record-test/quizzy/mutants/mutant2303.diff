@@ -1,0 +1,5 @@
+--- http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-23 02:44:25.000000000 
++++ http%3A%2F%2Fmzw.jp%3A80%2Fyuta%2Fresearch%2Fram%2Fexample%2Fafter%2Ffaulty%2Fquizzy%2Fquizzy%2Fquizzy.js	2016-03-23 02:44:33.016800000 
+@@ -272 +272 @@
+-					$('#quizzy_q' + curQuestion + '_foot_nxt').attr('disabled', false).fadeIn(fadeSpeed);
++					$('#quizzy_q' + curQuestion + '_foot_nxt').attr('disabled', "200px").fadeIn(fadeSpeed);

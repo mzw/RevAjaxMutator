@@ -22,8 +22,7 @@ public class TestCaseParser {
 		String src = FileUtils.readFileToString(file);
 		ASTParser parser = ASTParser.newParser(AST.JLS8);
 		parser.setSource(src.toCharArray());
-		CompilationUnit cu = (CompilationUnit) parser
-				.createAST(new NullProgressMonitor());
+		CompilationUnit cu = (CompilationUnit) parser.createAST(new NullProgressMonitor());
 		AllElementsFindVisitor visitor = new AllElementsFindVisitor();
 		cu.accept(visitor);
 		nodes = visitor.getNodes();

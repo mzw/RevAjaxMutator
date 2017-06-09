@@ -15,10 +15,6 @@ public class StatementDeleteMutatorToNoOp extends ReplacingToNoOpMutator<Stateme
 	
     @Override
     public List<Mutation> generateMutationList(Statement stmt) {
-    	if(stmt.getWeight() == 0) {
-    		return null;
-    	}
-    	
     	List<Mutation> mutationList = new ArrayList<Mutation>();
     	mutationList.add(new Mutation(stmt.getAstNode(), NO_OPERATION_STR));
     	return mutationList;

@@ -23,12 +23,11 @@ public class SortKey implements Comparable<SortKey>, Comparator<SortKey> {
 	private final int simpleStatementWeight;
 	private final int simpleCandidateSourceWeight;
 
-	public SortKey(double weight, String defectClass, String fixerClass,
-			String repairSource) {
+	public SortKey(double weight, String defectClass, String fixerClass, String repairSource) {
 		this.statementWeight = weight;
 		this.ajaxFeature = AjaxFeature.fromMutatableName(defectClass);
-		this.defectClass = DefectClass.fromStringName(defectClass);
-		this.fixerClass = FixerClass.fromStringName(fixerClass);
+		this.defectClass = DefectClass.fromMutableName(defectClass);
+		this.fixerClass = FixerClass.fromFixerName(fixerClass);
 		this.repairSourceType = RepairSource.getType(repairSource);
 		this.totalWeight = calculateWeight();
 		this.candidateSourceBfsWeight = calculateCandidateSourceBFSWeight();

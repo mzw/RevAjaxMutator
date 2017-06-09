@@ -2,204 +2,384 @@ package jp.mzw.revajaxmutator.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Properties;
-
-import jp.mzw.revajaxmutator.FilterPlugin;
-import jp.mzw.revajaxmutator.RecorderPlugin;
-import jp.mzw.revajaxmutator.RewriterPlugin;
-import jp.mzw.revajaxmutator.config.AppConfigBase;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Cookie;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.LocalFileDetector;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.owasp.webscarab.model.StoreException;
-import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class WebAppTestBase {
+import jp.mzw.revajaxmutator.config.LocalEnv;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
+import jp.mzw.revajaxmutator.proxy.SeleniumGridRewriterPlugin;
 
-	protected static String URL;
-	protected static String ADMIN_URL;
-    protected static WebDriver driver;
-    protected static WebDriverWait wait;
+abstract public class WebAppTestBase {
+	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
 
-    private static String CONFIG_FILENAME = "localenv.properties";
-    
-    protected static Properties CONFIG;
-    protected static String FIREFOX_BIN;
-    protected static String PHANTOMJS_BIN;
-    protected static String PROXY;
-    protected static String PROXY_PORT;
-    protected static int TIMEOUT;
-    
-    /**
-     * Before instantiating this class,
-     * explicitly call methods in the following order:
-     * 1. readConfig
-     * 2. launchBrowser
-     * although multiple "@BeforeClass" can be allowed.
-     * @throws IOException indicates "localenv.properties" not found on the resource path
-     */
-    @BeforeClass
-    public static void beforeTestBaseClass() throws IOException {
-    	readTestBaseConfig();
-    	launchBrowser();
-    }
-	
-    /**
-     * Launch given Firefox browser with given proxy configuration
-     */
-    private static void launchBrowser() {
-        DesiredCapabilities cap = new DesiredCapabilities();
-        
-        if(FIREFOX_BIN != null) {
-            org.openqa.selenium.Proxy proxy = new org.openqa.selenium.Proxy();
-            proxy.setHttpProxy(PROXY);
-            proxy.setFtpProxy(PROXY);
-            proxy.setSslProxy(PROXY);
-            cap.setCapability(CapabilityType.PROXY, proxy);
-            
-        	FirefoxBinary binary = new FirefoxBinary(new File(FIREFOX_BIN));
-        	cap.setCapability(FirefoxDriver.BINARY, binary);
-        	driver = new FirefoxDriver(cap);
-        } else if(PHANTOMJS_BIN != null) {
-        	ArrayList<String> cliArgsCap = new ArrayList<String>();
-        	cliArgsCap.add("--proxy="+PROXY);
-        	cliArgsCap.add("--proxy-type=http");
-        	cliArgsCap.add("--local-to-remote-url-access=true");
-        	cliArgsCap.add("--web-security=false");
-        	cliArgsCap.add("--webdriver-loglevel=NONE");
-        	cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
-        	
-        	cap.setJavascriptEnabled(true);
-        	cap.setCapability("phantomjs.page.settings.XSSAuditingEnabled", true);
-        	cap.setCapability("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
-        	cap.setCapability("phantomjs.page.settings.resourceTimeout","20000");
-            cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, PHANTOMJS_BIN);
-            driver = new PhantomJSDriver(cap);
-        }
-        
-        wait = new WebDriverWait(driver, TIMEOUT);
-    }
-    
-    /**
-     * Read configuration to specify firefox and proxy
-     * @throws IOException indicates "localenv.properties" not found on the resource path
-     */
-	private static void readTestBaseConfig() throws IOException {
-		CONFIG = getConfig(CONFIG_FILENAME);
+	/** Possess configuration related to local environment */
+	protected static LocalEnv localenv;
 
-		FIREFOX_BIN = CONFIG.getProperty("firefox-bin");
-		PHANTOMJS_BIN = CONFIG.getProperty("phantomjs-bin");
-		PROXY_PORT = CONFIG.getProperty("proxy_port") != null ? CONFIG.getProperty("proxy_port") : "80";
-		PROXY = "127.0.0.1:" + PROXY_PORT;
-		TIMEOUT = CONFIG.getProperty("timeout") != null ? Integer.parseInt(CONFIG.getProperty("timeout")) : 3;
+	/** Possess configuration related to an application under test */
+	protected static AppConfig config;
+
+	/** Identifier used to indicate to the proxy which mutation file to get */
+	protected static ThreadLocal<String> mutationFileId;
+
+	/** Possess Web browser in thread-local manner */
+	protected static ThreadLocal<WebDriver> currentDriver;
+
+	/** Possess {@code WebDriverWait} instances in thread-local manner */
+	protected static ThreadLocal<WebDriverWait> waits;
+
+	/** Possess {@code Actions} instances in thread-local manner */
+	protected static ThreadLocal<Actions> actions;
+
+	/**
+	 * [Important] a test suite needs to inherit {@code WebAppTestBase} and call
+	 * this method at its {@code BeforeClass}-annotated method
+	 *
+	 * @param clazz
+	 * @throws IOException
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 */
+	public static void setUpBeforeClass(Class<? extends AppConfig> clazz)
+			throws IOException, InstantiationException, IllegalAccessException {
+		// Load configurations
+		localenv = new LocalEnv(LocalEnv.FILENAME);
+		config = clazz.newInstance();
+
+		// Thread locals
+		currentDriver = new ThreadLocal<>();
+		waits = new ThreadLocal<>();
+		actions = new ThreadLocal<>();
+		mutationFileId = new ThreadLocal<>();
+
+		// Launch
+		launchBrowser(localenv, config);
 	}
 
-    @Before
-	public void setup() throws InterruptedException {
-    	// NOP
-    }
-    
-    @After
-    public void teardown() {
-    	// NOP
-    }
-    
-    @AfterClass
-    public static void afterTestBaseClass() {
-    	quitBrowser();
-    }
-    
-    private static void quitBrowser() {
-    	driver.quit();
-    }
-    
-    public static Properties getConfig(String filename) throws IOException {
-		InputStream is = WebAppTestBase.class.getClassLoader().getResourceAsStream(filename);
-		Properties config = new Properties();
-		config.load(is);
-    	return config;
-    }
-    
-    /*--------------------------------------------------
-		For test classes
-     --------------------------------------------------*/
-    public static void beforeTestClass(String filename) throws IOException, StoreException, InterruptedException {
-    	Properties config = getConfig(filename);
-    	AppConfig appConfig = new AppConfig(filename);
-		
-		URL = config.getProperty("url") != null ? config.getProperty("url") : "";
-		ADMIN_URL = config.getProperty("admin_url") != null ? config.getProperty("admin_url") : "";
-		
-		String proxy = config.getProperty("proxy") != null ? config.getProperty("proxy") : "";
-		// JSCover
-		if("jscover".equals(proxy)) {
-			String dir = config.getProperty("jscover_report_dir") != null ? config.getProperty("jscover_report_dir") : "jscover";
-			String instr = config.getProperty("jscover_instr_regx") != null ? config.getProperty("jscover_instr_regx") : "";
-			String no_instr = config.getProperty("jscover_no_instr_regx") != null ? config.getProperty("jscover_no_instr_regx") : "";
-			
-			JSCoverBase.launchProxyServer(dir, PROXY_PORT, instr.split(","), no_instr.split(","));
+	/**
+	 * Provides Web browser in thread-local manner
+	 *
+	 * @return
+	 */
+	public static WebDriver getDriver() {
+		return currentDriver.get();
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public static WebDriverWait getWait() {
+		return waits.get();
+	}
+
+	/**
+	 *
+	 * @return
+	 */
+	public static Actions getActions() {
+		return actions.get();
+	}
+
+	public void setMutationFileId(String id) {
+		mutationFileId.set(id);
+	}
+
+	/**
+	 *
+	 * @param localenv
+	 * @param config
+	 * @throws IOException
+	 */
+	protected static void launchBrowser(LocalEnv localenv, AppConfig config) throws IOException {
+		if (localenv.useChrome()) {
+			System.setProperty("chrome.binary", localenv.getChromeBin());
+			System.setProperty("webdriver.chrome.driver", localenv.getChromedriverBin());
+			System.setProperty("webdriver.chrome.silentOutput", "true");
+
+			final ChromeOptions options = new ChromeOptions();
+			if (localenv.getChromeHeadless()) {
+				options.addArguments("--headless");
+				options.addArguments("--no-sandbox");
+				options.addArguments("--disable-gpu");
+			}
+			options.addArguments("--test-type");
+			options.setBinary(localenv.getChromeBin());
+
+			final DesiredCapabilities cap = DesiredCapabilities.chrome();
+			cap.setCapability(ChromeOptions.CAPABILITY, options);
+			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+
+			// Connect to Selenium grid if available
+			WebDriver driver = null;
+			if (localenv.useSeleniumGrid()) {
+				options.addArguments("--proxy-server=" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+
+				// Makes Selenium grid upload local files (i.e. mutant
+				// files) to the worker nodes
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
+			} else {
+				options.addArguments("--proxy-server=" + localenv.getProxyAddress());
+				driver = new ChromeDriver(cap);
+			}
+			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
+			final Actions action = new Actions(driver);
+
+			currentDriver.set(driver);
+			waits.set(wait);
+			actions.set(action);
+		} else if (localenv.useFirefox()) {
+			System.setProperty("webdriver.gecko.driver", localenv.getGeckodriverBin());
+
+			final String proxyIp = (localenv.getSeleniumHubAddress() == null) ? localenv.getProxyIp()
+					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_IP;
+			final String proxyPort = (localenv.getSeleniumHubAddress() == null)
+					? new Integer(localenv.getProxyPort()).toString() : SeleniumGridRewriterPlugin.SEL_GRID_PROXY_PORT;
+
+			final DesiredCapabilities cap = DesiredCapabilities.firefox();
+			cap.setCapability("marionette", true);
+			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+
+			final FirefoxProfile profile = new FirefoxProfile();
+			profile.setPreference("network.proxy.type", 1);
+			profile.setPreference("network.proxy.http", proxyIp);
+			profile.setPreference("network.proxy.http_port", Integer.parseInt(proxyPort));
+			profile.setPreference("network.proxy.ssl", proxyIp);
+			profile.setPreference("network.proxy.ssl_port", Integer.parseInt(proxyPort));
+			profile.setPreference("network.proxy.share_proxy_settings", Boolean.TRUE);
+			profile.setPreference("network.proxy.no_proxies_on", "");
+			profile.setAcceptUntrustedCertificates(true);
+			cap.setCapability(FirefoxDriver.PROFILE, profile);
+
+			final FirefoxOptions options = new FirefoxOptions();
+			options.setBinary(localenv.getFirefoxBin());
+			options.addCapabilities(cap);
+
+			WebDriver driver = null;
+			if (localenv.useSeleniumGrid()) {
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
+			} else {
+				driver = new FirefoxDriver(options);
+			}
+			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
+			final Actions action = new Actions(driver);
+
+			currentDriver.set(driver);
+			waits.set(wait);
+			actions.set(action);
+		} else if (localenv.usePhantomjs()) {
+			final DesiredCapabilities cap = DesiredCapabilities.phantomjs();
+
+			final ArrayList<String> cliArgsCap = new ArrayList<String>();
+			final String proxyAddr = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyAddress()
+					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS;
+			cliArgsCap.add("--proxy=" + proxyAddr);
+			cliArgsCap.add("--proxy-type=http");
+			cliArgsCap.add("--local-to-remote-url-access=true");
+			cliArgsCap.add("--web-security=false");
+			cliArgsCap.add("--webdriver-loglevel=NONE");
+			cap.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, cliArgsCap);
+
+			cap.setJavascriptEnabled(true);
+			cap.setCapability("phantomjs.page.settings.XSSAuditingEnabled", true);
+			cap.setCapability("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
+			cap.setCapability("phantomjs.page.settings.resourceTimeout", "20000");
+			cap.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, localenv.getPhantomjsBin());
+
+			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
+
+			WebDriver driver = null;
+			if (localenv.useSeleniumGrid()) {
+				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
+				((RemoteWebDriver) driver).setFileDetector(new LocalFileDetector());
+			} else {
+				driver = new PhantomJSDriver(cap);
+			}
+			final WebDriverWait wait = new WebDriverWait(driver, localenv.getTimeout(), 50);
+			final Actions action = new Actions(driver);
+
+			currentDriver.set(driver);
+			waits.set(wait);
+			actions.set(action);
 		}
-		// RevAjaxMutator
-		else if(proxy.startsWith("ram")) {
-			String dir = config.getProperty("ram_record_dir") != null ? config.getProperty("ram_record_dir") : "record";
-			
-			ArrayList<ProxyPlugin> plugins = new ArrayList<ProxyPlugin>();
-			if(proxy.contains("record")) {
-				plugins.add(new RecorderPlugin(dir));
-			}
+	}
 
-			if(proxy.contains("rewrite")) {
-				RewriterPlugin plugin = new RewriterPlugin(dir);
-				plugin.setRewriteFile(appConfig.getRecordedJsFile().getName());
-				plugins.add(plugin);
-			}
-
-			if(proxy.contains("filter")) {
-				String filter_url_prefix = config.getProperty("ram_filter_url_prefix") != null ? config.getProperty("ram_filter_url_prefix") : "http://localhost:80";
-				String filter_method = config.getProperty("ram_filter_method") != null ? config.getProperty("ram_filter_method") : "POST";
-				plugins.add(new FilterPlugin(filter_url_prefix, filter_method));
-			}
-
-			RevAjaxMutatorBase.launchProxyServer(plugins, PROXY_PORT);
-		}
-    }
-    
-    private static class AppConfig extends AppConfigBase {
-    	private AppConfig(String config) throws IOException {
-    		super(config);
-    	}
-    }
-    
-    public static void afterTestClass() {
-    	JSCoverBase.interruptProxyServer(driver, TIMEOUT);
-    	RevAjaxMutatorBase.interruptProxyServer();
-    }
-    
-
-    /*--------------------------------------------------
+	/*--------------------------------------------------
 		Utilities
-     --------------------------------------------------*/
-    public static void takeScreenshot(String filename) {
-    	try {
-    		File screenshot = ( (TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
-    		FileUtils.copyFile(screenshot, new File(filename));
-    	} catch (IOException e) {
-    		e.printStackTrace();
-    	}
-    }
+	 --------------------------------------------------*/
+
+	/**
+	 * Report coverage results if available
+	 *
+	 * Quit all drivers if instantiated
+	 *
+	 * @throws InterruptedException
+	 */
+	@AfterClass
+	public static void tearDownAfterClassBase() throws InterruptedException {
+		try  {
+			JSCoverProxyServer.reportCoverageResults(getDriver(), config.getJscoverReportDir());
+		} catch (org.openqa.selenium.WebDriverException e) {
+			throw e;
+		} finally {
+			getDriver().close();
+			getDriver().quit();
+		}
+	}
+
+	/**
+	 * Open given URL
+	 *
+	 * Wait for showing all widgets
+	 *
+	 * @throws MalformedURLException
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws UnsupportedEncodingException
+	 */
+	@Before
+	public void setUpBase()
+			throws MalformedURLException, URISyntaxException, InterruptedException, UnsupportedEncodingException {
+		// Insert a cookies with information for the proxy to run the test
+		if (!LocalEnv.shouldRunJSCoverProxy()) {
+			this.setCookies();
+
+			// If using selenium grid, upload the mutant file to the worker
+			if (localenv.useSeleniumGrid()) {
+				this.sendMutantFileToSeleniumWorker();
+			}
+		}
+
+		getDriver().get(config.getUrl().toString());
+		this.waitUntilShowWidgets();
+	}
+
+	private void sendMutantFileToSeleniumWorker() throws MalformedURLException, UnsupportedEncodingException {
+		final WebElement upload = this.until(By.xpath("/html/body"));
+		final String absolutePath = config.getRecordedJsFile().getAbsolutePath();
+		final String mutantFilepath = (mutationFileId.get() == null || mutationFileId.get() == "") ? absolutePath
+				: absolutePath + "." + mutationFileId.get();
+		System.out.println("sending file: " + mutantFilepath);
+		upload.sendKeys(mutantFilepath);
+	}
+
+	/**
+	 * Adds cookies with enough information for the proxy to fetch the correct
+	 * mutant .js file. To add a cookie to the session, we first need to
+	 * navigate to the domain. Selenium does not allow setting cookies before
+	 * going to any page.
+	 *
+	 * @throws UnsupportedEncodingException
+	 *
+	 * @see <a href=
+	 *      "http://docs.seleniumhq.org/docs/03_webdriver.jsp#cookies">Selenium
+	 *      docs</a>
+	 *
+	 */
+	private void setCookies() throws MalformedURLException, UnsupportedEncodingException {
+		if (mutationFileId.get() != null) {
+			// When running in a multi-threaded environment, send the mutation
+			// id so the proxy knows which file to replace
+			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
+			getDriver().get(dummyURL);
+			getDriver().manage().addCookie(
+					new Cookie("jsMutantId", mutationFileId.get(), config.getUrl().getAuthority(), "/", null));
+
+			// If using selenium grid, we also need to send the file name, since
+			// the testrunner and proxy are not in the same JVM
+			if (localenv.useSeleniumGrid()) {
+				final String jsMutantFilename = config.getRecordedJsFile().getName();
+				getDriver().manage().addCookie(
+						new Cookie("jsMutantFilename", jsMutantFilename, config.getUrl().getAuthority(), "/", null));
+			}
+		}
+	}
+
+	/**
+	 * Wait for showing all widgets
+	 */
+	protected void waitUntilShowWidgets() {
+		getWait().until(
+				driver -> ((JavascriptExecutor) driver).executeScript("return document.readyState").equals("complete"));
+	}
+
+	/*--------------------------------------------------
+		Utilities
+	 --------------------------------------------------*/
+	public WebElement until(final By locator) {
+		getWait().until(driver -> driver.findElement(locator) != null);
+		return getDriver().findElement(locator);
+	}
+
+	public WebElement until(final By locator, final String text) {
+		getWait().until(driver -> driver.findElement(locator) != null);
+		getWait().until(driver -> driver.findElement(locator).getText().equals(text));
+		return getDriver().findElement(locator);
+	}
+
+	public WebElement clickable(final By locator) {
+		getWait().until(driver -> {
+			final WebElement element = driver.findElement(locator);
+			return element != null && element.isDisplayed() && element.isEnabled();
+		});
+		return getDriver().findElement(locator);
+	}
+
+	// public static WebElement until(final By locator, final String text) {
+	// getWait().until(driver -> driver.findElement(locator) != null);
+	// getWait().until(driver ->
+	// driver.findElement(locator).getText().equals(text));
+	// return getDriver().findElement(locator);
+	// }
+
+	public void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (final InterruptedException e) {
+			// NOP
+		}
+	}
+
+	/*--------------------------------------------------
+		Utilities
+	 --------------------------------------------------*/
+	public void takeScreenshot(String filename) {
+		try {
+			final File screenshot = ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
+			FileUtils.copyFile(screenshot, new File(filename));
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
+	}
 }
