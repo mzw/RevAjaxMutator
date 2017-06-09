@@ -313,7 +313,6 @@ abstract public class WebAppTestBase {
 			// id so the proxy knows which file to replace
 			final String dummyURL = "http://" + config.getUrl().getAuthority() + "/some404page";
 			getDriver().get(dummyURL);
-			waitUntilShowWidgets(); // for stable running
 			getDriver().manage().addCookie(
 					new Cookie("jsMutantId", mutationFileId.get(), config.getUrl().getAuthority(), "/", null));
 
