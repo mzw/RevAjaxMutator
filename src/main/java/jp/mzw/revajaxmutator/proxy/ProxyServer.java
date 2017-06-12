@@ -53,6 +53,14 @@ public class ProxyServer {
 		}
 	}
 
+	public static void restart() throws InterruptedException {
+		if (mProxy != null) {
+			if (mProxy.stop()) {
+				mProxy.run();
+			}
+		}
+	}
+
 	public static void removeConversationDir() throws IOException {
 		if (conversationDir.exists()) {
 			FileUtils.deleteDirectory(conversationDir);
