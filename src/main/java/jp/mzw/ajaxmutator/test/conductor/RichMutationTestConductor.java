@@ -310,6 +310,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				// Unkilled mutant
 				RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
 				LOGGER.info("mutant {} is not killed", this.description);
+				this.mutant.setState(MutationFileInformation.State.SURVIVE);
 				success = false;
 			} else {
 				// Killed mutant
