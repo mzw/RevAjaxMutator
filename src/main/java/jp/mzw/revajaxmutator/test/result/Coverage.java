@@ -193,6 +193,9 @@ public class Coverage {
 		for (Map.Entry<File, boolean[]> entry : results.entrySet()) {
 			boolean[] testsCoverage = entry.getValue();
 			for (int line = startLineNum; line <= endLineNum; line++) {
+				if (testsCoverage.length <= line) {
+					continue;
+				}
 				if (testsCoverage[line] == true) {
 					return true;
 				}
