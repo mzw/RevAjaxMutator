@@ -38,7 +38,7 @@ public class JQueryEventAttachmentDetector extends EventAttacherDetector {
                 return new EventAttachment(functionCall,
                         propertyGet.getTarget(), propertyGet.getProperty(),
                         arguments.get(0));
-            } else if (jQueryEventAttachers.contains(methodName)) {
+            } else if (jQueryEventAttachers.contains(methodName) && arguments.size() > 0) {
                 // e.g., target.on('click', callback);
                 return new EventAttachment(functionCall,
                         propertyGet.getTarget(), arguments.get(0),
