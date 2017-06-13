@@ -30,7 +30,7 @@ public class JQueryDOMSelectionDetector extends AbstractDetector<DOMSelection> {
     protected DOMSelection detectFromFunctionCall(FunctionCall functionCall,
             AstNode target, List<AstNode> arguments) {
         if (target instanceof Name
-                && "$".equals(((Name) target).getIdentifier())) {
+                && "$".equals(((Name) target).getIdentifier()) && arguments.size() > 0) {
             return new DOMSelection(functionCall, null,
                     DOMSelection.SelectionMethod.JQUERY, arguments.get(0));
         }
