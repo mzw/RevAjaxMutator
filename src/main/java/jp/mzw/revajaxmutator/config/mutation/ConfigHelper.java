@@ -148,6 +148,9 @@ public class ConfigHelper {
 		for (final String eventTarget : this.eventSet.getTargetSet()) {
 			repairSources.add(new RepairSource(eventTarget, RepairSource.Type.HTML));
 		}
+		for (final String identifier : this.htmlParser.getAllElementIdentifier()) {
+			repairSources.add(new RepairSource("$(" + identifier + ")", RepairSource.Type.HTML));
+		}
 		return repairSources;
 	}
 

@@ -78,7 +78,7 @@ public class ConfigHelperTest {
 	@Test
 	public void testGetRepairSourcesForEventTarget() {
 		final Collection<? extends RepairSource> parameters = helper.getRepairSourcesForEventTarget();
-		assertRepairSourceNums(parameters, DefaultParameters.TARGET_ELEMENTS_HANDLING_EVENT.size(), 0, 0, 6, 0);
+		assertRepairSourceNums(parameters, DefaultParameters.TARGET_ELEMENTS_HANDLING_EVENT.size(), 0, 8, 6, 0);
 	}
 
 	@Test
