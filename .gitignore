@@ -127,3 +127,5 @@ local.properties
 
 # Code Recommenders
 .recommenders/
+/.idea/
+/jscover/
