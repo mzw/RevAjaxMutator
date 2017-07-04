@@ -41,7 +41,6 @@ import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventCallbackRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventDurationRAMutator;
 import jp.mzw.revajaxmutator.MutateConfigurationBase;
 import jp.mzw.revajaxmutator.config.AppConfigBase;
-import jp.mzw.revajaxmutator.config.ConfigHelper;
 import jp.mzw.revajaxmutator.fixer.AppendedDOMRAFixer;
 import jp.mzw.revajaxmutator.fixer.AttributeModificationTargetVIFixer;
 import jp.mzw.revajaxmutator.fixer.AttributeModificationValueERFixer;

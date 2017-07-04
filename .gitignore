@@ -3,7 +3,6 @@
 *localenv.properties
 record/
 */workaround/
-ram.log
 logs/
 proxy_debug.txt
 
@@ -49,7 +48,6 @@ Temporary Items
 # Created by https://www.gitignore.io/api/java,maven,eclipse
 
 ### Java ###
-*.class
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
@@ -129,3 +127,4 @@ local.properties
 .recommenders/
 /.idea/
 /jscover/
+/RevAjaxMutator.iml
