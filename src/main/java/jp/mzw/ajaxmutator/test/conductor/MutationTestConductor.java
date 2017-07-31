@@ -1,5 +1,14 @@
 package jp.mzw.ajaxmutator.test.conductor;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import difflib.DiffUtils;
+import difflib.Patch;
+import difflib.PatchFailedException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -14,22 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import org.junit.runner.Result;
-import org.mozilla.javascript.ast.AstRoot;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
-
-import difflib.DiffUtils;
-import difflib.Patch;
-import difflib.PatchFailedException;
 import jp.mzw.ajaxmutator.Context;
 import jp.mzw.ajaxmutator.MutateVisitor;
 import jp.mzw.ajaxmutator.ParserWithBrowser;
@@ -54,6 +47,10 @@ import jp.mzw.ajaxmutator.test.executor.JUnitExecutor;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Randomizer;
 import jp.mzw.ajaxmutator.util.Util;
+import org.junit.runner.Result;
+import org.mozilla.javascript.ast.AstRoot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Executor to apply mutation testing to target applications. <br>
@@ -69,21 +66,21 @@ public class MutationTestConductor {
 	 * --------------------------------------------------
 	 */
 
-	protected MutationFileWriter mutationFileWriter;
-	protected MutationListManager mutationListManager;
-	protected Multimap<String, String> unkilledMutantsInfo;
+	MutationFileWriter mutationFileWriter;
+	MutationListManager mutationListManager;
+	Multimap<String, String> unkilledMutantsInfo;
 	protected Context context = Context.INSTANCE;
 	protected boolean setup = false;
-	protected int saveInformationInterval = Integer.MAX_VALUE;
+	int saveInformationInterval = Integer.MAX_VALUE;
 	protected ParserWithBrowser parser;
-	protected AstRoot astRoot;
-	protected boolean conducting;
-	protected boolean dryRun;
+	private AstRoot astRoot;
+	boolean conducting;
+	private boolean dryRun;
 	protected MutateVisitor visitor;
-	protected String pathToJsFile;
-	protected String targetURL;
-	protected Map<Mutator<?>, Integer> numOfMutation;
-	protected long timeoutMin;
+	String pathToJsFile;
+	String targetURL;
+	private Map<Mutator<?>, Integer> numOfMutation;
+	long timeoutMin;
 
 	/**
 	 * Setting information required for mutation testing. This method MUST be
@@ -126,7 +123,7 @@ public class MutationTestConductor {
 	 * Need to set up before mutation analysis. If not, throw
 	 * {@code IllegalStateException}.
 	 */
-	protected void checkIfSetuped() {
+	void checkIfSetuped() {
 		if (!this.setup) {
 			throw new IllegalStateException("You 'must' call setup method before you use.");
 		}
@@ -151,7 +148,7 @@ public class MutationTestConductor {
 	 *
 	 * @return
 	 */
-	protected String pathToBackupFile() {
+	String pathToBackupFile() {
 		return this.context.getJsPath() + ".backup";
 	}
 
@@ -242,7 +239,8 @@ public class MutationTestConductor {
 	 * @return map containing mutator as key and the number of its mutations as
 	 *         value
 	 */
-	protected Map<Mutator<?>, Integer> generateMutationFiles(MutateVisitor visitor, Set<Mutator<?>> mutators) {
+	private Map<Mutator<?>, Integer> generateMutationFiles(MutateVisitor visitor,
+		Set<Mutator<?>> mutators) {
 		this.numOfMutation = new HashMap<Mutator<?>, Integer>();
 
 		// Events
@@ -353,7 +351,7 @@ public class MutationTestConductor {
 	 * @param testExecutor
 	 * @param runningStopwatch
 	 */
-	protected void applyMutationAnalysis(TestExecutor testExecutor, Stopwatch runningStopwatch) {
+	private void applyMutationAnalysis(TestExecutor testExecutor, Stopwatch runningStopwatch) {
 		this.conducting = true;
 		this.addShutdownHookToRestoreBackup();
 
@@ -372,7 +370,7 @@ public class MutationTestConductor {
 	/**
 	 * Run test cases on each mutant
 	 */
-	protected int applyMutationAnalysis(TestExecutor testExecutor) {
+	private int applyMutationAnalysis(TestExecutor testExecutor) {
 		int numberOfAppliedMutation = 0;
 		final int numberOfMaxMutants = this.mutationListManager.getNumberOfUnkilledMutants();
 
@@ -447,7 +445,7 @@ public class MutationTestConductor {
 	 * @param fileInfo
 	 * @return if successfully file is wrote.
 	 */
-	protected boolean applyMutationFile(List<String> original, MutationFileInformation fileInfo) {
+	private boolean applyMutationFile(List<String> original, MutationFileInformation fileInfo) {
 		final Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
 		try {
 			@SuppressWarnings("unused")
@@ -468,7 +466,7 @@ public class MutationTestConductor {
 	 * @param total
 	 *            represents the total number of generated mutants
 	 */
-	protected synchronized void logProgress(int finished, int total) {
+	synchronized void logProgress(int finished, int total) {
 		LOGGER.info("{} in {} finished: {} %", finished, total, Math.floor(finished * 1000.0 / total) / 10);
 	}
 
@@ -477,7 +475,7 @@ public class MutationTestConductor {
 	 *
 	 * @param numberOfAppliedMutation
 	 */
-	protected void logExecutionDetail(int numberOfAppliedMutation) {
+	void logExecutionDetail(int numberOfAppliedMutation) {
 		LOGGER.info("---------------------------------------------");
 		final StringBuilder detailedInfo = new StringBuilder();
 		int numberOfUnkilledMutants = 0;
@@ -508,7 +506,7 @@ public class MutationTestConductor {
 	/**
 	 * Restore original JavaScript file after completing mutation analysis
 	 */
-	protected void addShutdownHookToRestoreBackup() {
+	void addShutdownHookToRestoreBackup() {
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
 			public void run() {
@@ -565,7 +563,7 @@ public class MutationTestConductor {
 	protected class Timeout implements Runnable {
 		private long min = Long.MAX_VALUE;
 		private boolean limited = false;
-		public Timeout(long min) {
+		Timeout(long min) {
 			this.min = min;
 			this.limited = (min == Long.MAX_VALUE ? false : true);
 		}
@@ -614,7 +612,7 @@ public class MutationTestConductor {
 	 *            contains mutable elements
 	 * @return default set of mutators
 	 */
-	public static ImmutableSet<Mutator<?>> defaultMutators(MutateVisitor visitor) {
+	static ImmutableSet<Mutator<?>> defaultMutators(MutateVisitor visitor) {
 		final ImmutableSet<Mutator<?>> mutators = ImmutableSet.<Mutator<?>>of(
 				new EventTargetRAMutator(visitor.getEventAttachments()),
 				new EventTypeRAMutator(visitor.getEventAttachments()),

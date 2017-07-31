@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import jp.mzw.revajaxmutator.config.app.AppConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.owasp.webscarab.httpclient.HTTPClient;
@@ -22,17 +22,15 @@ import org.owasp.webscarab.plugin.proxy.ProxyPlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jp.mzw.revajaxmutator.config.app.AppConfig;
-
 public class RewriterPlugin extends ProxyPlugin {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(RewriterPlugin.class);
 	
-	protected final String mDirname;
-	protected final List<String> mRewriteFiles;
+	final String mDirname;
+	private final List<String> mRewriteFiles;
 
 	public RewriterPlugin(String dirname) {
 		this.mDirname = dirname;
-		this.mRewriteFiles = new ArrayList<String>();
+		this.mRewriteFiles = new ArrayList<>();
 	}
 
 	@Override
@@ -52,7 +50,7 @@ public class RewriterPlugin extends ProxyPlugin {
 	}
 
 	/** */
-	public static final String MUTANT_HEADER_NAME = "mutant";
+	private static final String MUTANT_HEADER_NAME = "mutant";
 
 	/**
 	 *
@@ -60,7 +58,7 @@ public class RewriterPlugin extends ProxyPlugin {
 	 * @param response
 	 * @throws Exception
 	 */
-	protected synchronized void rewriteResponseContent(Request request, Response response) {
+	synchronized void rewriteResponseContent(Request request, Response response) {
 		try {
 			final String filename = this.checkIfRequestIsForTargetJsFile(request);
 			if (filename == null || filename == "") {
@@ -157,10 +155,18 @@ public class RewriterPlugin extends ProxyPlugin {
 		throw new FileNotFoundException();
 	}
 
-	private class Plugin implements HTTPClient {
+    String getDirectoryName() {
+        return mDirname;
+    }
+
+    List<String> getRewriteFiles() {
+        return mRewriteFiles;
+    }
+
+    private class Plugin implements HTTPClient {
 		private final HTTPClient mClient;
 
-		public Plugin(HTTPClient client) {
+		Plugin(HTTPClient client) {
 			this.mClient = client;
 		}
 

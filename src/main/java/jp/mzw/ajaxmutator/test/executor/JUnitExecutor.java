@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
+import jp.mzw.ajaxmutator.test.runner.JUnitTestRunner;
+import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
+import jp.mzw.ajaxmutator.test.runner.OrderedJUnitTestRunner;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.runner.JUnitCore;
@@ -16,10 +18,6 @@ import org.junit.runner.notification.Failure;
 import org.junit.runners.model.InitializationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jp.mzw.ajaxmutator.test.runner.JUnitTestRunner;
-import jp.mzw.ajaxmutator.test.runner.JUnitTheoryRunner;
-import jp.mzw.ajaxmutator.test.runner.OrderedJUnitTestRunner;
 
 /**
  * TestExecutor for testclasses written in Junit4.
@@ -48,7 +46,7 @@ public class JUnitExecutor implements TestExecutor {
 	}
 
 	public List<Result> run() {
-		final ArrayList<Result> results = new ArrayList<Result>();
+		final ArrayList<Result> results = new ArrayList<>();
 		for (final Class<?> testClass : this.targetClasses) {
 			final Result result = this.runSingleTest(testClass);
 			results.add(result);
@@ -97,7 +95,7 @@ public class JUnitExecutor implements TestExecutor {
 
 	@Override
 	public boolean execute(String mutationId) {
-		this.testResults = new TreeMap<String, Boolean>();
+		this.testResults = new TreeMap<>();
 		for (final Class<?> testClass : this.targetClasses) {
 			if (!this.executeSingleTest(testClass, mutationId)) {
 				this.updateMessage(false);
@@ -131,7 +129,7 @@ public class JUnitExecutor implements TestExecutor {
 	}
 
 	private void storeResult(Result result) {
-		final List<String> testMethods = new ArrayList<String>();
+		final List<String> testMethods = new ArrayList<>();
 		for (final Class<?> clazz : this.targetClasses) {
 			for (final Method method : clazz.getMethods()) {
 				if (method.isAnnotationPresent(Test.class)) {

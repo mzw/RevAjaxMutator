@@ -1,20 +1,17 @@
 package jp.mzw.ajaxmutator.prioritizer;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.revajaxmutator.test.result.Coverage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * TODO
@@ -25,11 +22,11 @@ import jp.mzw.revajaxmutator.test.result.Coverage;
 public class CoverageBasedPrioritizer extends Prioritizer {
 	protected static Logger LOGGER = LoggerFactory.getLogger(CoverageBasedPrioritizer.class);
 
-	protected Map<File, boolean[]> coverages;
+	private Map<File, boolean[]> coverages;
 
-	protected int pointer;
+	private int pointer;
 
-	public CoverageBasedPrioritizer() {
+	CoverageBasedPrioritizer() {
 	}
 
 	@Override
@@ -43,7 +40,7 @@ public class CoverageBasedPrioritizer extends Prioritizer {
 	 * @param mutant
 	 * @return
 	 */
-	public List<String> getOrderedMethodNames(MutationFileInformation mutant) {
+	private List<String> getOrderedMethodNames(MutationFileInformation mutant) {
 		// Create
 		final Map<String, Integer> map = Maps.newHashMap();
 		for (final Map.Entry<File, boolean[]> entry : this.coverages.entrySet()) {
