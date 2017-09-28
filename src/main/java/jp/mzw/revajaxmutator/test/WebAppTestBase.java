@@ -7,7 +7,12 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.Map;
+import jp.mzw.revajaxmutator.config.LocalEnv;
+import jp.mzw.revajaxmutator.config.app.AppConfig;
+import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
+import jp.mzw.revajaxmutator.proxy.SeleniumGridRewriterPlugin;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -33,11 +38,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import jp.mzw.revajaxmutator.config.LocalEnv;
-import jp.mzw.revajaxmutator.config.app.AppConfig;
-import jp.mzw.revajaxmutator.proxy.JSCoverProxyServer;
-import jp.mzw.revajaxmutator.proxy.SeleniumGridRewriterPlugin;
 
 abstract public class WebAppTestBase {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(WebAppTestBase.class);
@@ -133,6 +133,7 @@ abstract public class WebAppTestBase {
 				options.addArguments("--disable-gpu");
 			}
 			options.addArguments("--test-type");
+            setIgnoreChromeDialogOption(options);
 			options.setBinary(localenv.getChromeBin());
 
 			final DesiredCapabilities cap = DesiredCapabilities.chrome();
@@ -140,7 +141,7 @@ abstract public class WebAppTestBase {
 			cap.setCapability(CapabilityType.ACCEPT_SSL_CERTS, true);
 
 			// Connect to Selenium grid if available
-			WebDriver driver = null;
+			WebDriver driver;
 			if (localenv.useSeleniumGrid()) {
 				options.addArguments("--proxy-server=" + SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS);
 				driver = new RemoteWebDriver(new URL(localenv.getSeleniumHubAddress() + "/wd/hub"), cap);
@@ -201,7 +202,7 @@ abstract public class WebAppTestBase {
 		} else if (localenv.usePhantomjs()) {
 			final DesiredCapabilities cap = DesiredCapabilities.phantomjs();
 
-			final ArrayList<String> cliArgsCap = new ArrayList<String>();
+			final ArrayList<String> cliArgsCap = new ArrayList<>();
 			final String proxyAddr = (localenv.getSeleniumHubAddress() != null) ? localenv.getProxyAddress()
 					: SeleniumGridRewriterPlugin.SEL_GRID_PROXY_ADDRESS;
 			cliArgsCap.add("--proxy=" + proxyAddr);
@@ -234,6 +235,21 @@ abstract public class WebAppTestBase {
 			actions.set(action);
 		}
 	}
+
+    /**
+     * Ignore "Changes you made may not be saved" dialog message from chrome
+     *
+     * @param options
+     */
+    private static void setIgnoreChromeDialogOption(ChromeOptions options) {
+        Map<String, Object> prefs = new HashMap<>();
+        Map<String, Object> profile = new HashMap<>();
+        Map<String, Object> contentSettings = new HashMap<>();
+        contentSettings.put("notifications", 2);
+        profile.put("managed_default_content_settings", contentSettings);
+        prefs.put("profile", profile);
+        options.setExperimentalOption("prefs", prefs);
+    }
 
 	/*--------------------------------------------------
 		Utilities

@@ -1,5 +1,10 @@
 package jp.mzw.ajaxmutator.test.conductor;
 
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ArrayListMultimap;
+import difflib.DiffUtils;
+import difflib.Patch;
+import difflib.PatchFailedException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -14,16 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ArrayListMultimap;
-
-import difflib.DiffUtils;
-import difflib.Patch;
-import difflib.PatchFailedException;
 import jp.mzw.ajaxmutator.MutateVisitor;
 import jp.mzw.ajaxmutator.generator.MutationFileInformation;
 import jp.mzw.ajaxmutator.generator.MutationListManager;
@@ -33,6 +28,8 @@ import jp.mzw.ajaxmutator.test.executor.TestExecutor;
 import jp.mzw.ajaxmutator.util.Util;
 import jp.mzw.revajaxmutator.proxy.ProxyServer;
 import jp.mzw.revajaxmutator.test.result.Coverage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * RichMutationTestConductor extends {@link MutationTestConductor} at the
@@ -62,16 +59,16 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	private Semaphore newTaskSemaphore;
 
 	/** Contains coverage results of target JavaScript code */
-	protected Map<File, boolean[]> coverages;
+    private Map<File, boolean[]> coverages;
 
 	/**
 	 * The number of threads to concurrently run test cases on each mutant
 	 * (default: the number of available processors).
 	 */
-	protected int numOfThreads = Runtime.getRuntime().availableProcessors();
+    private int numOfThreads = Runtime.getRuntime().availableProcessors();
 
-	protected Sampling sampling;
-	protected Prioritizer prioritizer;
+	private Sampling sampling;
+	private Prioritizer prioritizer;
 
 	/**
 	 * Set up RichMutationTestConductor directly
@@ -125,7 +122,6 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 * Run test case on each mutant in a multiple-threads manner
 	 *
 	 * @param testExecutors
-	 * @param coverages
 	 */
 	public void mutationAnalysisUsingExistingMutations(List<TestExecutor> testExecutors) {
 		this.mutationListManager = new MutationListManager(this.mutationFileWriter.getDestinationDirectory());
@@ -141,7 +137,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 * @param testExecutors
 	 * @param runningStopwatch
 	 */
-	protected void applyMutationAnalysis(List<TestExecutor> testExecutors, Stopwatch runningStopwatch) {
+    private void applyMutationAnalysis(List<TestExecutor> testExecutors, Stopwatch runningStopwatch) {
 		this.conducting = true;
 		this.addShutdownHookToRestoreBackup();
 		final int numberOfAppliedMutation = this.applyMutationAnalysis(testExecutors);
@@ -163,7 +159,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 *            Executors of test cases
 	 * @return The number of applied mutants
 	 */
-	protected int applyMutationAnalysis(final List<TestExecutor> testExecutors) {
+    private int applyMutationAnalysis(final List<TestExecutor> testExecutors) {
 		// Set up
 		int numberOfAppliedMutation = 0;
 		final int numberOfMaxMutants = this.mutationListManager.getNumberOfUnkilledMutants();
@@ -181,7 +177,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		final ExecutorService executor = Executors.newFixedThreadPool(this.numOfThreads);
 		this.batchTestBarrier = new CyclicBarrier(this.numOfThreads);
 		this.newTaskSemaphore = new Semaphore(this.numOfThreads);
-		final List<Future<Boolean>> futures = new ArrayList<Future<Boolean>>();
+		final List<Future<Boolean>> futures = new ArrayList<>();
 		for (final String description : nameOfMutations) {
 			LOGGER.info("Start applying {}", description);
 			for (final MutationFileInformation mutant : this.mutationListManager.getMutationFileInformationList(description)) {
@@ -254,6 +250,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 				break;
 			}
 		}
+
 		// Wait for the current tests to finish
 		for (final Future<Boolean> future : futures) {
 			try {
@@ -292,7 +289,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		private final int numberOfAppliedMutation;
 		private final int numberOfMaxMutants;
 
-		public TestCallable(TestExecutor executor, MutationFileInformation mutant, String description, int numberOfAppliedMutation, int numberOfMaxMutants) {
+		TestCallable(TestExecutor executor, MutationFileInformation mutant, String description,
+            int numberOfAppliedMutation, int numberOfMaxMutants) {
 			this.executor = executor;
 			this.mutant = mutant;
 			this.description = description;
@@ -306,7 +304,9 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			// Execute the call with an identifier to let the proxy know which
 			// mutated file to replace
 			final String mutationId = Integer.toString(this.numberOfAppliedMutation);
-			if (this.executor.execute(mutationId)) {
+
+            boolean testSuccess = this.executor.execute(mutationId);
+            if (testSuccess) {
 				// Unkilled mutant
 				RichMutationTestConductor.this.unkilledMutantsInfo.put(this.description, this.mutant.toString());
 				LOGGER.info("mutant {} is not killed", this.description);
@@ -325,12 +325,10 @@ public class RichMutationTestConductor extends MutationTestConductor {
 			RichMutationTestConductor.this.removeMutantFile(this.numberOfAppliedMutation);
 			RichMutationTestConductor.this.logProgress(this.numberOfAppliedMutation, this.numberOfMaxMutants);
 
-			// TODO workaround for issue where a new test would make all current
-			// running tests fail.
-			// Block until all threads finish before continuing to run a new
-			// test.
-			RichMutationTestConductor.this.batchTestBarrier.await();
-			RichMutationTestConductor.this.batchTestBarrier.reset();
+			// TODO workaround for issue where a new test would make all current running tests fail.
+			// Block until all threads finish before continuing to run a new test.
+            RichMutationTestConductor.this.batchTestBarrier.await();
+            RichMutationTestConductor.this.batchTestBarrier.reset();
 
 			RichMutationTestConductor.this.newTaskSemaphore.release();
 
@@ -350,7 +348,8 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	 *            the information needed to mutate the file
 	 * @return true if the file was successfully created
 	 */
-	protected boolean createMutantFile(long id, List<String> original, MutationFileInformation fileInfo) {
+    private boolean createMutantFile(long id, List<String> original,
+        MutationFileInformation fileInfo) {
 		final Patch patch = DiffUtils.parseUnifiedDiff(Util.readFromFile(fileInfo.getAbsolutePath()));
 		try {
 			@SuppressWarnings("unused")
@@ -363,7 +362,7 @@ public class RichMutationTestConductor extends MutationTestConductor {
 		return true;
 	}
 
-	public boolean removeMutantFile(long id) {
+	private boolean removeMutantFile(long id) {
 		final String mutantPath = this.pathToJsFile + "." + id;
 		final File mutantFile = new File(mutantPath);
 		return mutantFile.delete();
@@ -402,29 +401,29 @@ public class RichMutationTestConductor extends MutationTestConductor {
 	}
 
 	protected static final OperatingSystemMXBean OS = ManagementFactory.getOperatingSystemMXBean();
-	protected static boolean waitForHealthyLoadAverage() throws IOException, InterruptedException {
-		final int cpu = OS.getAvailableProcessors();
-		double load = OS.getSystemLoadAverage();
-
-		Thread lock = Thread.currentThread();
-		synchronized (lock) {
-			boolean restarted = false;
-			while (cpu < load) {
-				LOGGER.warn("Waiting for healthy load average: {} for #CPU={}", String.format("%.2f", load), cpu);
-				if (!restarted) {
-					LOGGER.warn("Restart proxy server");
-					ProxyServer.restart();
-					restarted = true;
-				}
-				lock.wait(1000);
-				load = OS.getSystemLoadAverage(); // update load average
-			}
-		}
+	private static boolean waitForHealthyLoadAverage() throws IOException, InterruptedException {
+//		final int cpu = OS.getAvailableProcessors();
+//		double load = OS.getSystemLoadAverage();
+//
+//		Thread lock = Thread.currentThread();
+//		synchronized (lock) {
+//			boolean restarted = false;
+//			while (cpu < load) {
+//				LOGGER.warn("Waiting for healthy load average: {} for #CPU={}", String.format("%.2f", load), cpu);
+//				if (!restarted) {
+//					LOGGER.warn("Restart proxy server");
+//					ProxyServer.restart();
+//					restarted = true;
+//				}
+//				lock.wait(1000);
+//				load = OS.getSystemLoadAverage(); // update load average
+//			}
+//		}
 
 		return true;
 	}
 
-	protected static boolean waitForHealthyDiskSpace() throws IOException, InterruptedException {
+	private static boolean waitForHealthyDiskSpace() throws IOException, InterruptedException {
 		Thread lock = Thread.currentThread();
 		synchronized (lock) {
 			File file = new File("/");

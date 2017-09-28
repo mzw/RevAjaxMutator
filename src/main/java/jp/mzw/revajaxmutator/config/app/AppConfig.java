@@ -1,5 +1,6 @@
 package jp.mzw.revajaxmutator.config.app;
 
+import flex.messaging.util.URLDecoder;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -9,15 +10,12 @@ import java.net.URLEncoder;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
+import jp.mzw.revajaxmutator.search.Sorter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import flex.messaging.util.URLDecoder;
-import jp.mzw.revajaxmutator.config.mutation.MutateConfiguration;
-import jp.mzw.revajaxmutator.search.Sorter;
 
 public abstract class AppConfig implements IAppConfig {
 	protected static Logger LOGGER = LoggerFactory.getLogger(AppConfig.class);
@@ -167,7 +165,8 @@ public abstract class AppConfig implements IAppConfig {
 		}
 
 		final Pattern pattern = Pattern.compile(regex.toString());
-		for (File file : this.getRecordDir().listFiles()) {
+		final File[] files = this.getRecordDir().listFiles();
+		for (File file : files) {
 			if (file.isFile() && !this.isMutantFile(file.getName())) {
 				final Matcher matcher = pattern.matcher(file.getName());
 				if (matcher.find() && !file.getName().endsWith(".backup")) {
@@ -185,7 +184,7 @@ public abstract class AppConfig implements IAppConfig {
 			}
 		}
 
-		LOGGER.warn("Not found target JavaScript file: {}", url.toString());
+		LOGGER.warn("Could not find target JavaScript file: {}", url.toString());
 		return null;
 	}
 
@@ -319,7 +318,9 @@ public abstract class AppConfig implements IAppConfig {
 	 * @return
 	 */
 	public File getTestcaseFile() {
-		return new File(this.pathToTestcaseFile());
+		final String pathname = this.pathToTestcaseFile();
+		final File file = new File(pathname);
+		return file;
 	}
 
 	private boolean isMutantFile(final String filename) {

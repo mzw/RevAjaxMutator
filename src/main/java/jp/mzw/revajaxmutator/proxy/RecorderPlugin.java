@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
-
 import org.owasp.webscarab.httpclient.HTTPClient;
 import org.owasp.webscarab.model.Request;
 import org.owasp.webscarab.model.Response;
@@ -52,10 +51,14 @@ public class RecorderPlugin extends ProxyPlugin {
 		}
 	}
 
-	private class Plugin implements HTTPClient {
+    String getDirectoryName() {
+        return mDirname;
+    }
+
+    private class Plugin implements HTTPClient {
 		private HTTPClient mClient;
 
-		public Plugin(HTTPClient client) {
+		Plugin(HTTPClient client) {
 			mClient = client;
 		}
 

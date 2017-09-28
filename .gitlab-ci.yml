@@ -1,0 +1,13 @@
+cache:
+  paths:
+    - /root/.m2/repository/
+before_script:
+  - apt-get update -y && apt-get upgrade -y
+
+build:
+  script:
+    - mvn install -B
+  artifacts:
+    name: "RAM"
+    paths:
+      - ./target/RAM*.jar
