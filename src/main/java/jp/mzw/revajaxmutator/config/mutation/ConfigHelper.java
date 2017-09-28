@@ -175,7 +175,7 @@ public class ConfigHelper {
 			htmlSet.add(eventType);
 		}
 		for (final String eventType : htmlSet) {
-			repairSources.add(new RepairSource(eventType, RepairSource.Type.HTML));
+			repairSources.add(new RepairSource("\'" + eventType + "\'", RepairSource.Type.HTML));
 		}
 
 		// From JavaScript

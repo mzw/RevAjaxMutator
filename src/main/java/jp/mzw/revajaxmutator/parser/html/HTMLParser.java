@@ -48,7 +48,8 @@ public class HTMLParser {
 		for (Element element : document.getAllElements()) {
 			for (Attribute attribute : element.attributes()) {
 				if (EVENT_HTML_DOMLEVEL2_ATTRIBUTES.contains(attribute.getKey())) {
-					eventTypeSet.add(attribute.getKey());
+					eventTypeSet.add(attribute.getKey()); // for non-jQuery
+					eventTypeSet.add(attribute.getKey().substring(2)); // for jQuery
 					eventCallbackSet.add(attribute.getValue());
 					if (!"".equals(element.id())) { // TODO 'id' attribute only?
 						eventTargetSet.add(element.id());

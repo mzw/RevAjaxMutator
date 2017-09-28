@@ -71,6 +71,7 @@ import jp.mzw.ajaxmutator.mutator.replace.among.AttributeModificationValueRAMuta
 import jp.mzw.ajaxmutator.mutator.replace.among.EventCallbackRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.EventTargetRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.EventTypeRAMutator;
+import jp.mzw.ajaxmutator.mutator.replace.among.RequestMethodRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.RequestOnSuccessHandlerRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.RequestUrlRAMutator;
 import jp.mzw.ajaxmutator.mutator.replace.among.TimerEventCallbackRAMutator;
@@ -205,6 +206,7 @@ public class DefaultProgramRepairConfig extends MutateConfigurationBase {
 					new TimerEventDurationRAMutator(visitor.getTimerEventAttachmentExpressions()),
 					new TimerEventCallbackRAMutator(visitor.getTimerEventAttachmentExpressions()),
 					new RequestUrlRAMutator(visitor.getRequests()),
+					new RequestMethodRAMutator(visitor.getRequests()),
 					new RequestOnSuccessHandlerRAMutator(visitor.getRequests()),
 					new DOMSelectionSelectNearbyMutator(),
 					new AttributeModificationTargetRAMutator(visitor.getAttributeModifications()),
@@ -251,40 +253,26 @@ public class DefaultProgramRepairConfig extends MutateConfigurationBase {
 				.parseTestCase(config.getTestcaseFile())
 				.parseJavaScript(config.getRecordedJsFile());
 
-		mutators = ImmutableSet
-				.<Mutator<?>> of(
-						new EventTargetTSFixer(visitor
-								.getEventAttachments(), configHelper
-								.getRepairSourcesForEventTarget()),
-						new EventTypeTSFixer(visitor.getEventAttachments(),
-								configHelper.getRepairSourcesForEventType()),
-						new EventCallbackERFixer(visitor
-								.getEventAttachments(), configHelper
-								.getRepairSourcesForEventCallback()),
-						new TimerEventDurationVIFixer(configHelper
-								.getRepairSourcesForTimerEventDuration()),
-						new TimerEventCallbackERFixer(visitor
-								.getTimerEventAttachmentExpressions()),
-						new AppendedDOMRAFixer(visitor.getDomAppendings()),
-						new AttributeModificationTargetVIFixer(visitor
-								.getAttributeModifications()),
-						new AttributeModificationValueERFixer(visitor
-								.getAttributeModifications(), configHelper
-								.getRepairSourcesForAttributeValues()),
-						new DOMSelectionSelectNearbyFixer(),
-						new RequestOnSuccessHandlerERFixer(visitor
-								.getRequests()),
-						new RequestMethodRAFixer(visitor.getRequests()),
+		mutators = ImmutableSet.<Mutator<?>> of(
+						new EventTargetTSFixer(visitor.getEventAttachments(), configHelper.getRepairSourcesForEventTarget()),
+						new EventTypeTSFixer(visitor.getEventAttachments(), configHelper.getRepairSourcesForEventType()),
+						new EventCallbackERFixer(visitor.getEventAttachments(), configHelper.getRepairSourcesForEventCallback()),
+						new TimerEventDurationVIFixer(configHelper.getRepairSourcesForTimerEventDuration()),
+						new TimerEventCallbackERFixer(visitor.getTimerEventAttachmentExpressions()),
 						new RequestURLVIFixer(visitor.getRequests()),
+						new RequestMethodRAFixer(visitor.getRequests()),
+						new RequestOnSuccessHandlerERFixer(visitor.getRequests()),
 						new RequestResponseBodyVIFixer(),
+						new DOMSelectionAtrributeFixer(visitor.getDomSelections(), configHelper.getRepairSourcesForDomSelectionAttributeFixer()),
+						new DOMSelectionSelectNearbyFixer(),
+						new AppendedDOMRAFixer(visitor.getDomAppendings()),
+						new DOMReplacementSrcTargetFixer(),
 						new DOMCreationToNoOpFixer(),
 						new DOMRemovalToNoOpFixer(),
-						new DOMReplacementSrcTargetFixer(),
 						new DOMCloningToNoOpFixer(),
 						new DOMNormalizationToNoOpFixer(),
-						new DOMSelectionAtrributeFixer(
-								visitor.getDomSelections(),
-								configHelper
-										.getRepairSourcesForDomSelectionAttributeFixer()));
+						new AttributeModificationTargetVIFixer(visitor.getAttributeModifications()),
+						new AttributeModificationValueERFixer(visitor.getAttributeModifications(), configHelper.getRepairSourcesForAttributeValues())
+					);
 	}
 }
