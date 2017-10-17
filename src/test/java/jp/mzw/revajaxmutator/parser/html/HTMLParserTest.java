@@ -32,7 +32,7 @@ public class HTMLParserTest {
 		EventSet events = parser.getAllEventSet();
 		Assert.assertEquals(1, events.getTargetSet().size());
 		Assert.assertArrayEquals("element".toCharArray(), Iterables.get(events.getTargetSet(), 0).toCharArray());
-		Assert.assertEquals(1, events.getTypeSet().size());
+		Assert.assertEquals(2, events.getTypeSet().size());
 		Assert.assertArrayEquals("onclick".toCharArray(), Iterables.get(events.getTypeSet(), 0).toCharArray());
 		Assert.assertEquals(1, events.getCallbackSet().size());
 		Assert.assertArrayEquals("callback();".toCharArray(), Iterables.get(events.getCallbackSet(), 0).toCharArray());
