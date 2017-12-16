@@ -269,7 +269,7 @@ abstract public class WebAppTestBase {
 		} catch (org.openqa.selenium.WebDriverException e) {
 			throw e;
 		} finally {
-			getDriver().close();
+//			getDriver().close();
 			getDriver().quit();
 		}
 	}
