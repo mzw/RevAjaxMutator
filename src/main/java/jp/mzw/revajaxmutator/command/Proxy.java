@@ -1,6 +1,7 @@
 package jp.mzw.revajaxmutator.command;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.owasp.webscarab.model.Preferences;
 import org.owasp.webscarab.model.StoreException;
@@ -8,6 +9,7 @@ import org.owasp.webscarab.plugin.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jp.mzw.revajaxmutator.config.LocalEnv;
 import jp.mzw.revajaxmutator.proxy.FilterPlugin;
 import jp.mzw.revajaxmutator.proxy.RecorderPlugin;
 import jp.mzw.revajaxmutator.proxy.RewriterPlugin;
@@ -38,10 +40,11 @@ public class Proxy extends Command {
 	 * 
 	 * @param args
 	 */
-	public void launch(String[] args) {
+	public void launch(String[] args) {		
 		try {
+			final LocalEnv localenv = new LocalEnv(LocalEnv.FILENAME);
 			Framework framework = new Framework();
-			Preferences.setPreference("Proxy.listeners", "127.0.0.1:8080");
+			Preferences.setPreference("Proxy.listeners", localenv.getProxyAddress());
 			framework.setSession("FileSystem", new File(".conversation"), "");
 			org.owasp.webscarab.plugin.proxy.Proxy proxy = new org.owasp.webscarab.plugin.proxy.Proxy(framework);
 			for (int i = 0; i < args.length; i++) {
@@ -66,7 +69,7 @@ public class Proxy extends Command {
 					System.exit(1);
 				}
 			}
-		} catch (StoreException e) {
+		} catch (IOException | StoreException e) {
 			LOG.error(e.getMessage());
 		}
 	}
