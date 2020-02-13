@@ -12,14 +12,14 @@
 	<distributionManagement>
 		<repository>
 			<id>jp.mzw.mvn-repo</id>
-			<url>scp://mvn-repo.mzw.jp/var/mvn/repo</url>
+			<url>scp://mvn-repo.mzw.jp/var/mvn-repo</url>
 		</repository>
 	</distributionManagement>
 
 	<repositories>
 		<repository>
 			<id>jp.mzw.mvn-repo</id>
-			<url>http://mvn-repo.mzw.jp</url>
+			<url>https://mvn-repo.mzw.jp</url>
 		</repository>
 	</repositories>
 
@@ -124,6 +124,21 @@
 			<groupId>com.github.detro</groupId>
 			<artifactId>phantomjsdriver</artifactId>
 			<version>2.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>15-ea+1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-fxml</artifactId>
+			<version>15-ea+1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-web</artifactId>
+			<version>15-ea+1</version>
 		</dependency>
 	</dependencies>
 

@@ -39,13 +39,13 @@ public class ConfigHelper {
 		final ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("document", RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("document", RepairSource.Type.Default));
 
 		// From Test Case
 		for (final String attr : this.testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource(attr, RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource(attr, RepairSource.Type.TestCase));
 			}
 		}
 		// From HTML
@@ -67,12 +67,12 @@ public class ConfigHelper {
 		final ArrayList<String> duplicate = new ArrayList<>();
 
 		// add default
-		repairSources.add(new RepairSource("$(document)", RepairSource.Type.DEFAULT));
+		repairSources.add(new RepairSource("$(document)", RepairSource.Type.Default));
 		// From Test Case
 		for (final String attr : this.testCaseParser.getAttributeValues()) {
 			if (!duplicate.contains(attr)) {
 				duplicate.add(attr);
-				repairSources.add(new RepairSource("$(" + attr + ")", RepairSource.Type.TESTCASE));
+				repairSources.add(new RepairSource("$(" + attr + ")", RepairSource.Type.TestCase));
 			}
 		}
 		// From HTML
@@ -140,7 +140,7 @@ public class ConfigHelper {
 		// default
 		final String[] durations = new String[] { "0", "50", "100", "250", "500", "750", "1000" };
 		for (final String duration : durations) {
-			repairSources.add(new RepairSource(duration, RepairSource.Type.DEFAULT));
+			repairSources.add(new RepairSource(duration, RepairSource.Type.Default));
 		}
 		return repairSources;
 	}
